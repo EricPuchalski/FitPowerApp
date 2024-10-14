@@ -7,7 +7,7 @@ export default function LogIn() {
     <div className="min-h-screen flex items-center justify-center bg-[#220901] relative">
       <div className="absolute inset-0 bg-cover bg-center z-0 " style={{backgroundImage: "url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/gym-5364404_1280-WLCaZmCO874uBuOz60BJlhr8Tnm6iv.jpg')", opacity: 0.6}}></div>
       <div className="bg-[#110814] p-8 rounded-lg shadow-xl shadow-[#444245] w-96 z-10">
-        <h2 className="text-3xl font-bold mb-6 text-[#F6AA1C] text-center">FitPower</h2>
+        <h2 className="text-3xl font-bold mb-6 text-[#F6AA1C] text-center">FitFlow</h2>
         <form className="space-y-4">
           <div>
             <Label htmlFor="email" className="text-[#F6AA1C]">Email</Label>
