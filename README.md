@@ -1,50 +1,47 @@
-# React + TypeScript + Vite
+# Gym Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este proyecto es una aplicación de gestión para un gimnasio, diseñada para facilitar la administración de clientes, rutinas de ejercicio, planes de nutrición y la interacción entre entrenadores, nutricionistas y clientes. El sistema incluye varios roles con funcionalidades específicas para cada uno.
 
-Currently, two official plugins are available:
+## Roles del Sistema
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. **Administrador**
+El administrador tiene acceso completo al sistema y es responsable de:
+- Gestionar usuarios (crear, editar y eliminar clientes, entrenadores, nutricionistas).
+- Asignar entrenadores y nutricionistas a los clientes.
+- Controlar y supervisar todas las operaciones del gimnasio.
 
-## Expanding the ESLint configuration
+### 2. **Entrenador**
+El entrenador gestiona las rutinas de ejercicios de los clientes:
+- Crear y personalizar rutinas de entrenamiento para cada cliente.
+- Evaluar el progreso físico de los clientes.
+- Ajustar los entrenamientos según el avance o necesidades del cliente.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 3. **Nutricionista**
+El nutricionista se encarga de los planes de nutrición para los clientes:
+- Crear planes de alimentación personalizados.
+- Monitorear y ajustar la dieta de los clientes según sus objetivos.
+- Consultar el progreso de los clientes y realizar modificaciones en su plan nutricional.
 
-- Configure the top-level `parserOptions` property like this:
+### 4. **Cliente**
+Los clientes pueden:
+- Consultar su rutina de ejercicios asignada.
+- Revisar su plan de alimentación.
+- Registrar su progreso diario (peso, repeticiones, alimentos consumidos).
+- Comunicarse con su entrenador y nutricionista.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Funcionalidades Principales
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+- **Gestión de Clientes**: Los administradores pueden agregar, editar y eliminar clientes, asignarles entrenadores y nutricionistas.
+- **Gestión de Rutinas de Ejercicio**: Los entrenadores pueden crear y modificar rutinas de entrenamiento para los clientes.
+- **Gestión de Planes Nutricionales**: Los nutricionistas pueden crear planes alimenticios personalizados, ajustarlos según los progresos de los clientes.
+- **Registro de Progreso**: Los clientes pueden registrar su progreso diario, tanto en sus entrenamientos como en su nutrición.
+- **Evaluación y Ajuste**: Entrenadores y nutricionistas pueden revisar el rendimiento de los clientes y hacer ajustes a sus rutinas o dietas.
+- **Comunicación**: Los clientes pueden interactuar con sus entrenadores y nutricionistas a través de la plataforma.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## Tecnologías Utilizadas
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- **Backend**: Spring Boot
+- **Frontend**: React
+- **Base de Datos**: MySQL
+- **Autenticación**: Spring Security
+- **Interacción entre Cliente y Servidor**: API REST
