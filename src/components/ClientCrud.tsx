@@ -1,112 +1,155 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { Plus, Pencil, Trash2, User, Dumbbell, Mail, Phone, MapPin, Target, Building, UserCheck, Apple } from 'lucide-react'
+import { useEffect, useState } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  User,
+  Dumbbell,
+  Mail,
+  Phone,
+  MapPin,
+  Target,
+  Building,
+  UserCheck,
+  Apple,
+} from "lucide-react";
 
-type ClientStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
+type ClientStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
 
 type Trainer = {
-  id: string
-  nombre: string
-  apellido: string
-}
+  id: string;
+  lastname: string;
+  dni: string;
+};
 
 type Nutritionist = {
-  id: string
-  nombre: string
-  apellido: string
+  id: string;
+  lastname: string;
+  dni: string;
+};
+
+type Gym = {
+  id: string;
+  name: string;
+};
+
+interface Client {
+  name: string;
+  lastname: string;
+  dni: string;
+  email: string;
+  phone: string;
+  goal: string;
+  gymName: string;
+  dniTrainer: string;
+  dniNutritionist: string;
+  id: string;
+  address: string; // Asegúrate de incluir 'address'
 }
 
-type Client = {
-  id: string
-  nombre: string
-  apellido: string
-  dni: string
-  email: string
-  telefono: string
-  direccion: string
-  initState: ClientStatus
-  currentState: ClientStatus
-  goal: string
-  gym: string
-  trainerId: string
-  nutritionistId: string
-}
+export default function ClientCrud() {
+  const [clients, setClients] = useState<Client[]>([]); // Inicializar como arreglo vacío
+  const [trainers, setTrainers] = useState<Trainer[]>([]); // Inicializar como arreglo vacío
+  const [nutritionists, setNutritionists] = useState<Nutritionist[]>([]); // Inicializar como arreglo vacío
+  const [gyms, setGyms] = useState<Gym[]>([]); // Inicializar como arreglo vacío
 
-const initialTrainers: Trainer[] = [
-  { id: '1', nombre: 'Carlos', apellido: 'Entrenador' },
-  { id: '2', nombre: 'Laura', apellido: 'Entrenadora' },
-  { id: '3', nombre: 'Javier', apellido: 'Fitness' },
-]
+  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const token = localStorage.getItem("token");
 
-const initialNutritionists: Nutritionist[] = [
-  { id: '1', nombre: 'Ana', apellido: 'Nutricionista' },
-  { id: '2', nombre: 'Luis', apellido: 'Dietista' },
-  { id: '3', nombre: 'María', apellido: 'Nutrióloga' },
-]
+  const [formData, setFormData] = useState<Client>({
+    name: "",
+    lastname: "",
+    dni: "",
+    email: "",
+    phone: "",
+    goal: "",
+    gymName: "",
+    dniTrainer: "",
+    dniNutritionist: "",
+    id: "", // o podría ser un valor único generado
+    address: "", // Incluye el campo 'address'
+  });
 
-const initialClients: Client[] = [
-  {
-    id: '1',
-    nombre: 'Juan',
-    apellido: 'Pérez',
-    dni: '12345678A',
-    email: 'juan@example.com',
-    telefono: '123456789',
-    direccion: 'Calle Fitness 123',
-    initState: 'ACTIVE',
-    currentState: 'ACTIVE',
-    goal: 'Perder peso',
-    gym: 'FITPOWER Central',
-    trainerId: '1',
-    nutritionistId: '1'
-  },
-  {
-    id: '2',
-    nombre: 'María',
-    apellido: 'González',
-    dni: '87654321B',
-    email: 'maria@example.com',
-    telefono: '987654321',
-    direccion: 'Avenida Salud 456',
-    initState: 'ACTIVE',
-    currentState: 'SUSPENDED',
-    goal: 'Ganar masa muscular',
-    gym: 'FITPOWER Norte',
-    trainerId: '2',
-    nutritionistId: '2'
-  },
-]
+  useEffect(() => {
+    // Fetch Clients
+    fetch("http://localhost:8080/api/clients", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setClients(data);
+      })
+      .catch((error) => console.error("Error al obtener los clientes:", error));
+    fetch("http://localhost:8080/api/nutritionists", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setNutritionists(data);
+      })
+      .catch((error) => console.error("Error al obtener los clientes:", error));
 
-export default function ClientManagement() {
-  const [clients, setClients] = useState<Client[]>(initialClients)
-  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false)
-  const [editingClient, setEditingClient] = useState<Client | null>(null)
+    // Fetch Trainers
+    fetch("http://localhost:8080/api/trainers", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTrainers(data);
+      })
+      .catch((error) =>
+        console.error("Error al obtener los entrenadores:", error)
+      );
+      fetch("http://localhost:8080/api/gyms", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setGyms(data);
+        })
+        .catch((error) =>
+          console.error("Error al obtener los entrenadores:", error)
+        );
+  }, []); // El array de dependencias está vacío, así que este efecto solo se ejecuta una vez, al montarse el componente
 
   const handleCreateClient = (newClient: Client) => {
-    setClients([...clients, newClient])
-    setIsNewClientDialogOpen(false)
-  }
+    setClients((prevClients) => [...prevClients, newClient]);
+    setIsNewClientDialogOpen(false);
+  };
 
   const handleEditClient = (updatedClient: Client) => {
-    setClients(clients.map(client => client.id === updatedClient.id ? updatedClient : client))
-    setEditingClient(null)
-  }
+    setClients((prevClients) =>
+      prevClients.map((client) =>
+        client.id === updatedClient.id ? updatedClient : client
+      )
+    );
+    setEditingClient(null);
+  };
 
   const handleDeleteClient = (id: string) => {
-    setClients(clients.filter(client => client.id !== id))
-  }
-
-  const getTrainerName = (trainerId: string) => {
-    const trainer = initialTrainers.find(t => t.id === trainerId)
-    return trainer ? `${trainer.nombre} ${trainer.apellido}` : 'No asignado'
-  }
-
-  const getNutritionistName = (nutritionistId: string) => {
-    const nutritionist = initialNutritionists.find(n => n.id === nutritionistId)
-    return nutritionist ? `${nutritionist.nombre} ${nutritionist.apellido}` : 'No asignado'
-  }
-
+    setClients((prevClients) =>
+      prevClients.filter((client) => client.id !== id)
+    );
+  };
   return (
     <div className="min-h-screen bg-[url('https://img.freepik.com/free-photo/3d-gym-equipment_23-2151114137.jpg')] bg-cover bg-center bg-no-repeat">
       <div className="container mx-auto px-4 py-8 bg-[#03396c]/90 min-h-screen">
@@ -117,7 +160,7 @@ export default function ClientManagement() {
             </h2>
           </div>
           <div className="pt-6 bg-[#f2e6b6] p-4">
-            <button 
+            <button
               onClick={() => setIsNewClientDialogOpen(true)}
               className="bg-[#b2d3a7] hover:bg-[#65c6c4] text-[#03396c] px-4 py-2 rounded flex items-center"
             >
@@ -134,34 +177,50 @@ export default function ClientManagement() {
                   <th className="font-bold text-[#03396c] p-2">Nombre</th>
                   <th className="font-bold text-[#03396c] p-2">Email</th>
                   <th className="font-bold text-[#03396c] p-2">Teléfono</th>
-                  <th className="font-bold text-[#03396c] p-2">Estado</th>
                   <th className="font-bold text-[#03396c] p-2">Objetivo</th>
                   <th className="font-bold text-[#03396c] p-2">Gimnasio</th>
                   <th className="font-bold text-[#03396c] p-2">Entrenador</th>
-                  <th className="font-bold text-[#03396c] p-2">Nutricionista</th>
-                  <th className="font-bold text-[#03396c] p-2">Acciones</th>
+                  <th className="font-bold text-[#03396c] p-2">
+                    Nutricionista
+                  </th>
+                  <th className="font-bold text-[#03396c] p-2 ">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {clients.map((client) => (
                   <tr key={client.id} className="hover:bg-[#b2d3a7]">
-                    <td className="font-medium text-[#03396c] p-2">{`${client.nombre} ${client.apellido}`}</td>
-                    <td className="text-[#03396c] p-2">{client.email}</td>
-                    <td className="text-[#03396c] p-2">{client.telefono}</td>
-                    <td className="text-[#03396c] p-2">{client.currentState}</td>
-                    <td className="text-[#03396c] p-2">{client.goal}</td>
-                    <td className="text-[#03396c] p-2">{client.gym}</td>
-                    <td className="text-[#03396c] p-2">{getTrainerName(client.trainerId)}</td>
-                    <td className="text-[#03396c] p-2">{getNutritionistName(client.nutritionistId)}</td>
+                    <td className="font-medium text-[#03396c] p-2 text-center">
+                      {`${client.name || "No tiene"} ${
+                        client.lastname || "No tiene"
+                      }`}
+                    </td>
+                    <td className="text-[#03396c] p-2 text-center">
+                      {client.email || "No tiene"}
+                    </td>
+                    <td className="text-[#03396c] p-2 text-center">
+                      {client.phone || "No tiene"}
+                    </td>
+                    <td className="text-[#03396c] p-2 text-center">
+                      {client.goal || "No tiene"}
+                    </td>
+                    <td className="text-[#03396c] p-2 text-center">
+                      {client.gymName || "No tiene"}
+                    </td>
+                    <td className="text-[#03396c] p-2 text-center">
+                      {client.dniTrainer || "No tiene"}
+                    </td>
+                    <td className="text-[#03396c] p-2 text-center">
+                      {client.dniNutritionist || "No tiene"}
+                    </td>
                     <td className="p-2">
-                      <div className="flex space-x-2">
-                        <button 
+                      <div className="flex space-x-2 ">
+                        <button
                           onClick={() => setEditingClient(client)}
-                          className="text-[#03396c] hover:text-[#65c6c4] hover:bg-[#03396c] p-1 rounded"
+                          className="text-[#03396c] hover:text-[#65c6c4] hover:bg-[#03396c] p-1 rounded "
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteClient(client.id)}
                           className="text-[#f8c471] hover:text-[#f2e6b6] hover:bg-[#f8c471] p-1 rounded"
                         >
@@ -181,187 +240,191 @@ export default function ClientManagement() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-[#f2e6b6] p-6 rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-bold text-[#03396c] mb-4">
-              {editingClient ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
+              {editingClient ? "Editar Cliente" : "Crear Nuevo Cliente"}
             </h3>
-            <ClientForm 
-              onSubmit={editingClient ? handleEditClient : handleCreateClient} 
-              initialData={editingClient || undefined}
-              onClose={() => {
-                setIsNewClientDialogOpen(false)
-                setEditingClient(null)
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (editingClient) {
+                  handleEditClient({
+                    ...editingClient,
+                    ...formData,
+                  });
+                } else {
+                  handleCreateClient({
+                    ...formData,
+                  });
+                }
+                setIsNewClientDialogOpen(false);
+                setEditingClient(null);
               }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-type ClientFormProps = {
-  onSubmit: (client: Client) => void
-  initialData?: Client
-  onClose: () => void
-}
-
-function ClientForm({ onSubmit, initialData, onClose }: ClientFormProps) {
-  const [formData, setFormData] = useState<Client>(
-    initialData || {
-      id: '',
-      nombre: '',
-      apellido: '',
-      dni: '',
-      email: '',
-      telefono: '',
-      direccion: '',
-      initState: 'ACTIVE',
-      currentState: 'ACTIVE',
-      goal: '',
-      gym: '',
-      trainerId: '',
-      nutritionistId: ''
-    }
-  )
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit({ ...formData, id: initialData ? formData.id : Date.now().toString() })
-    onClose()
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+              className="space-y-4"
+            >
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="nombre" className="flex items-center text-[#03396c]">
             <User className="w-4 h-4 mr-2" /> Nombre
           </label>
-          <input id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
+          <input
+            id="nombre"
+            name="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
+          />
         </div>
         <div>
           <label htmlFor="apellido" className="flex items-center text-[#03396c]">
             <User className="w-4 h-4 mr-2" /> Apellido
           </label>
-          <input id="apellido" name="apellido" value={formData.apellido} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
+          <input
+            id="apellido"
+            name="lastname"
+            value={formData.lastname}
+            onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+            required
+            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
+          />
         </div>
         <div>
           <label htmlFor="dni" className="flex items-center text-[#03396c]">
             <User className="w-4 h-4 mr-2" /> DNI
           </label>
-          <input id="dni" name="dni" value={formData.dni} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
+          <input
+            id="dni"
+            name="dni"
+            value={formData.dni}
+            onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+            required
+            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
+          />
         </div>
         <div>
           <label htmlFor="email" className="flex items-center text-[#03396c]">
             <Mail className="w-4 h-4 mr-2" /> Email
           </label>
-          <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
+          />
         </div>
         <div>
           <label htmlFor="telefono" className="flex items-center text-[#03396c]">
             <Phone className="w-4 h-4 mr-2" /> Teléfono
           </label>
-          <input id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
-        </div>
-        <div>
-          <label htmlFor="direccion" className="flex items-center text-[#03396c]">
-            <MapPin className="w-4 h-4 mr-2" /> Dirección
-          </label>
-          <input id="direccion" name="direccion" value={formData.direccion} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
-        </div>
-        <div>
-          <label htmlFor="currentState" className="flex items-center text-[#03396c]">
-            <UserCheck className="w-4 h-4 mr-2" /> Estado Actual
-          </label>
-          <select
-            id="currentState"
-            name="currentState"
-            value={formData.currentState}
-            onChange={handleChange}
+          <input
+            id="telefono"
+            name="phone"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            required
             className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
-          >
-            <option value="ACTIVE">Activo</option>
-            <option value="INACTIVE">Inactivo</option>
-            <option value="SUSPENDED">Suspendido</option>
-          </select>
+          />
         </div>
         <div>
-          <label htmlFor="goal" className="flex items-center text-[#03396c]">
-            <Target className="w-4  h-4 mr-2" /> Objetivo
+          <label htmlFor="objetivo" className="flex items-center text-[#03396c]">
+            <Target className="w-4 h-4 mr-2" /> Objetivo
           </label>
-          <input id="goal" name="goal" value={formData.goal} onChange={handleChange} required className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded" />
+          <input
+            id="objetivo"
+            name="goal"
+            value={formData.goal}
+            onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+            required
+            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
+          />
         </div>
         <div>
-          <label htmlFor="gym" className="flex items-center text-[#03396c]">
+          <label htmlFor="gimnasio" className="flex items-center text-[#03396c]">
             <Building className="w-4 h-4 mr-2" /> Gimnasio
           </label>
           <select
-            id="gym"
-            name="gym"
-            value={formData.gym}
-            onChange={handleChange}
+            id="gimnasio"
+            name="gymName"
+            value={formData.gymName}
+            onChange={(e) => setFormData({ ...formData, gymName: e.target.value })}
             required
             className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
           >
-            <option value="">Seleccionar gimnasio</option>
-            <option value="FITPOWER Central">FITPOWER Central</option>
-            <option value="FITPOWER Norte">FITPOWER Norte</option>
-            <option value="FITPOWER Sur">FITPOWER Sur</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="trainerId" className="flex items-center text-[#03396c]">
-            <Dumbbell className="w-4 h-4 mr-2" /> Entrenador
-          </label>
-          <select
-            id="trainerId"
-            name="trainerId"
-            value={formData.trainerId}
-            onChange={handleChange}
-            required
-            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
-          >
-            <option value="">Seleccionar entrenador</option>
-            {initialTrainers.map(trainer => (
-              <option key={trainer.id} value={trainer.id}>
-                {`${trainer.nombre} ${trainer.apellido}`}
+            <option value="">Selecciona un gimnasio</option>
+            {gyms.map((gym) => (
+              <option key={gym.id} value={gym.name}>
+                {gym.name}
               </option>
             ))}
           </select>
         </div>
+
         <div>
-          <label htmlFor="nutritionistId" className="flex items-center text-[#03396c]">
-            <Apple className="w-4 h-4 mr-2" /> Nutricionista
+          <label htmlFor="entrenador" className="flex items-center text-[#03396c]">
+            <User className="w-4 h-4 mr-2" /> Entrenador
           </label>
           <select
-            id="nutritionistId"
-            name="nutritionistId"
-            value={formData.nutritionistId}
-            onChange={handleChange}
+            id="entrenador"
+            name="dniTrainer"
+            value={formData.dniTrainer}
+            onChange={(e) => setFormData({ ...formData, dniTrainer: e.target.value })}
             required
             className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
           >
-            <option value="">Seleccionar nutricionista</option>
-            {initialNutritionists.map(nutritionist => (
-              <option key={nutritionist.id} value={nutritionist.id}>
-                {`${nutritionist.nombre} ${nutritionist.apellido}`}
+            <option value="">Selecciona un entrenador</option>
+            {trainers.map((trainer) => (
+              <option key={trainer.dni} value={trainer.dni}>
+                {trainer.lastname} - DNI: {trainer.dni}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="nutricionista" className="flex items-center text-[#03396c]">
+            <User className="w-4 h-4 mr-2" /> Nutricionista
+          </label>
+          <select
+            id="nutricionista"
+            name="dniNutritionist"
+            value={formData.dniNutritionist}
+            onChange={(e) => setFormData({ ...formData, dniNutritionist: e.target.value })}
+            required
+            className="mt-1 w-full p-2 bg-[#f2e6b6] border border-[#65c6c4] text-[#03396c] rounded"
+          >
+            <option value="">Selecciona un nutricionista</option>
+            {nutritionists.map((nutritionist) => (
+              <option key={nutritionist.dni} value={nutritionist.dni}>
+                {nutritionist.lastname} - DNI: {nutritionist.dni}
               </option>
             ))}
           </select>
         </div>
       </div>
-      <div className="flex justify-end space-x-2">
-        <button type="button" onClick={onClose} className="px-4 py-2 bg-[#b2d3a7] text-[#03396c] rounded hover:bg-[#65c6c4]">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            setIsNewClientDialogOpen(false);
+            setEditingClient(null);
+          }}
+          className="bg-[#e74c3c] text-white px-4 py-2 rounded mr-2"
+        >
           Cancelar
         </button>
-        <button type="submit" className="px-4 py-2 bg-[#03396c] text-white rounded hover:bg-[#65c6c4]">
-          {initialData ? 'Actualizar Cliente' : 'Crear Cliente'}
+        <button
+          type="submit"
+          className="bg-[#2ecc71] text-white px-4 py-2 rounded"
+        >
+          {editingClient ? 'Actualizar Cliente' : 'Crear Cliente'}
         </button>
       </div>
     </form>
-  )
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

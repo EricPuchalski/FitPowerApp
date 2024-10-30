@@ -57,6 +57,8 @@ export default function DashboardClient() {
   const [foodAmount, setFoodAmount] = useState<string>("");
   const dailyCalorieGoal = 2000;
 
+
+
   const [clientStats, setClientStats] = useState<ClientStats[]>([
     {
       date: "2023-01-01",

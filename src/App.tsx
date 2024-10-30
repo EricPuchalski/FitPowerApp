@@ -10,6 +10,7 @@ import DashboardTrainer from './components/DashboardTrainer';
 import NutritionistCrud from './components/NutritionistCrud';
 import TraineersManager from './components/TraineersManager';
 import TrainerCrud from './components/TrainerCrud';
+import ClientCrud from './components/ClientCrud';
 
 
 function App() {
@@ -17,13 +18,13 @@ function App() {
   <Router>
     <Routes>
       <Route path="/" element={<LogIn/>} />
-      <Route path="/clients" element={<DashboardClient/>} />
+      <Route path="/client" element={<DashboardClient/>} />
       <Route path="/admin" element={<DashboardAdmin/>} />
-      <Route path="/admin/clients" element={<ClientManagement/>} />
       <Route path="/trainer" element={<DashboardTrainer/>} />
       <Route path="/trainerCrud" element={<TrainerCrud/>} />
       <Route path="/nutritionistCrud" element={<NutritionistCrud/>} />
       <Route path="/traineers" element={<TraineersManager/>} />
+      <Route path="/admin/clients" element={<ClientCrud/>} />
     </Routes>
   </Router>
   )
