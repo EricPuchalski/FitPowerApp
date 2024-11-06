@@ -6,11 +6,12 @@ import DashboardAdmin from './components/DashboardAdmin';
 import ClientManagement from './components/ClientManagAdmin';
 
 import DashboardClient from './components/DashboardClient';
-import DashboardTrainer from './components/DashboardTrainer';
 import NutritionistCrud from './components/NutritionistCrud';
 import TraineersManager from './components/TraineersManager';
 import TrainerCrud from './components/TrainerCrud';
 import ClientCrud from './components/ClientCrud';
+import DashboardTrainer from './components/DashboardTrainerReal';
+import TrainingClient from './components/TrainingClient';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
       <Route path="/nutritionistCrud" element={<NutritionistCrud/>} />
       <Route path="/traineers" element={<TraineersManager/>} />
       <Route path="/admin/clients" element={<ClientCrud/>} />
+      <Route path="/client/training" element={<TrainingClient/>} />
     </Routes>
   </Router>
   )

@@ -31,7 +31,9 @@ export default function LogIn() {
         // Almacenar el token en localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.roles[0]); // Almacenar el rol del primer elemento en el array de roles
-
+        localStorage.setItem('userId', data.id);
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('userEmail', data.email);
         // Redirigir al dashboard según el rol
         if (data.roles.includes("ROLE_NUTRITIONIST")) {
           navigate("/nutritionist");
