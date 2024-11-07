@@ -19,12 +19,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../../components/ui/accordion";
-import { Clock, Dumbbell, Play } from "lucide-react";
+import { Clock, Dumbbell, Play, CheckCircle, XCircle } from "lucide-react";
 import NavBarTrainer from "./NavBarTrainer";
 import { NavBarClient } from "./NavBarClient";
 
-const baseUrl = 'http://localhost:8080/api/routines/client/email/';
-const clientUrl = 'http://localhost:8080/api/clients/email/';
+const baseUrl = "http://localhost:8080/api/routines/client/email/";
+const clientUrl = "http://localhost:8080/api/clients/email/";
 
 // Función para obtener las rutinas del cliente
 async function getClientRoutines(email: string) {
@@ -37,7 +37,7 @@ async function getClientRoutines(email: string) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error al obtener las rutinas del cliente:', error);
+    console.error("Error al obtener las rutinas del cliente:", error);
     throw error;
   }
 }
@@ -53,7 +53,29 @@ async function getClientData(email: string) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error al obtener los datos del cliente:', error);
+    console.error("Error al obtener los datos del cliente:", error);
+    throw error;
+  }
+}
+
+// Función para activar una rutina
+async function activateRoutine(routineId: number) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/routines/activate/32423432/${routineId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en la solicitud: ${response.statusText}`);
+    }
+
+    // No necesitamos parsear la respuesta
+    return response;
+  } catch (error) {
+    console.error("Error al activar la rutina:", error);
     throw error;
   }
 }
@@ -70,6 +92,7 @@ type Session = {
 type Routine = {
   id: number;
   name: string;
+  completed: boolean;
   sessions: Session[];
 };
 
@@ -85,12 +108,12 @@ type Client = {
 };
 
 export default function TrainingClient() {
-  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [client, setClient] = useState<Client | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const email = 'damian_betum@gmail.com'; // Reemplaza con el email del cliente
+  const email = "damian_betum@gmail.com"; // Reemplaza con el email del cliente
 
   useEffect(() => {
     const fetchRoutines = async () => {
@@ -98,7 +121,7 @@ export default function TrainingClient() {
         const data = await getClientRoutines(email);
         setRoutines(data);
       } catch (error) {
-        setError('Error al obtener las rutinas del cliente');
+        setError("Error al obtener las rutinas del cliente");
       }
     };
 
@@ -108,7 +131,7 @@ export default function TrainingClient() {
         setClient(data);
         console.log(data);
       } catch (error) {
-        setError('Error al obtener los datos del cliente');
+        setError("Error al obtener los datos del cliente");
       }
     };
 
@@ -126,17 +149,27 @@ export default function TrainingClient() {
   }, [email]);
 
   const handleStartRoutine = (routine: Routine) => {
-    setSelectedRoutine(routine)
-  }
+    setSelectedRoutine(routine);
+  };
 
- 
+  const handleConfirmStart = async () => {
+    if (selectedRoutine) {
+      try {
+        await activateRoutine(selectedRoutine.id);
+        window.location.href = `http://localhost:5173/client/training/routine`;
+      } catch (error) {
+        console.error("Error al activar la rutina:", error);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#220901] relative">
       <div className="container p-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white center">
         <NavBarClient />
         <h1 className="text-4xl font-bold my-8 text-center">
-          {client?.name} {client?.lastname} este es tu entrenamiento personalizado!
+          {client?.name} {client?.lastname} este es tu entrenamiento
+          personalizado!
         </h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
           {routines.map((routine) => (
@@ -154,6 +187,16 @@ export default function TrainingClient() {
                   <CardDescription className="text-gray-400">
                     {routine.sessions.length} ejercicios
                   </CardDescription>
+                  <div className="flex items-center mt-2">
+                    {routine.completed ? (
+                      <CheckCircle className="w-4 h-4 text-green-500 mr-2 transition duration-2000 ease-in-out" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-500 mr-2 transition duration-2000 ease-in-out" />
+                    )}
+                    <span>
+                      {routine.completed ? "Completada" : "No completada"}
+                    </span>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <Accordion type="single" collapsible className="w-full">
@@ -225,12 +268,7 @@ export default function TrainingClient() {
               <CardFooter className="flex justify-end">
                 <Button
                   className="bg-green-600 hover:bg-green-700 text-white mr-2"
-                  onClick={() => {
-                    // Aquí iría la lógica para iniciar la rutina
-                    alert(
-                      "¡Rutina iniciada! Buena suerte con tu entrenamiento."
-                    );
-                  }}
+                  onClick={handleConfirmStart}
                 >
                   Confirmar Inicio
                 </Button>
@@ -247,8 +285,6 @@ export default function TrainingClient() {
         )}
         <FooterPag></FooterPag>
       </div>
-     
     </div>
-
   );
 }
