@@ -12,6 +12,7 @@ import TrainerCrud from './components/TrainerCrud';
 import ClientCrud from './components/ClientCrud';
 import DashboardTrainer from './components/DashboardTrainerReal';
 import TrainingClient from './components/TrainingClient';
+import ClientRoutine from './components/ClientRoutine';
 
 
 function App() {
@@ -27,6 +28,8 @@ function App() {
       <Route path="/traineers" element={<TraineersManager/>} />
       <Route path="/admin/clients" element={<ClientCrud/>} />
       <Route path="/client/training" element={<TrainingClient/>} />
+      <Route path="/client/training/routine" element={<ClientRoutine/>} />
+
     </Routes>
   </Router>
   )
