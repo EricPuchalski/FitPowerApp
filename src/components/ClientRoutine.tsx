@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -52,6 +52,7 @@ type Session = {
 };
 
 type Routine = {
+  completed: boolean;
   id: number;
   name: string;
   sessions: Session[];
@@ -61,6 +62,7 @@ const initialRoutine: Routine = {
   id: 1,
   name: "Rutina de Fuerza",
   sessions: [],
+  completed: false,
 };
 
 export default function ClientRoutine() {
@@ -77,9 +79,12 @@ export default function ClientRoutine() {
   const [trainingDiaryId, setTrainingDiaryId] = useState<number | null>(null);
   const [trainingSessions, setTrainingSessions] = useState<Session[]>([]);
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("userEmail");
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("Datos de trainingSessions:", trainingSessions);
@@ -279,6 +284,65 @@ export default function ClientRoutine() {
     setSessionToDelete(null);
   };
 
+  const handleFinalizar = async () => {
+    try {
+      // Obtener todas las rutinas del cliente
+      const clientRoutinesResponse = await fetch(
+        `http://localhost:8080/api/routines/client/${client.dni}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!clientRoutinesResponse.ok) {
+        throw new Error(
+          `Error al obtener las rutinas del cliente: ${clientRoutinesResponse.statusText}`
+        );
+      }
+
+      const clientRoutines = await clientRoutinesResponse.json();
+
+      // Verificar si todas las rutinas, excepto la actual, están completadas
+      clientRoutines.forEach((r: Routine) => {
+        console.log(`Routine ID: ${r.id}, Completed: ${r.completed}`);
+      });
+      const allRoutinesCompleted = clientRoutines
+        .filter((r: Routine) => r.id !== routine.id)
+        .every((r: Routine) => r.completed);
+
+      if (allRoutinesCompleted) {
+        setShowCongratulations(true);
+        setTimeout(() => {
+          setShowCongratulations(false);
+          navigate("/client/training");
+        }, 2000); // Mostrar el cuadro de felicitación durante 3 segundos
+      } else {
+        navigate("/client/training");
+      }
+
+      // Completar la rutina actual
+      const response = await fetch(
+        `http://localhost:8080/api/routines/${routine.id}/complete`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error en la solicitud: ${response.statusText}`);
+      }
+
+      console.log("Rutina completada:", routine.id);
+    } catch (error) {
+      console.error("Error al completar la rutina:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
       <NavBarClient />
@@ -308,7 +372,7 @@ export default function ClientRoutine() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="grid grid-cols-2 gap-4">
-                      <div>
+                        <div>
                           <Label htmlFor={`weight-${session.id}`}>
                             Peso (kg)
                           </Label>
@@ -327,7 +391,7 @@ export default function ClientRoutine() {
                             step={0.5}
                           />
                         </div>
-                                <div>
+                        <div>
                           <Label htmlFor={`reps-${session.id}`}>
                             Repeticiones
                           </Label>
@@ -362,8 +426,6 @@ export default function ClientRoutine() {
                             min={1}
                           />
                         </div>
-                
-                       
                         <div>
                           <Label htmlFor={`rest-${session.id}`}>
                             Tiempo de Descanso
@@ -383,7 +445,6 @@ export default function ClientRoutine() {
                             disabled // Aquí se deshabilita el campo
                           />
                         </div>
-
                         <Button
                           onClick={() => handleSaveSession(session)}
                           className="mt-4 w-full bg-green-500 hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 text-white font-semibold"
@@ -409,34 +470,50 @@ export default function ClientRoutine() {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-            <table className="w-full border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
-  <thead className="bg-gray-50">
-    <tr>
-      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ejercicio</th>
-      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repeticiones</th>
-      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peso (kg)</th>
-      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Eliminar</th>
-    </tr>
-  </thead>
-  <tbody className="divide-y divide-gray-200">
-    {trainingSessions.map((session) => (
-      <tr key={session.id} className="hover:bg-gray-50 transition-colors">
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{session.exerciseName}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{session.reps}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{session.weight}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          <Button
-            onClick={() => handleDeleteSession(session.id)}
-            className="bg-red-500 hover:bg-red-600 text-white transition-colors"
-          >
-            <Trash className="w-4 h-4" />
-          </Button>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
+              <table className="w-full border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ejercicio
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Repeticiones
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Peso (kg)
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Eliminar
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {trainingSessions.map((session) => (
+                    <tr
+                      key={session.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {session.exerciseName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {session.reps}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {session.weight}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <Button
+                          onClick={() => handleDeleteSession(session.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white transition-colors"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </ScrollArea>
           </CardContent>
         </Card>
@@ -448,7 +525,6 @@ export default function ClientRoutine() {
               <CardTitle className="text-2xl font-bold text-white">
                 Confirmar Eliminación
               </CardTitle>
-
               <CardDescription className="text-gray-400">
                 ¿Estás seguro de que deseas eliminar esta sesión?
               </CardDescription>
@@ -473,12 +549,42 @@ export default function ClientRoutine() {
           </Card>
         </div>
       )}
-<Button
-  onClick={handleSaveRoutine}
-  className="w-full h-20 my-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold"
->
-  <FaDumbbell className="w-4 h-4 mr-2" /> Finalizar
-</Button>
+      {showCongratulations && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <Card className="w-[600px] h-[600px] overflow-hidden relative flex flex-col justify-center">
+          <div
+            className="absolute inset-0 bg-contain bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/imagen_de_exito.png')" }}
+          >
+            <div className="absolute inset-0 bg-black opacity-60" /> {/* Capa de opacidad para mejorar la legibilidad */}
+          </div>
+          <div className="relative z-10 flex flex-col items-center justify-center text-center">
+            <CardHeader>
+              <CardTitle className="text-3xl font-bold text-white mb-2">
+                ¡Felicidades!
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-gray-100">
+              <p className="text-lg">
+                Has completado tu semana de entrenamiento. ¡Excelente trabajo!
+              </p>
+              <p className="mt-4 text-sm text-gray-400">
+                Sigue así y alcanzarás tus metas fitness.
+              </p>
+            </CardContent>
+          </div>
+        </Card>
+      </div>
+      
+     
+      
+      )}
+      <Button
+        onClick={handleFinalizar}
+        className="w-full h-20 my-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold"
+      >
+        <FaDumbbell className="w-4 h-4 mr-2" /> Finalizar
+      </Button>
       <FooterPag />
     </div>
   );

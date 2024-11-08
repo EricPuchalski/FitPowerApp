@@ -68,9 +68,11 @@ async function getClientData(email: string, token: string) {
 }
 
 // Función para activar una rutina
-async function activateRoutine(routineId: number, token: string) {
+async function activateRoutine(routineId: number, token: string, clientDni: string) {
+  console.log(clientDni);
+  
   try {
-    const response = await fetch(`http://localhost:8080/api/routines/activate/32423432/${routineId}`, {
+    const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,6 +131,7 @@ type Routine = {
   id: number;
   name: string;
   completed: boolean;
+  clientDNI: string
   sessions: Session[];
 };
 
@@ -196,7 +199,7 @@ export default function TrainingClient() {
     if (selectedRoutine && token && client) {
       try {
         const diaryId = await createTrainingDiary(client.dni, token);
-        await activateRoutine(selectedRoutine.id, token);
+        await activateRoutine(selectedRoutine.id,token, selectedRoutine.clientDNI );
         window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}`;
       } catch (error) {
         console.error("Error al activar la rutina:", error);
