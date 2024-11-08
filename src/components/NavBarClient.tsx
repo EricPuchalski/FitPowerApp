@@ -11,11 +11,26 @@ export const NavBarClient = () => {
           </div>
           <nav className="hidden md:flex space-x-6">
             <a
-              href="#"
+              href="/client"
               className="hover:text-blue-200 transition flex items-center space-x-1"
             >
               <User size={18} />
               <span>Perfil</span>
+            </a>
+
+            <a
+              href="/client/training"
+              className="hover:text-blue-200 transition flex items-center space-x-1"
+            >
+              <Dumbbell size={18} />
+              <span>Entrenamiento</span>
+            </a>
+            <a
+              href="/client/nutrition"
+              className="hover:text-blue-200 transition flex items-center space-x-1"
+            >
+              <Apple size={18} />
+              <span>Nutrición</span>
             </a>
             <a
               href="#"
@@ -24,20 +39,6 @@ export const NavBarClient = () => {
               <Bell size={18} />
 
         
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-200 transition flex items-center space-x-1"
-            >
-              <Dumbbell size={18} />
-              <span>Entrenamiento</span>
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-200 transition flex items-center space-x-1"
-            >
-              <Apple size={18} />
-              <span>Nutrición</span>
             </a>
           </nav>
           <button

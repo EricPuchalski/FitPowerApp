@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import { NavBarClient } from "./NavBarClient";
 
 // Simulación de una librería de alimentos y calorías
 const foodDatabase = [
@@ -56,8 +57,6 @@ export default function DashboardClient() {
   const [selectedFood, setSelectedFood] = useState("");
   const [foodAmount, setFoodAmount] = useState<string>("");
   const dailyCalorieGoal = 2000;
-
-
 
   const [clientStats, setClientStats] = useState<ClientStats[]>([
     {
@@ -96,94 +95,7 @@ export default function DashboardClient() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Dumbbell className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Cliente</h1>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <a
-              href="#"
-              className="hover:text-blue-200 transition flex items-center space-x-1"
-            >
-              <User size={18} />
-              <span>Perfil</span>
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-200 transition flex items-center space-x-1 relative"
-            >
-              <Bell size={18} />
-              {notificationCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {notificationCount}
-                </span>
-              )}
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-200 transition flex items-center space-x-1"
-            >
-              <Dumbbell size={18} />
-              <span>Entrenamiento</span>
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-200 transition flex items-center space-x-1"
-            >
-              <Apple size={18} />
-              <span>Nutrición</span>
-            </a>
-          </nav>
-          <button
-            className="md:hidden bg-blue-800 p-2 rounded-md hover:bg-indigo-700 transition"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </header>
-
-      {isMenuOpen && (
-        <div className="md:hidden bg-indigo-800 text-white">
-          <nav className="container mx-auto px-4 py-2 flex flex-col space-y-2">
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
-            >
-              <User size={18} />
-              <span>Perfil</span>
-            </a>
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2 relative"
-            >
-              <Bell size={18} />
-              <span>Notificaciones</span>
-              {notificationCount > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {notificationCount}
-                </span>
-              )}
-            </a>
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
-            >
-              <Dumbbell size={18} />
-              <span>Entrenamiento</span>
-            </a>
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
-            >
-              <Apple size={18} />
-              <span>Nutrición</span>
-            </a>
-          </nav>
-        </div>
-      )}
+      <NavBarClient />
 
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -283,12 +195,12 @@ export default function DashboardClient() {
             {/* Botón "Ver detalles" */}
             <Dialog>
               <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out border-none shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  >
-                    Ver detalles
-                  </Button>
+                <Button
+                  variant="outline"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out border-none shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  Ver detalles
+                </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl bg-white border border-gray-300 rounded-lg shadow-lg p-6">
                 <DialogHeader>
@@ -346,8 +258,7 @@ export default function DashboardClient() {
             {/* Botón para añadir estado actual */}
             <Dialog>
               <DialogTrigger asChild>
-                <button                     className="ml-20 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out border-none shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                >
+                <button className="ml-20 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out border-none shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
                   Añadir nuevo registro
                 </button>
               </DialogTrigger>
