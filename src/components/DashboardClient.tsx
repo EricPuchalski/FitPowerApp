@@ -50,6 +50,42 @@ type ClientStats = {
   height: number;
 };
 
+type Client = {
+  id: number;
+  name: string;
+  lastname: string;
+  dni: string;
+  phone: string;
+  address: string;
+  email: string;
+  goal: string;
+  gymName: string;
+  trainerDni: string;
+  nutritionistDni: string;
+};
+
+const clientUrl = "http://localhost:8080/api/clients/email/";
+
+// Función para obtener los datos del cliente
+async function getClientData(email: string, token: string) {
+  try {
+    const response = await fetch(`${clientUrl}${email}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Error en la solicitud: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener los datos del cliente:", error);
+    throw error;
+  }
+}
+
 export default function DashboardClient() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(1);
@@ -57,6 +93,8 @@ export default function DashboardClient() {
   const [selectedFood, setSelectedFood] = useState("");
   const [foodAmount, setFoodAmount] = useState<string>("");
   const dailyCalorieGoal = 2000;
+  const token = localStorage.getItem("token");
+  const email = localStorage.getItem("userEmail");
 
   const [clientStats, setClientStats] = useState<ClientStats[]>([
     {
@@ -82,6 +120,21 @@ export default function DashboardClient() {
     },
   ]);
 
+  const [client, setClient] = useState<Client | null>(null);
+
+  useEffect(() => {
+    const fetchClientData = async () => {
+      try {
+        const data = await getClientData(email, token);
+        setClient(data);
+      } catch (error) {
+        console.error("Error al obtener los datos del cliente:", error);
+      }
+    };
+
+    fetchClientData();
+  }, []);
+
   const handleAddFood = () => {
     const food = foodDatabase.find((f) => f.name === selectedFood);
     const amount = parseFloat(foodAmount);
@@ -93,6 +146,10 @@ export default function DashboardClient() {
     }
   };
 
+  if (!client) {
+    return <div>Cargando...</div>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <NavBarClient />
@@ -103,23 +160,24 @@ export default function DashboardClient() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <p>
-                <strong>Nombre:</strong> Juan
+                <strong>Nombre:</strong> {client.name || "No tiene"}
               </p>
               <p>
-                <strong>Apellido:</strong> Pérez
-              </p>
-            </div>
-            <div>
-              <p>
-                <strong>Gimnasio:</strong> FitPower Central
-              </p>
-              <p>
-                <strong>Nutricionista:</strong> Dra. Ana García
+                <strong>Apellido:</strong> {client.lastname || "No tiene"}
               </p>
             </div>
             <div>
               <p>
-                <strong>Entrenador:</strong> Carlos Rodríguez
+                <strong>Gimnasio:</strong> {client.gymName || "No tiene"}
+              </p>
+              <p>
+                <strong>Nutricionista:</strong>{" "}
+                {client.nutritionistDni || "No tiene"}
+              </p>
+            </div>
+            <div>
+              <p>
+                <strong>Entrenador:</strong> {client.trainerDni || "No tiene"}
               </p>
             </div>
           </div>

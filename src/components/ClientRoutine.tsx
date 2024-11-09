@@ -30,7 +30,7 @@ import { Save, Clock, Dumbbell, Trash } from "lucide-react";
 import { NavBarClient } from "./NavBarClient";
 import { FooterPag } from "./Footer";
 import { FaDumbbell } from "react-icons/fa";
-
+import Fireworks from "./Fireworks";
 type Client = {
   id: number;
   name: string;
@@ -80,6 +80,8 @@ export default function ClientRoutine() {
   const [trainingSessions, setTrainingSessions] = useState<Session[]>([]);
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
   const [showCongratulations, setShowCongratulations] = useState(false);
+
+  const [active, setActive] = useState<boolean>(false);
 
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("userEmail");
@@ -288,7 +290,7 @@ export default function ClientRoutine() {
     try {
       // Obtener todas las rutinas del cliente
       const clientRoutinesResponse = await fetch(
-        `http://localhost:8080/api/routines/client/${client.dni}`,
+        `http://localhost:8080/api/routines/client/${client?.dni}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -314,10 +316,12 @@ export default function ClientRoutine() {
 
       if (allRoutinesCompleted) {
         setShowCongratulations(true);
+        setActive(true); // Activar los fuegos artificiales
         setTimeout(() => {
           setShowCongratulations(false);
+          setActive(false); // Desactivar los fuegos artificiales
           navigate("/client/training");
-        }, 2000); // Mostrar el cuadro de felicitación durante 3 segundos
+        }, 5000); // Mostrar el cuadro de felicitación durante 3 segundos
       } else {
         navigate("/client/training");
       }
@@ -549,36 +553,38 @@ export default function ClientRoutine() {
           </Card>
         </div>
       )}
+      
       {showCongratulations && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <Card className="w-[600px] h-[600px] overflow-hidden relative flex flex-col justify-center">
-          <div
-            className="absolute inset-0 bg-contain bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/imagen_de_exito.png')" }}
-          >
-            <div className="absolute inset-0 bg-black opacity-60" /> {/* Capa de opacidad para mejorar la legibilidad */}
-          </div>
-          <div className="relative z-10 flex flex-col items-center justify-center text-center">
-            <CardHeader>
-              <CardTitle className="text-3xl font-bold text-white mb-2">
-                ¡Felicidades!
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-gray-100">
-              <p className="text-lg">
-                Has completado tu semana de entrenamiento. ¡Excelente trabajo!
-              </p>
-              <p className="mt-4 text-sm text-gray-400">
-                Sigue así y alcanzarás tus metas fitness.
-              </p>
-            </CardContent>
-          </div>
-        </Card>
-      </div>
-      
-     
-      
+          <Card className="w-[600px] h-[600px] overflow-hidden relative flex flex-col justify-center">
+            <div
+              className="absolute inset-0 bg-contain bg-center bg-no-repeat"
+              style={{ backgroundImage: "url('/gato-gym.png')" }}
+            >
+              <div className="absolute inset-0 bg-black opacity-60" />{" "}
+              {/* Capa de opacidad para mejorar la legibilidad */}
+            </div>
+            <div className="relative z-10 flex flex-col items-center justify-center text-center">
+              <CardHeader>
+                <CardTitle className="text-3xl font-bold text-white mb-2">
+                  ¡Felicidades!
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-gray-100">
+                <p className="text-lg">
+                  Has completado tu semana de entrenamiento. ¡Excelente trabajo!
+                </p>
+                <p className="mt-4 text-sm text-gray-400">
+                  Sigue así y alcanzarás tus metas fitness.
+                </p>
+              </CardContent>
+            </div>
+          </Card>
+        </div>
       )}
+
+<Fireworks active={active} />
+
       <Button
         onClick={handleFinalizar}
         className="w-full h-20 my-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold"
