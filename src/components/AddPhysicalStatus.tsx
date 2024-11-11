@@ -81,7 +81,7 @@ const AddPhysicalStatus: React.FC<AddPhysicalStatusProps> = ({ clientDni, onUpda
         <DialogTrigger asChild>
           <Button
             variant="outline"
-            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out border-none shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold my-3 py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out border-none shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-300"
           >
             Añadir nuevo registro
           </Button>

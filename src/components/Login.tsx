@@ -40,7 +40,7 @@ export default function LogIn() {
         } else if (data.roles.includes("ROLE_CLIENT")) {
           navigate("/client");
         } else if (data.roles.includes("ROLE_TRAINER")) {
-          navigate("/trainer");
+          navigate("/trainer/clients");
         } else if (data.roles.includes("ROLE_ADMIN")) {
           navigate("/admin");
         } else {

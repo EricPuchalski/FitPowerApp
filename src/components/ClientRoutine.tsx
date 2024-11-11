@@ -80,6 +80,7 @@ export default function ClientRoutine() {
   const [trainingSessions, setTrainingSessions] = useState<Session[]>([]);
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
   const [showCongratulations, setShowCongratulations] = useState(false);
+  const [observaciones, setObservaciones] = useState('');
 
   const [active, setActive] = useState<boolean>(false);
 
@@ -88,9 +89,6 @@ export default function ClientRoutine() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log("Datos de trainingSessions:", trainingSessions);
-  }, [trainingSessions]);
 
   async function getClientData(email: string, token: string) {
     try {
@@ -129,7 +127,6 @@ export default function ClientRoutine() {
       }
 
       const data = await response.json();
-      console.log("Datos de la API:", data);
 
       setTrainingSessions(data);
     } catch (error) {
@@ -288,6 +285,25 @@ export default function ClientRoutine() {
 
   const handleFinalizar = async () => {
     try {
+      // Actualizar el diario de entrenamiento con las observaciones
+      const updateDiaryResponse = await fetch(
+        `http://localhost:8080/api/training-diaries/${trainingDiaryId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ observation: observaciones }),
+        }
+      );
+  
+      if (!updateDiaryResponse.ok) {
+        throw new Error(
+          `Error al actualizar el diario de entrenamiento: ${updateDiaryResponse.statusText}`
+        );
+      }
+  
       // Obtener todas las rutinas del cliente
       const clientRoutinesResponse = await fetch(
         `http://localhost:8080/api/routines/client/${client?.dni}`,
@@ -297,23 +313,19 @@ export default function ClientRoutine() {
           },
         }
       );
-
+  
       if (!clientRoutinesResponse.ok) {
         throw new Error(
           `Error al obtener las rutinas del cliente: ${clientRoutinesResponse.statusText}`
         );
       }
-
+  
       const clientRoutines = await clientRoutinesResponse.json();
-
-      // Verificar si todas las rutinas, excepto la actual, están completadas
-      clientRoutines.forEach((r: Routine) => {
-        console.log(`Routine ID: ${r.id}, Completed: ${r.completed}`);
-      });
+  
       const allRoutinesCompleted = clientRoutines
         .filter((r: Routine) => r.id !== routine.id)
         .every((r: Routine) => r.completed);
-
+  
       if (allRoutinesCompleted) {
         setShowCongratulations(true);
         setActive(true); // Activar los fuegos artificiales
@@ -321,11 +333,11 @@ export default function ClientRoutine() {
           setShowCongratulations(false);
           setActive(false); // Desactivar los fuegos artificiales
           navigate("/client/training");
-        }, 5000); // Mostrar el cuadro de felicitación durante 3 segundos
+        }, 5000); // Mostrar el cuadro de felicitación durante 5 segundos
       } else {
         navigate("/client/training");
       }
-
+  
       // Completar la rutina actual
       const response = await fetch(
         `http://localhost:8080/api/routines/${routine.id}/complete`,
@@ -336,16 +348,15 @@ export default function ClientRoutine() {
           },
         }
       );
-
+  
       if (!response.ok) {
         throw new Error(`Error en la solicitud: ${response.statusText}`);
       }
-
-      console.log("Rutina completada:", routine.id);
     } catch (error) {
       console.error("Error al completar la rutina:", error);
     }
   };
+  
 
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
@@ -553,7 +564,7 @@ export default function ClientRoutine() {
           </Card>
         </div>
       )}
-      
+
       {showCongratulations && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <Card className="w-[600px] h-[600px] overflow-hidden relative flex flex-col justify-center">
@@ -582,15 +593,28 @@ export default function ClientRoutine() {
           </Card>
         </div>
       )}
-
-<Fireworks active={active} />
-
-      <Button
-        onClick={handleFinalizar}
-        className="w-full h-20 my-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold"
-      >
-        <FaDumbbell className="w-4 h-4 mr-2" /> Finalizar
-      </Button>
+      <Fireworks active={active} />
+      <div className="flex items-center justify-center p-4">
+      <div className="w-1/2 mr-4">
+        <label htmlFor="observaciones" className="block text-gray-700 font-bold mb-2">
+          Ingrese sus observaciones:
+        </label>
+        <textarea
+          id="observaciones"
+          value={observaciones}
+          onChange={(e) => setObservaciones(e.target.value)}
+          className="w-full h-32 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+        />
+      </div>
+      <div className="w-1/2 ml-4">
+        <button
+          onClick={handleFinalizar}
+          className="w-full h-20 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
+        >
+          <FaDumbbell className="w-4 h-4 mr-2" /> Finalizar
+        </button>
+      </div>
+    </div>
       <FooterPag />
     </div>
   );

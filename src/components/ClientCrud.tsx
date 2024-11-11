@@ -58,6 +58,7 @@ export default function ClientCrud() {
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const token = localStorage.getItem("token");
+  
 
   const [formData, setFormData] = useState<Client>({
     name: "",
