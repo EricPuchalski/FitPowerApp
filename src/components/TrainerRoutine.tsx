@@ -204,9 +204,8 @@ export default function TrainerRoutine() {
           body: JSON.stringify(session),
         });
       }
-
       console.log("Rutina guardada:", routine);
-      navigate("/trainer/routines");
+      navigate("/trainer/clients");
     } catch (error) {
       console.error("Error al guardar la rutina:", error);
     }

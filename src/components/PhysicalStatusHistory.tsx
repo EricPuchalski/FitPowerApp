@@ -65,7 +65,10 @@ export default function PhysicalStatusHistory({ clientStats }: PhysicalStatusHis
                   Altura (cm)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
+                  Grasa corporal (kg)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Masa muscular (cm)
                 </th>
               </tr>
             </thead>
@@ -80,16 +83,13 @@ export default function PhysicalStatusHistory({ clientStats }: PhysicalStatusHis
                       {stat.weight}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {stat.height}
+                      {stat.bodyfat}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {stat.bodymass}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleRow(stat.id)}
-                      >
-                        {expandedRow === stat.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
+  
                       <Button
                         variant="ghost"
                         size="sm"

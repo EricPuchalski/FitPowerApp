@@ -20,14 +20,14 @@ export default function NavBarTrainer() {
             <h1 className="text-2xl font-bold">FitPower Entrenador</h1>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <a
+        {/**    <a
               href="/trainer  "
               className="hover:text-blue-200 transition flex items-center space-x-1"
             >
               <User size={18} />
               <span>Perfil</span>
             </a>
-
+*/} 
             <a
               href="/trainer/routines"
               className="hover:text-blue-200 transition flex items-center space-x-1"
