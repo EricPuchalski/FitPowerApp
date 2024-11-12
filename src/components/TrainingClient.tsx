@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { FooterPag } from "./Footer";
 import { motion } from "framer-motion";
@@ -26,10 +24,10 @@ import { NavBarClient } from "./NavBarClient";
 const baseUrl = "http://localhost:8080/api/routines/client/email/";
 const clientUrl = "http://localhost:8080/api/clients/email/";
 
-// Función para obtener las rutinas del cliente
-async function getClientRoutines(email: string, token: string) {
+// Función para obtener el plan de entrenamiento activo del cliente
+async function getActiveTrainingPlan(clientDni: string, token: string) {
   try {
-    const response = await fetch(`${baseUrl}${email}`, {
+    const response = await fetch(`http://localhost:8080/api/training-plans/active/${clientDni}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -41,7 +39,27 @@ async function getClientRoutines(email: string, token: string) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error al obtener las rutinas del cliente:", error);
+    console.error("Error al obtener el plan de entrenamiento activo:", error);
+    throw error;
+  }
+}
+
+// Función para obtener las rutinas activas del plan de entrenamiento
+async function getActiveRoutines(trainingPlanId: number, token: string) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/training-plans/${trainingPlanId}/active-routines`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Error en la solicitud: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener las rutinas activas del plan de entrenamiento:", error);
     throw error;
   }
 }
@@ -59,7 +77,6 @@ async function getClientData(email: string, token: string) {
     }
 
     const data = await response.json();
-
     return data;
   } catch (error) {
     console.error("Error al obtener los datos del cliente:", error);
@@ -68,28 +85,25 @@ async function getClientData(email: string, token: string) {
 }
 
 // Función para activar una rutina
-async function activateRoutine(routineId: number, token: string, clientDni: string) {
-  console.log(clientDni);
-  
-  try {
-    const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    async function activateRoutine(routineId: number, token: string, clientDni: string) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    if (!response.ok) {
-      throw new Error(`Error en la solicitud: ${response.statusText}`);
-    }
+        if (!response.ok) {
+          throw new Error(`Error en la solicitud: ${response.statusText}`);
+        }
 
-    // No necesitamos parsear la respuesta
-    return response;
-  } catch (error) {
-    console.error("Error al activar la rutina:", error);
-    throw error;
-  }
+        return response;
+      } catch (error) {
+        console.error("Error al activar la rutina:", error);
+        throw error;
+      }
 }
 
 // Función para crear un TrainingDiary
@@ -131,8 +145,9 @@ type Routine = {
   id: number;
   name: string;
   completed: boolean;
-  clientDNI: string
+  clientDNI: string;
   sessions: Session[];
+  active: boolean; // Añadido el campo active
 };
 
 type Client = {
@@ -160,31 +175,26 @@ export default function TrainingClient() {
       return;
     }
 
-    const fetchRoutines = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getClientRoutines(email, token);
-        setRoutines(data);
+        const clientData = await getClientData(email, token);
+        setClient(clientData);
+
+        if (clientData) {
+          const trainingPlan = await getActiveTrainingPlan(clientData.dni, token);
+          const activeRoutines = await getActiveRoutines(trainingPlan.id, token);
+          setRoutines(activeRoutines);
+        }
       } catch (error) {
-        setError("Error al obtener las rutinas del cliente");
+        setError("Error al obtener los datos del cliente o el plan de entrenamiento");
       }
     };
 
-    const fetchClientData = async () => {
-      try {
-        const data = await getClientData(email, token);
-        setClient(data);
-      } catch (error) {
-        setError("Error al obtener los datos del cliente");
-      }
-    };
-
-    fetchRoutines();
-    fetchClientData();
+    fetchData();
 
     // Polling every 5 seconds
     const intervalId = setInterval(async () => {
-      await fetchRoutines();
-      await fetchClientData();
+      await fetchData();
     }, 5000);
 
     // Cleanup interval on component unmount
@@ -199,13 +209,14 @@ export default function TrainingClient() {
     if (selectedRoutine && token && client) {
       try {
         const diaryId = await createTrainingDiary(client.dni, token);
-        await activateRoutine(selectedRoutine.id,token, selectedRoutine.clientDNI );
-        window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}`;
+        await activateRoutine(selectedRoutine.id, token, selectedRoutine.clientDNI);
+        window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`;
       } catch (error) {
         console.error("Error al activar la rutina:", error);
       }
     }
   };
+  
 
   return (
     <>
@@ -217,14 +228,14 @@ export default function TrainingClient() {
             personalizado!
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-            {routines.map((routine) => (
+            {routines.sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1)).map((routine) => (
               <motion.div
                 key={routine.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Card className="bg-gray-800 border-gray-700">
+                <Card className={`bg-gray-800 border-gray-700 ${routine.active ? '' : 'bg-gray-400 opacity-75'}`}>
                   <CardHeader>
                     <CardTitle className="text-2xl font-bold">
                       {routine.name}
@@ -242,6 +253,9 @@ export default function TrainingClient() {
                         {routine.completed ? "Completada" : "No completada"}
                       </span>
                     </div>
+                    {!routine.active && (
+                      <span className="text-red-500 font-semibold">Desactivado</span>
+                    )}
                   </CardHeader>
                   <CardContent>
                     <Accordion type="single" collapsible className="w-full">
@@ -277,6 +291,7 @@ export default function TrainingClient() {
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                       onClick={() => handleStartRoutine(routine)}
+                      disabled={!routine.active}
                     >
                       <Play className="w-4 h-4 mr-2" /> Comenzar Rutina
                     </Button>

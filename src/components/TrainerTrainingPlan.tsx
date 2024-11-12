@@ -27,11 +27,21 @@ type Routine = {
   name: string;
   creationDate: string;
   sessions: Session[];
+  active: boolean; // Añadido el campo active
+};
+
+type TrainingPlan = {
+  id: number;
+  clientDni: string;
+  active: boolean;
+  name: string;
+  description: string;
+  routines: Routine[];
 };
 
 // Componente principal
 export default function TrainerTrainingPlan() {
-  const [routines, setRoutines] = useState<Routine[]>([]);
+  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
   const { clientDni } = useParams<{ clientDni: string }>();
 
   useEffect(() => {
@@ -40,18 +50,18 @@ export default function TrainerTrainingPlan() {
       return;
     }
 
-    // Fetch routines from API
-    fetch(`http://localhost:8080/api/routines/client/${clientDni}`, {
+    // Fetch training plan from API
+    fetch(`http://localhost:8080/api/training-plans/active/${clientDni}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     })
       .then((response) => response.json())
-      .then((data) => setRoutines(data))
-      .catch((error) => console.error("Error fetching routines:", error));
+      .then((data) => setTrainingPlan(data))
+      .catch((error) => console.error("Error fetching training plan:", error));
   }, [clientDni]);
 
-  const handleDeleteRoutine = (id: number) => {
+  const handleDeactivateRoutine = (id: number) => {
     Swal.fire({
       title: '¿Estás seguro?',
       text: "¡No podrás revertir esto!",
@@ -59,27 +69,37 @@ export default function TrainerTrainingPlan() {
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar',
+      confirmButtonText: 'Sí, desactivar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`http://localhost:8080/api/routines/${id}`, {
-          method: 'DELETE',
+        fetch(`http://localhost:8080/api/routines/deactivate/${id}`, {
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
           .then((response) => {
             if (response.ok) {
-              setRoutines(routines.filter(routine => routine.id !== id));
-              Swal.fire('Eliminado', 'La rutina ha sido eliminada.', 'success');
+              setTrainingPlan((prevPlan) => {
+                if (prevPlan) {
+                  return {
+                    ...prevPlan,
+                    routines: prevPlan.routines.map(routine =>
+                      routine.id === id ? { ...routine, active: false } : routine
+                    ),
+                  };
+                }
+                return prevPlan;
+              });
+              Swal.fire('Desactivado', 'La rutina ha sido desactivada.', 'success');
             } else {
-              throw new Error('Error al eliminar la rutina');
+              throw new Error('Error al desactivar la rutina');
             }
           })
           .catch((error) => {
-            console.error("Error deleting routine:", error);
-            Swal.fire('Error', 'Hubo un problema al eliminar la rutina.', 'error');
+            console.error("Error deactivating routine:", error);
+            Swal.fire('Error', 'Hubo un problema al desactivar la rutina.', 'error');
           });
       }
     });
@@ -92,12 +112,12 @@ export default function TrainerTrainingPlan() {
         <h1 className="text-2xl font-bold mb-6 text-gray-800">
           Plan de entrenamiento actual del cliente:
         </h1>
-        {routines.map((routine) => (
+        {trainingPlan && trainingPlan.routines.sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1)).map((routine) => (
           <div
             key={routine.id}
-            className="mb-8 bg-white shadow-md rounded-lg overflow-hidden w-3/4 mx-auto"
+            className={`mb-8 bg-white shadow-md rounded-lg overflow-hidden w-3/4 mx-auto ${routine.active ? '' : 'bg-gray-400 opacity-75'}`}
           >
-            <div className="p-4 bg-blue-100 border-b flex justify-between items-center rounded-lg shadow-md">
+            <div className={`p-4 ${routine.active ? 'bg-blue-100' : 'bg-gray-500'} border-b flex justify-between items-center rounded-lg shadow-md`}>
               <div className="flex items-center space-x-4 p-4 bg-blue-500 text-white rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold">{routine.name}</h2>
                 <p className="text-gray-200">
@@ -116,17 +136,21 @@ export default function TrainerTrainingPlan() {
                     <Link to={`/modificar-rutina/${routine.id}`}>Modificar</Link>
                   </div>
                 </Button>
-                <Button
-                  asChild
-                  variant="destructive"
-                  className="flex items-center space-x-2 bg-red-500 text-white hover:bg-red-600"
-                  onClick={() => handleDeleteRoutine(routine.id)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <Trash className="h-5 w-5" />
-                    <span>Eliminar</span>
-                  </div>
-                </Button>
+                {routine.active ? (
+                  <Button
+                    asChild
+                    variant="destructive"
+                    className="flex items-center space-x-2 bg-red-500 text-white hover:bg-red-600"
+                    onClick={() => handleDeactivateRoutine(routine.id)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Trash className="h-5 w-5" />
+                      <span>Desactivar</span>
+                    </div>
+                  </Button>
+                ) : (
+                  <span className="text-red-500 font-semibold">Desactivado</span>
+                )}
               </div>
             </div>
 
@@ -137,7 +161,6 @@ export default function TrainerTrainingPlan() {
                   <TableHead className="py-2 px-4 bg-blue-300 text-white">Series</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-300 text-white">Repeticiones</TableHead>
                   <TableHead className="py-2 px-4 bg-blue-300 text-white">Descanso</TableHead>
-
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -147,7 +170,6 @@ export default function TrainerTrainingPlan() {
                     <TableCell className="py-2 px-4 bg-blue-100">{session.sets}</TableCell>
                     <TableCell className="py-2 px-4 bg-blue-100">{session.reps}</TableCell>
                     <TableCell className="py-2 px-4 bg-blue-100">{session.restTime}</TableCell>
-
                   </TableRow>
                 ))}
               </TableBody>

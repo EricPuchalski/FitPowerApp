@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
@@ -31,6 +29,7 @@ import { NavBarClient } from "./NavBarClient";
 import { FooterPag } from "./Footer";
 import { FaDumbbell } from "react-icons/fa";
 import Fireworks from "./Fireworks";
+
 type Client = {
   id: number;
   name: string;
@@ -88,7 +87,6 @@ export default function ClientRoutine() {
   const email = localStorage.getItem("userEmail");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
 
   async function getClientData(email: string, token: string) {
     try {
@@ -180,15 +178,19 @@ export default function ClientRoutine() {
       })
       .catch((error) => console.error("Error fetching exercises:", error));
 
-    // Fetch active routine from API
-    fetch(`http://localhost:8080/api/routines/active/email/${email}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => setRoutine(data))
-      .catch((error) => console.error("Error fetching routine:", error));
+    // Get routine ID from URL params
+    const routineId = searchParams.get("routineId");
+    if (routineId) {
+      // Fetch active routine from API using routine ID
+      fetch(`http://localhost:8080/api/routines/${routineId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => setRoutine(data))
+        .catch((error) => console.error("Error fetching routine:", error));
+    }
 
     // Fetch client data
     getClientData(email, token)
@@ -297,35 +299,54 @@ export default function ClientRoutine() {
           body: JSON.stringify({ observation: observaciones }),
         }
       );
-  
+
       if (!updateDiaryResponse.ok) {
         throw new Error(
           `Error al actualizar el diario de entrenamiento: ${updateDiaryResponse.statusText}`
         );
       }
-  
-      // Obtener todas las rutinas del cliente
-      const clientRoutinesResponse = await fetch(
-        `http://localhost:8080/api/routines/client/${client?.dni}`,
+
+      // Obtener el plan de entrenamiento activo del cliente
+      const trainingPlanResponse = await fetch(
+        `http://localhost:8080/api/training-plans/active/${client?.dni}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-  
-      if (!clientRoutinesResponse.ok) {
+
+      if (!trainingPlanResponse.ok) {
         throw new Error(
-          `Error al obtener las rutinas del cliente: ${clientRoutinesResponse.statusText}`
+          `Error al obtener el plan de entrenamiento activo: ${trainingPlanResponse.statusText}`
         );
       }
-  
-      const clientRoutines = await clientRoutinesResponse.json();
-  
-      const allRoutinesCompleted = clientRoutines
+
+      const trainingPlan = await trainingPlanResponse.json();
+
+      // Obtener las rutinas activas del plan de entrenamiento
+      const activeRoutinesResponse = await fetch(
+        `http://localhost:8080/api/training-plans/${trainingPlan.id}/active-routines`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!activeRoutinesResponse.ok) {
+        throw new Error(
+          `Error al obtener las rutinas activas del plan de entrenamiento: ${activeRoutinesResponse.statusText}`
+        );
+      }
+
+      const activeRoutines = await activeRoutinesResponse.json();
+
+      // Verificar si todas las rutinas están completadas
+      const allRoutinesCompleted = activeRoutines
         .filter((r: Routine) => r.id !== routine.id)
         .every((r: Routine) => r.completed);
-  
+
       if (allRoutinesCompleted) {
         setShowCongratulations(true);
         setActive(true); // Activar los fuegos artificiales
@@ -337,7 +358,7 @@ export default function ClientRoutine() {
       } else {
         navigate("/client/training");
       }
-  
+
       // Completar la rutina actual
       const response = await fetch(
         `http://localhost:8080/api/routines/${routine.id}/complete`,
@@ -348,7 +369,7 @@ export default function ClientRoutine() {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`Error en la solicitud: ${response.statusText}`);
       }
@@ -356,7 +377,6 @@ export default function ClientRoutine() {
       console.error("Error al completar la rutina:", error);
     }
   };
-  
 
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
