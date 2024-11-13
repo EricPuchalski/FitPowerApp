@@ -130,11 +130,12 @@ export default function TrainerTrainingPlan() {
             variant="outline"
             className="flex items-center space-x-2 bg-purple-500 text-white hover:bg-purple-600"
           >
-            <Link to={`/ver-historial-planes/${clientDni}`}>
-              <div className="flex items-center space-x-2">
-                <span>Ver Historial de Planes</span>
-              </div>
-            </Link>
+<Link to={`/trainer/client/${clientDni}/training-plan/history`}>
+  <div className="flex items-center space-x-2">
+    <span>Ver Historial de Planes</span>
+  </div>
+</Link>
+
           </Button>
         </div>
         {trainingPlan && (
