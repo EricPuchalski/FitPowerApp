@@ -1,14 +1,7 @@
 
 import { User } from "lucide-react";
 
-type ClientStats = {
-    id: number;
-    weight: number;
-    height: number;
-    bodymass: number;
-    bodyfat: number;
-    creationDate: string;
-  };
+
 interface PhysicalStatusProps {
   clientStats: ClientStats[];
 }

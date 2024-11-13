@@ -9,31 +9,6 @@ import { CalendarDays, Dumbbell } from "lucide-react"
 import NavBarTrainer from './NavBarTrainer'
 import { FooterPag } from './Footer'
 
-interface Session {
-  id: number
-  sets: number
-  reps: number
-  exerciseName: string
-  weight: number
-}
-
-interface Routine {
-  id: number
-  clientDNI: string
-  name: string
-  creationDate: string
-  active: boolean
-  sessions: Session[]
-}
-
-interface TrainingPlan {
-  id: number
-  active: boolean
-  name: string
-  description: string
-  routines: Routine[]
-}
-
 export default function TrainingPlansList() {
   const { clientDni } = useParams<{ clientDni: string }>()
   const [trainingPlans, setTrainingPlans] = useState<TrainingPlan[]>([])

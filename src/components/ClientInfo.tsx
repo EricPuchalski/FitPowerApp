@@ -1,18 +1,5 @@
+import { Client } from "../model/Client";
 
-
-type Client = {
-    id: number;
-    name: string;
-    lastname: string;
-    dni: string;
-    phone: string;
-    address: string;
-    email: string;
-    goal: string;
-    gymName: string;
-    trainerDni: string;
-    nutritionistDni: string;
-  };
 
 interface ClientInfoProps {
   client: Client;

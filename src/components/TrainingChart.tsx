@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
-import { Line, Bar, Radar, Doughnut } from 'react-chartjs-2'
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, RadialLinearScale, ArcElement } from 'chart.js'
+import { Line, Bar } from 'react-chartjs-2'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js'
 
 ChartJS.register(
   CategoryScale,
@@ -13,27 +13,10 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  BarElement,
-  RadialLinearScale,
-  ArcElement
+  BarElement
 )
 
-type Session = {
-  id: number
-  reps: number
-  exerciseName: string
-  weight: number
-}
-
-type TrainingDiary = {
-  id: number
-  sessions: Session[]
-  clientDni: string
-  date: string
-  observation: string
-}
-
-export default function TrainingDiaryDashboard() {
+export default function TrainingChart() {
   const [data, setData] = useState<TrainingDiary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -76,8 +59,6 @@ export default function TrainingDiaryDashboard() {
         <TotalRepsBySessionChart data={data} />
         <TotalWeightBySessionChart data={data} />
         <ExercisesBySessionChart data={data} />
-        <ExerciseComparisonChart data={data} />
-        <ExerciseDistributionChart data={data} />
       </CardContent>
     </Card>
   )
@@ -132,16 +113,16 @@ function TotalRepsBySessionChart({ data }: { data: TrainingDiary[] }) {
       {
         label: 'Total Reps by Session',
         data: data.map(diary => diary.sessions.reduce((acc, session) => acc + session.reps, 0)),
-        fill: false,
-        backgroundColor: 'rgba(54,162,235,0.4)',
+        backgroundColor: 'rgba(54,162,235,0.2)',
         borderColor: 'rgba(54,162,235,1)',
+        borderWidth: 1,
       },
     ],
   }
 
   return (
     <div className="h-[400px] mb-4">
-      <Line data={chartData} />
+      <Bar data={chartData} />
     </div>
   )
 }
@@ -153,16 +134,16 @@ function TotalWeightBySessionChart({ data }: { data: TrainingDiary[] }) {
       {
         label: 'Total Weight by Session',
         data: data.map(diary => diary.sessions.reduce((acc, session) => acc + session.weight, 0)),
-        fill: true,
-        backgroundColor: 'rgba(153,102,255,0.4)',
+        backgroundColor: 'rgba(153,102,255,0.2)',
         borderColor: 'rgba(153,102,255,1)',
+        borderWidth: 1,
       },
     ],
   }
 
   return (
     <div className="h-[400px] mb-4">
-      <Line data={chartData} />
+      <Bar data={chartData} />
     </div>
   )
 }
@@ -184,57 +165,6 @@ function ExercisesBySessionChart({ data }: { data: TrainingDiary[] }) {
   return (
     <div className="h-[400px] mb-4">
       <Bar data={chartData} />
-    </div>
-  )
-}
-
-function ExerciseComparisonChart({ data }: { data: TrainingDiary[] }) {
-  const exerciseNames = [...new Set(data.flatMap(diary => diary.sessions.map(session => session.exerciseName)))];
-  const chartData = {
-    labels: exerciseNames,
-    datasets: [
-      {
-        label: 'Reps',
-        data: exerciseNames.map(name => data.flatMap(diary => diary.sessions).filter(session => session.exerciseName === name).reduce((acc, session) => acc + session.reps, 0)),
-        backgroundColor: 'rgba(75,192,192,0.2)',
-        borderColor: 'rgba(75,192,192,1)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Weight',
-        data: exerciseNames.map(name => data.flatMap(diary => diary.sessions).filter(session => session.exerciseName === name).reduce((acc, session) => acc + session.weight, 0)),
-        backgroundColor: 'rgba(255,99,132,0.2)',
-        borderColor: 'rgba(255,99,132,1)',
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  return (
-    <div className="h-[400px] mb-4">
-      <Radar data={chartData} />
-    </div>
-  )
-}
-
-function ExerciseDistributionChart({ data }: { data: TrainingDiary[] }) {
-  const exerciseNames = [...new Set(data.flatMap(diary => diary.sessions.map(session => session.exerciseName)))];
-  const chartData = {
-    labels: exerciseNames,
-    datasets: [
-      {
-        label: 'Exercise Distribution',
-        data: exerciseNames.map(name => data.flatMap(diary => diary.sessions).filter(session => session.exerciseName === name).length),
-        backgroundColor: ['rgba(255,99,132,0.2)', 'rgba(54,162,235,0.2)', 'rgba(255,206,86,0.2)', 'rgba(75,192,192,0.2)', 'rgba(153,102,255,0.2)'],
-        borderColor: ['rgba(255,99,132,1)', 'rgba(54,162,235,1)', 'rgba(255,206,86,1)', 'rgba(75,192,192,1)', 'rgba(153,102,255,1)'],
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  return (
-    <div className="h-[400px] mb-4">
-      <Doughnut data={chartData} />
     </div>
   )
 }

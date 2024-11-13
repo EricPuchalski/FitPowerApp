@@ -7,30 +7,8 @@ import ClientInfo from "./ClientInfo";
 import PhysicalStatus from "./PhysicalStatus";
 import PhysicalStatusHistory from "./PhysicalStatusHistory";
 import AddPhysicalStatus from "./AddPhysicalStatus";
-
-// Tipos de datos
-type ClientStats = {
-  id: number;
-  weight: number;
-  height: number;
-  bodymass: number;
-  bodyfat: number;
-  creationDate: string;
-};
-
-type Client = {
-  id: number;
-  name: string;
-  lastname: string;
-  dni: string;
-  phone: string;
-  address: string;
-  email: string;
-  goal: string;
-  gymName: string;
-  trainerDni: string;
-  nutritionistDni: string;
-};
+import { ClientStats } from "../model/ClientStatus";
+import { Client } from "../model/Client";
 
 const clientUrl = "http://localhost:8080/api/clients/email/";
 const clientStatusUrl = "http://localhost:8080/api/clients/";

@@ -29,39 +29,16 @@ import NavBarTrainer from "./NavBarTrainer";
 import { FooterPag } from "./Footer";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Routine } from "../model/Routine";
+import { Session } from "../model/Session";
+import { Client } from "../model/Client";
 
-type Client = {
-  height: number;
-  id: number;
-  name: string;
-  lastname: string;
-  dni: string;
-  phone: string;
-  address: string;
-  email: string;
-  goal: string;
-  gymName: string;
-  trainerDni: string;
-  nutritionistDni: string;
-};
+
 
 type Exercise = {
   name: string;
 };
 
-type Session = {
-  sets: number;
-  reps: number;
-  restTime: string;
-  exerciseName: string;
-};
-
-type Routine = {
-  id: number;
-  name: string;
-  clientDni: string;
-  sessions: Session[];
-};
 
 const initialRoutine: Routine = {
   id: 0,

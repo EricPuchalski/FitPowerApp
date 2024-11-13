@@ -6,6 +6,7 @@ import { Line, Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js'
 import TrainingChart from './TrainingChart'
 import NavBarTrainer from './NavBarTrainer'
+import { ClientStats } from '../model/ClientStatus'
 
 ChartJS.register(
   CategoryScale,
@@ -18,21 +19,13 @@ ChartJS.register(
   BarElement
 )
 
-type ClientStatus = {
-  id: number
-  weight: number
-  height: number
-  bodymass: number
-  bodyfat: number
-  creationDate: string
-}
 
 function calculateBMI(weight: number, height: number): number {
   return weight / ((height / 100) ** 2)
 }
 
 export default function ClientPhysicalStatusAdvancedDashboard() {
-  const [data, setData] = useState<ClientStatus[]>([])
+  const [data, setData] = useState<ClientStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)

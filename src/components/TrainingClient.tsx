@@ -22,6 +22,9 @@ import {
 import { Clock, Dumbbell, Play, CheckCircle, XCircle } from "lucide-react";
 import NavBarTrainer from "./NavBarTrainer";
 import { NavBarClient } from "./NavBarClient";
+import { Client } from "../model/Client";
+import { Routine } from "../model/Routine";
+import { TrainingPlan } from "../model/TrainingPlan";
 
 const baseUrl = "http://localhost:8080/api/routines/client/email/";
 const clientUrl = "http://localhost:8080/api/clients/email/";
@@ -135,42 +138,10 @@ async function createTrainingDiary(clientDni, token) {
 }
 
 // Tipos de datos
-type Session = {
-  id: number;
-  exerciseName: string;
-  sets: number;
-  reps: number;
-  restTime: number;
-};
 
-type Routine = {
-  id: number;
-  name: string;
-  completed: boolean;
-  clientDNI: string;
-  sessions: Session[];
-  active: boolean; // Añadido el campo active
-};
 
-type Client = {
-  id: number;
-  name: string;
-  lastname: string;
-  dni: string;
-  phone: string;
-  address: string;
-  email: string;
-  goal: string;
-};
 
-type TrainingPlan = {
-  id: number;
-  clientDni: string;
-  active: boolean;
-  name: string;
-  description: string;
-  routines: Routine[];
-};
+
 
 export default function TrainingClient() {
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
@@ -228,7 +199,7 @@ export default function TrainingClient() {
     if (selectedRoutine && token && client) {
       try {
         const diaryId = await createTrainingDiary(client.dni, token);
-        await activateRoutine(selectedRoutine.id, token, selectedRoutine.clientDNI);
+        await activateRoutine(selectedRoutine.id, token, selectedRoutine.clientDni);
         window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`;
       } catch (error) {
         console.error("Error al activar la rutina:", error);

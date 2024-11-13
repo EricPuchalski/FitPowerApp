@@ -30,16 +30,6 @@ import { FooterPag } from "./Footer";
 import { FaDumbbell } from "react-icons/fa";
 import Fireworks from "./Fireworks";
 
-type Client = {
-  id: number;
-  name: string;
-  lastname: string;
-  dni: string;
-  phone: string;
-  address: string;
-  email: string;
-  goal: string;
-};
 
 type Session = {
   id: number;

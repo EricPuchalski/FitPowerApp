@@ -4,20 +4,6 @@ import axios from 'axios'
 import { FooterPag } from './Footer'
 import NavBarTrainer from './NavBarTrainer'
 
-interface Session {
-  id: number
-  reps: number
-  exerciseName: string
-  weight: number
-}
-
-interface TrainingDiary {
-  id: number
-  sessions: Session[]
-  clientDni: string
-  date: string
-  observation: string
-}
 
 export default function ClientTrainingDiaries() {
   const [trainingDiaries, setTrainingDiaries] = useState<TrainingDiary[]>([])
