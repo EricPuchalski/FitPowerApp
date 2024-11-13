@@ -13,7 +13,7 @@ import NavBarTrainer from "./NavBarTrainer";
 import { FooterPag } from "./Footer";
 import { Pencil, Trash } from "lucide-react"; // Asegúrate de instalar lucide-react
 import Swal from 'sweetalert2'; // Asegúrate de instalar sweetalert2
-
+import CreateNewTrainingPlan from "./CreateTrainingPlan";
 // Definición de tipos
 type Session = {
   exerciseName: string;
@@ -57,7 +57,10 @@ export default function TrainerTrainingPlan() {
       },
     })
       .then((response) => response.json())
-      .then((data) => setTrainingPlan(data))
+      .then((data) => {
+        console.log("Data received:", data); // Añade esto para verificar los datos recibidos
+        setTrainingPlan(data);
+      })
       .catch((error) => console.error("Error fetching training plan:", error));
   }, [clientDni]);
 
@@ -109,13 +112,43 @@ export default function TrainerTrainingPlan() {
     <div className="flex flex-col min-h-screen">
       <NavBarTrainer />
       <div className="flex-grow p-4">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">
-          Plan de entrenamiento actual del cliente:
-        </h1>
+        <div className="flex justify-center space-x-4 my-8">
+          <Button
+            asChild
+            variant="outline"
+            className="flex items-center space-x-2 bg-blue-500 text-white hover:bg-blue-600"
+          >
+            <Link to={`/trainer/client/${clientDni}/training-plans/${trainingPlan?.id}/routine`}>
+              <div className="flex items-center space-x-2">
+                <span>Agregar Rutina</span>
+              </div>
+            </Link>
+          </Button>
+          <CreateNewTrainingPlan clientDni={clientDni} /> {/* Usa el nuevo componente aquí */}
+          <Button
+            asChild
+            variant="outline"
+            className="flex items-center space-x-2 bg-purple-500 text-white hover:bg-purple-600"
+          >
+            <Link to={`/ver-historial-planes/${clientDni}`}>
+              <div className="flex items-center space-x-2">
+                <span>Ver Historial de Planes</span>
+              </div>
+            </Link>
+          </Button>
+        </div>
+        {trainingPlan && (
+          <div className="mb-8 bg-white shadow-md rounded-lg overflow-hidden w-3/4 mx-auto p-4">
+            <div className="bg-blue-100 border-b flex flex-col space-y-4 p-4 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-blue-700">{trainingPlan.name}</h2>
+              <p className="text-gray-700">{trainingPlan.description}</p>
+            </div>
+          </div>
+        )}
         {trainingPlan && trainingPlan.routines.sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1)).map((routine) => (
           <div
             key={routine.id}
-            className={`mb-8 bg-white shadow-md rounded-lg overflow-hidden w-3/4 mx-auto ${routine.active ? '' : 'bg-gray-400 opacity-75'}`}
+            className={`mb-8 bg-white shadow-md rounded-lg overflow-hidden w-3/4 mx-auto ${routine.active ? '' : 'bg-gray-900 opacity-75'}`}
           >
             <div className={`p-4 ${routine.active ? 'bg-blue-100' : 'bg-gray-500'} border-b flex justify-between items-center rounded-lg shadow-md`}>
               <div className="flex items-center space-x-4 p-4 bg-blue-500 text-white rounded-lg shadow-md">
@@ -149,7 +182,7 @@ export default function TrainerTrainingPlan() {
                     </div>
                   </Button>
                 ) : (
-                  <span className="text-red-500 font-semibold">Desactivado</span>
+                  <span className="text-red-200 font-semibold">Desactivado</span>
                 )}
               </div>
             </div>

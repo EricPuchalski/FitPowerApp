@@ -85,25 +85,25 @@ async function getClientData(email: string, token: string) {
 }
 
 // Función para activar una rutina
-    async function activateRoutine(routineId: number, token: string, clientDni: string) {
-      try {
-        const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+async function activateRoutine(routineId: number, token: string, clientDni: string) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        if (!response.ok) {
-          throw new Error(`Error en la solicitud: ${response.statusText}`);
-        }
+    if (!response.ok) {
+      throw new Error(`Error en la solicitud: ${response.statusText}`);
+    }
 
-        return response;
-      } catch (error) {
-        console.error("Error al activar la rutina:", error);
-        throw error;
-      }
+    return response;
+  } catch (error) {
+    console.error("Error al activar la rutina:", error);
+    throw error;
+  }
 }
 
 // Función para crear un TrainingDiary
@@ -161,10 +161,20 @@ type Client = {
   goal: string;
 };
 
+type TrainingPlan = {
+  id: number;
+  clientDni: string;
+  active: boolean;
+  name: string;
+  description: string;
+  routines: Routine[];
+};
+
 export default function TrainingClient() {
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [client, setClient] = useState<Client | null>(null);
+  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("userEmail");
@@ -182,6 +192,7 @@ export default function TrainingClient() {
 
         if (clientData) {
           const trainingPlan = await getActiveTrainingPlan(clientData.dni, token);
+          setTrainingPlan(trainingPlan);
           const activeRoutines = await getActiveRoutines(trainingPlan.id, token);
           setRoutines(activeRoutines);
         }
@@ -216,7 +227,6 @@ export default function TrainingClient() {
       }
     }
   };
-  
 
   return (
     <>
@@ -224,9 +234,11 @@ export default function TrainingClient() {
         <div className="container p-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white center">
           <NavBarClient />
           <h1 className="text-4xl font-bold my-8 text-center">
-            {client?.name} {client?.lastname} este es tu entrenamiento
-            personalizado!
+            {client?.name} {client?.lastname}, bienvenido a tu plan de entrenamiento: {trainingPlan?.name}
           </h1>
+          <p className="text-lg text-center mb-8">
+            {trainingPlan?.description}
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
             {routines.sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1)).map((routine) => (
               <motion.div

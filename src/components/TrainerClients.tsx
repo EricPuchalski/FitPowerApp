@@ -104,6 +104,7 @@ export default function TrainerClientList() {
                     <TableHead className="w-[200px] py-2">Nombre</TableHead>
                     <TableHead className="py-2">Apellido</TableHead>
                     <TableHead className="py-2">DNI</TableHead>
+                    <TableHead className="py-2">Objetivos</TableHead>
                     <TableHead className="py-2">Plan de Entrenamiento</TableHead>
                     <TableHead className="py-2">Diarios de Entrenamiento</TableHead>
                     <TableHead className="py-2">Rendimiento</TableHead>
@@ -116,13 +117,14 @@ export default function TrainerClientList() {
                         <TableCell className="font-medium py-2">{client.name}</TableCell>
                         <TableCell className="py-2">{client.lastname}</TableCell>
                         <TableCell className="py-2">{client.dni}</TableCell>
+                        <TableCell className="py-2">{client.goal}</TableCell>
                         <TableCell className="py-2">
                           <Link to={`/trainer/client/${client.dni}/training-plan`} className="text-blue-500 hover:underline">
                             Ver detalles
                           </Link>
                         </TableCell>
                         <TableCell className="py-2">
-                          <Link to={`/trainer/client/${client.id}/training-logs`} className="text-blue-500 hover:underline">
+                          <Link to={`/trainer/client/${client.dni}/training-logs`} className="text-blue-500 hover:underline">
                             Ver detalles
                           </Link>
                         </TableCell>

@@ -29,18 +29,11 @@ export default function NavBarTrainer() {
             </a>
 */} 
             <a
-              href="/trainer/routines"
-              className="hover:text-blue-200 transition flex items-center space-x-1"
-            >
-              <Dumbbell size={18} />
-              <span>Gestionar Rutinas</span>
-            </a>
-            <a
               href="/trainer/clients"
               className="hover:text-blue-200 transition flex items-center space-x-1"
             >
               <User size={18} />
-              <span>Ver Clientes</span>
+              <span>Inicio</span>
             </a>
           </nav>
           <button

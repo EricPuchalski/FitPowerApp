@@ -13,6 +13,7 @@ import TrainerRoutine from './components/TrainerRoutine';
 import TrainerClientList from './components/TrainerClients';
 import TrainerTrainingPlan from './components/TrainerTrainingPlan';
 import ModifyRoutine from './components/ModifyRoutine';
+import ClientTrainingDiaries from './components/ClientTrainingDiaries';
 
 
 function App() {
@@ -22,9 +23,10 @@ function App() {
         <Route path="/" element={<LogIn />} />
         <Route path="/client" element={<DashboardClient />} />
         <Route path="/admin" element={<DashboardAdmin />} />
-        <Route path="/trainer/routines" element={<TrainerRoutine />} />
+        <Route path="/trainer/client/:clientDni/training-plans/:trainingPlanId/routine" element={<TrainerRoutine />} />
         <Route path="/trainer/clients" element={<TrainerClientList />} />
         <Route path="/trainer/client/:clientDni/training-plan" element={<TrainerTrainingPlan />} />
+        <Route path="/trainer/client/:clientDni/training-logs" element={<ClientTrainingDiaries />} />
         <Route path="/modificar-rutina/:routineId" element={<ModifyRoutine />} />
         <Route path="/trainerCrud" element={<TrainerCrud />} />
         <Route path="/nutritionistCrud" element={<NutritionistCrud />} />
@@ -32,6 +34,7 @@ function App() {
         <Route path="/admin/clients" element={<ClientCrud />} />
         <Route path="/client/training" element={<TrainingClient />} />
         <Route path="/client/training/routine" element={<ClientRoutine />} />
+        
       </Routes>
     </Router>
   )

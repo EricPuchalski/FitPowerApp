@@ -24,7 +24,7 @@ import {
   AccordionTrigger,
 } from "../../components/ui/accordion";
 import { ScrollArea } from "../../components/ui/scroll-area";
-import { Save, Dumbbell, Trash } from "lucide-react";
+import { Save, Dumbbell, Trash, Pencil } from "lucide-react";
 import NavBarTrainer from "./NavBarTrainer";
 import { FooterPag } from "./Footer";
 
@@ -79,7 +79,7 @@ export default function ModifyRoutine() {
   const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [openSessionIndex, setOpenSessionIndex] = useState<number | null>(null);
+  const [openSessionIndex, setOpenSessionIndex] = useState<string | null>(null);
 
   const token = localStorage.getItem("token");
   const { routineId } = useParams<{ routineId: string }>();
@@ -98,7 +98,10 @@ export default function ModifyRoutine() {
       },
     })
       .then((response) => response.json())
-      .then((data) => setClients(data))
+      .then((data) => {
+        console.log("Clients fetched:", data);
+        setClients(data);
+      })
       .catch((error) => console.error("Error fetching clients:", error));
 
     // Fetch exercises from API
@@ -110,6 +113,7 @@ export default function ModifyRoutine() {
       .then((response) => response.json())
       .then((data) => {
         // Assuming the API returns an array of exercise names
+        console.log("Exercises fetched:", data);
         setExerciseOptions(data.map((exercise: Exercise) => exercise.name));
       })
       .catch((error) => console.error("Error fetching exercises:", error));
@@ -121,9 +125,19 @@ export default function ModifyRoutine() {
       },
     })
       .then((response) => response.json())
-      .then((data) => setRoutine(data))
+      .then((data) => {
+        console.log("Routine fetched:", data);
+        setRoutine(data);
+      })
       .catch((error) => console.error("Error fetching routine:", error));
   }, [token, routineId]);
+
+  useEffect(() => {
+    if (routine.clientDni) {
+      const client = clients.find((c) => c.dni === routine.clientDni);
+      setSelectedClient(client || null);
+    }
+  }, [routine.clientDni, clients]);
 
   const handleSessionChange = (
     index: number,
@@ -150,16 +164,54 @@ export default function ModifyRoutine() {
       restTime: "00:01:00",
       exerciseName: "",
     });
-    setOpenSessionIndex(routine.sessions.length); // Set the new session index to be open
+    setOpenSessionIndex(`session-${routine.sessions.length}`); // Set the new session index to be open
   };
 
-  const handleDeleteSession = (index: number) => {
-    setRoutine((prevRoutine) => ({
-      ...prevRoutine,
-      sessions: prevRoutine.sessions.filter((_, i) => i !== index),
-    }));
-    if (openSessionIndex === index) {
-      setOpenSessionIndex(null); // Close the accordion if the open session is deleted
+  const handleDeleteSession = async (index: number) => {
+    const sessionId = routine.sessions[index].id;
+    if (sessionId) {
+      try {
+        await fetch(`http://localhost:8080/api/routines/${routine.id}/sessions/${sessionId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setRoutine((prevRoutine) => ({
+          ...prevRoutine,
+          sessions: prevRoutine.sessions.filter((_, i) => i !== index),
+        }));
+        if (openSessionIndex === `session-${index}`) {
+          setOpenSessionIndex(null); // Close the accordion if the open session is deleted
+        }
+      } catch (error) {
+        console.error("Error al eliminar la sesión:", error);
+      }
+    } else {
+      setRoutine((prevRoutine) => ({
+        ...prevRoutine,
+        sessions: prevRoutine.sessions.filter((_, i) => i !== index),
+      }));
+      if (openSessionIndex === `session-${index}`) {
+        setOpenSessionIndex(null); // Close the accordion if the open session is deleted
+      }
+    }
+  };
+
+  const handleEditSession = async (index: number) => {
+    const session = routine.sessions[index];
+    try {
+      await fetch(`http://localhost:8080/api/routines/${routine.id}/sessions/${session.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(session),
+      });
+      console.log("Sesión actualizada:", session);
+    } catch (error) {
+      console.error("Error al actualizar la sesión:", error);
     }
   };
 
@@ -181,14 +233,7 @@ export default function ModifyRoutine() {
       // Update sessions
       for (const session of routine.sessions) {
         if (session.id) {
-          await fetch(`http://localhost:8080/api/routines/${routine.id}/sessions`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(session),
-          });
+          await handleEditSession(routine.sessions.indexOf(session));
         } else {
           await fetch(`http://localhost:8080/api/routines/${routine.id}/sessions`, {
             method: "POST",
@@ -206,6 +251,12 @@ export default function ModifyRoutine() {
     } catch (error) {
       console.error("Error al actualizar la rutina:", error);
     }
+  };
+
+  const handleToggleAccordion = (index: number) => {
+    setOpenSessionIndex((prevIndex) =>
+      prevIndex === `session-${index}` ? null : `session-${index}`
+    );
   };
 
   return (
@@ -239,33 +290,6 @@ export default function ModifyRoutine() {
                 }
               />
             </div>
-            <div className="mb-4">
-              <Label htmlFor="clientDni">Cliente</Label>
-              <Select
-                value={routine.clientDni}
-                onValueChange={(value) => {
-                  const selectedClient = clients.find(
-                    (client) => client.dni === value
-                  );
-                  setSelectedClient(selectedClient || null);
-                  setRoutine((prevRoutine) => ({
-                    ...prevRoutine,
-                    clientDni: value,
-                  }));
-                }}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Selecciona un cliente" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  {clients.map((client) => (
-                    <SelectItem key={client.dni} value={client.dni}>
-                      {client.name} {client.lastname}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             {selectedClient && (
               <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
                 <p className="font-bold text-lg">
@@ -273,12 +297,6 @@ export default function ModifyRoutine() {
                 </p>
               </div>
             )}
-            <Button
-              onClick={handleSaveRoutine}
-              className="w-full h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
-            >
-              <Save className="w-4 h-4 mr-2" /> Guardar Rutina
-            </Button>
           </CardContent>
         </Card>
         <Card className="mb-6 bg-white">
@@ -292,10 +310,19 @@ export default function ModifyRoutine() {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-              <Accordion type="single" collapsible className="w-full" value={`session-${openSessionIndex}`}>
+              <Accordion
+                type="single"
+                collapsible
+                className="w-full"
+                value={openSessionIndex}
+                onValueChange={(value) => setOpenSessionIndex(value)}
+              >
                 {routine.sessions.map((session, index) => (
                   <AccordionItem key={index} value={`session-${index}`}>
-                    <AccordionTrigger className="text-lg font-medium">
+                    <AccordionTrigger
+                      className="text-lg font-medium"
+                      onClick={() => handleToggleAccordion(index)}
+                    >
                       {index + 1}. {session.exerciseName}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -381,9 +408,15 @@ export default function ModifyRoutine() {
                         <div className="flex justify-end">
                           <Button
                             onClick={() => handleDeleteSession(index)}
-                            className="bg-red-500 hover:bg-red-600 text-white transition-colors"
+                            className="bg-red-500 hover:bg-red-600 text-white transition-colors mr-2"
                           >
                             <Trash className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleEditSession(index)}
+                            className="bg-green-500 hover:bg-green-600 text-white transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
