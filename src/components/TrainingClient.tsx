@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from "react";
 import { FooterPag } from "./Footer";
 import { motion } from "framer-motion";
@@ -25,7 +27,7 @@ const baseUrl = "http://localhost:8080/api/routines/client/email/";
 const clientUrl = "http://localhost:8080/api/clients/email/";
 
 // Función para obtener el plan de entrenamiento activo del cliente
-async function getActiveTrainingPlan(clientDni: string, token: string) {
+async function getActiveTrainingPlan(clientDni, token) {
   try {
     const response = await fetch(`http://localhost:8080/api/training-plans/active/${clientDni}`, {
       headers: {
@@ -45,7 +47,7 @@ async function getActiveTrainingPlan(clientDni: string, token: string) {
 }
 
 // Función para obtener las rutinas activas del plan de entrenamiento
-async function getActiveRoutines(trainingPlanId: number, token: string) {
+async function getActiveRoutines(trainingPlanId, token) {
   try {
     const response = await fetch(`http://localhost:8080/api/training-plans/${trainingPlanId}/active-routines`, {
       headers: {
@@ -65,7 +67,7 @@ async function getActiveRoutines(trainingPlanId: number, token: string) {
 }
 
 // Función para obtener los datos del cliente
-async function getClientData(email: string, token: string) {
+async function getClientData(email, token) {
   try {
     const response = await fetch(`${clientUrl}${email}`, {
       headers: {
@@ -85,7 +87,7 @@ async function getClientData(email: string, token: string) {
 }
 
 // Función para activar una rutina
-async function activateRoutine(routineId: number, token: string, clientDni: string) {
+async function activateRoutine(routineId, token, clientDni) {
   try {
     const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
       method: "POST",
@@ -107,7 +109,7 @@ async function activateRoutine(routineId: number, token: string, clientDni: stri
 }
 
 // Función para crear un TrainingDiary
-async function createTrainingDiary(clientDni: string, token: string) {
+async function createTrainingDiary(clientDni, token) {
   try {
     const response = await fetch("http://localhost:8080/api/training-diaries", {
       method: "POST",
@@ -176,6 +178,7 @@ export default function TrainingClient() {
   const [client, setClient] = useState<Client | null>(null);
   const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("userEmail");
 
@@ -213,7 +216,12 @@ export default function TrainingClient() {
   }, [email, token]);
 
   const handleStartRoutine = (routine: Routine) => {
-    setSelectedRoutine(routine);
+    if (routine.completed) {
+      setSelectedRoutine(routine);
+      setShowConfirmModal(true);
+    } else {
+      setSelectedRoutine(routine);
+    }
   };
 
   const handleConfirmStart = async () => {
@@ -228,6 +236,16 @@ export default function TrainingClient() {
     }
   };
 
+  const handleConfirmModal = () => {
+    setShowConfirmModal(false);
+    handleConfirmStart();
+  };
+
+  const handleCancelModal = () => {
+    setShowConfirmModal(false);
+    setSelectedRoutine(null);
+  };
+
   return (
     <>
       <div className="w-full min-h-screen flex items-center justify-center bg-[#220901] relative">
@@ -240,7 +258,7 @@ export default function TrainingClient() {
             {trainingPlan?.description}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-            {routines.sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1)).map((routine) => (
+            {routines.sort((a, b) => a.id - b.id).map((routine) => (
               <motion.div
                 key={routine.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -355,6 +373,44 @@ export default function TrainingClient() {
               </Card>
             </motion.div>
           )}
+{showConfirmModal && (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.3 }}
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+  >
+    <Card className="w-full max-w-md bg-orange-500 border-orange-600">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-white">
+          Advertencia
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-lg mb-4 text-white">
+          Ya has realizado este entrenamiento esta semana. ¿Quieres volver a hacerlo?
+        </p>
+      </CardContent>
+      <CardFooter className="flex justify-end">
+        <Button
+          className="bg-green-600 hover:bg-green-700 text-white mr-2"
+          onClick={handleConfirmModal}
+        >
+          Sí
+        </Button>
+        <Button
+          variant="outline"
+          className="bg-transparent text-white border-orange-600 hover:bg-orange-600"
+          onClick={handleCancelModal}
+        >
+          No
+        </Button>
+      </CardFooter>
+    </Card>
+  </motion.div>
+)}
+
+
         </div>
       </div>
       <FooterPag />

@@ -15,6 +15,7 @@ import TrainerTrainingPlan from './components/TrainerTrainingPlan';
 import ModifyRoutine from './components/ModifyRoutine';
 import ClientTrainingDiaries from './components/ClientTrainingDiaries';
 import TrainingPlansList from './components/ClientTrainingPlans';
+import ClientPhysicalStatusChart from './components/ClientPhysicalStatusChart';
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/trainer/client/:clientDni/training-plan" element={<TrainerTrainingPlan />} />
         <Route path="/trainer/client/:clientDni/training-logs" element={<ClientTrainingDiaries />} />
         <Route path="/trainer/client/:clientDni/training-plan/history" element={<TrainingPlansList />} />
+        <Route path="/trainer/client/:clientDni/charts" element={<ClientPhysicalStatusChart />} />
         <Route path="/modificar-rutina/:routineId" element={<ModifyRoutine />} />
         <Route path="/trainerCrud" element={<TrainerCrud />} />
         <Route path="/nutritionistCrud" element={<NutritionistCrud />} />

@@ -129,7 +129,7 @@ export default function TrainerClientList() {
                           </Link>
                         </TableCell>
                         <TableCell className="py-2">
-                          <Link to={`/trainer/client/${client.id}/performance`} className="text-blue-500 hover:underline">
+                          <Link to={`/trainer/client/${client.dni}/charts`} className="text-blue-500 hover:underline">
                             Ver detalles
                           </Link>
                         </TableCell>
