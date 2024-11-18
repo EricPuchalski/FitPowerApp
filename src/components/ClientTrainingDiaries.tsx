@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import { FooterPag } from './Footer'
 import NavBarTrainer from './NavBarTrainer'
+import { TrainingDiary } from '../model/TrainingDiary'
 
 
 export default function ClientTrainingDiaries() {

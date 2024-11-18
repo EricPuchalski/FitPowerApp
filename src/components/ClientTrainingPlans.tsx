@@ -8,6 +8,7 @@ import { Badge } from "../../components/ui/badge"
 import { CalendarDays, Dumbbell } from "lucide-react"
 import NavBarTrainer from './NavBarTrainer'
 import { FooterPag } from './Footer'
+import { TrainingPlan } from '../model/TrainingPlan'
 
 export default function TrainingPlansList() {
   const { clientDni } = useParams<{ clientDni: string }>()

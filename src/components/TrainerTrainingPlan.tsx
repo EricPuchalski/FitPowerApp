@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from "react";
 import {
   Table,
@@ -14,30 +16,10 @@ import { FooterPag } from "./Footer";
 import { Pencil, Trash } from "lucide-react"; // Asegúrate de instalar lucide-react
 import Swal from 'sweetalert2'; // Asegúrate de instalar sweetalert2
 import CreateNewTrainingPlan from "./CreateTrainingPlan";
-// Definición de tipos
-type Session = {
-  exerciseName: string;
-  sets: number;
-  reps: number;
-  restTime: number;
-};
+import { TrainingPlan } from "../model/TrainingPlan";
+import { getActiveTrainingPlan } from "../services/TrainingPlanService";
+import { deactivateRoutine } from "../services/RoutineService";
 
-type Routine = {
-  id: number;
-  name: string;
-  creationDate: string;
-  sessions: Session[];
-  active: boolean; // Añadido el campo active
-};
-
-type TrainingPlan = {
-  id: number;
-  clientDni: string;
-  active: boolean;
-  name: string;
-  description: string;
-  routines: Routine[];
-};
 
 // Componente principal
 export default function TrainerTrainingPlan() {
@@ -50,18 +32,17 @@ export default function TrainerTrainingPlan() {
       return;
     }
 
-    // Fetch training plan from API
-    fetch(`http://localhost:8080/api/training-plans/active/${clientDni}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Data received:", data); // Añade esto para verificar los datos recibidos
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const data = await getActiveTrainingPlan(clientDni, token);
         setTrainingPlan(data);
-      })
-      .catch((error) => console.error("Error fetching training plan:", error));
+      } catch (error) {
+        console.error("Error fetching training plan:", error);
+      }
+    };
+
+    fetchData();
   }, [clientDni]);
 
   const handleDeactivateRoutine = (id: number) => {
@@ -74,36 +55,31 @@ export default function TrainerTrainingPlan() {
       cancelButtonColor: '#d33',
       confirmButtonText: 'Sí, desactivar',
       cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        fetch(`http://localhost:8080/api/routines/deactivate/${id}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        })
-          .then((response) => {
-            if (response.ok) {
-              setTrainingPlan((prevPlan) => {
-                if (prevPlan) {
-                  return {
-                    ...prevPlan,
-                    routines: prevPlan.routines.map(routine =>
-                      routine.id === id ? { ...routine, active: false } : routine
-                    ),
-                  };
-                }
-                return prevPlan;
-              });
-              Swal.fire('Desactivado', 'La rutina ha sido desactivada.', 'success');
-            } else {
-              throw new Error('Error al desactivar la rutina');
-            }
-          })
-          .catch((error) => {
-            console.error("Error deactivating routine:", error);
-            Swal.fire('Error', 'Hubo un problema al desactivar la rutina.', 'error');
-          });
+        try {
+          const token = localStorage.getItem("token");
+          const response = await deactivateRoutine(id, token);
+          if (response.ok) {
+            setTrainingPlan((prevPlan) => {
+              if (prevPlan) {
+                return {
+                  ...prevPlan,
+                  routines: prevPlan.routines.map(routine =>
+                    routine.id === id ? { ...routine, active: false } : routine
+                  ),
+                };
+              }
+              return prevPlan;
+            });
+            Swal.fire('Desactivado', 'La rutina ha sido desactivada.', 'success');
+          } else {
+            throw new Error('Error al desactivar la rutina');
+          }
+        } catch (error) {
+          console.error("Error deactivating routine:", error);
+          Swal.fire('Error', 'Hubo un problema al desactivar la rutina.', 'error');
+        }
       }
     });
   };

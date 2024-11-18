@@ -1,3 +1,5 @@
+import { Routine } from "./Routine";
+
 export type TrainingPlan = {
     id: number;
     clientDni: string;

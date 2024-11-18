@@ -35,9 +35,6 @@ import { Client } from "../model/Client";
 
 
 
-type Exercise = {
-  name: string;
-};
 
 
 const initialRoutine: Routine = {
