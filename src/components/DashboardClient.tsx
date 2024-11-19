@@ -13,8 +13,21 @@ import { Client } from "../model/Client";
 const clientUrl = "http://localhost:8080/api/clients/email/";
 const clientStatusUrl = "http://localhost:8080/api/clients/";
 
+
+
+export default function DashboardClient() {
+  const token = localStorage.getItem("token");
+  const email = localStorage.getItem("userEmail");
+
+  const [clientStats, setClientStats] = useState<ClientStats[]>([]);
+  const [client, setClient] = useState<Client | null>(null);
+
+
+  
 // Función para obtener los datos del cliente
 async function getClientData(email: string, token: string) {
+  
+  
   try {
     const response = await fetch(`${clientUrl}${email}`, {
       headers: {
@@ -52,15 +65,6 @@ async function getClientStatuses(dni: string, token: string) {
     throw error;
   }
 }
-
-export default function DashboardClient() {
-  const [selectedFood, setSelectedFood] = useState("");
-  const [foodAmount, setFoodAmount] = useState<string>("");
-  const token = localStorage.getItem("token");
-  const email = localStorage.getItem("userEmail");
-
-  const [clientStats, setClientStats] = useState<ClientStats[]>([]);
-  const [client, setClient] = useState<Client | null>(null);
 
   const fetchClientData = async () => {
     try {
