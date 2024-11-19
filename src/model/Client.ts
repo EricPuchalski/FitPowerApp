@@ -1,5 +1,4 @@
 export type Client = {
-    height: number;
     id: number;
     name: string;
     lastname: string;
@@ -11,4 +10,5 @@ export type Client = {
     gymName: string;
     trainerDni: string;
     nutritionistDni: string;
+    initialPhysicalState: string
   };

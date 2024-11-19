@@ -19,7 +19,6 @@ ChartJS.register(
   BarElement
 )
 
-
 function calculateBMI(weight: number, height: number): number {
   return weight / ((height / 100) ** 2)
 }
@@ -61,37 +60,41 @@ export default function ClientPhysicalStatusAdvancedDashboard() {
     : data
 
   return (
-    <Card className="w-full max-w-4xl">
-      <NavBarTrainer></NavBarTrainer>
-      <CardHeader>
-        <CardTitle>Client Physical Status Advanced Dashboard</CardTitle>
-        <CardDescription>Comprehensive and diverse view of client's physical measurements over time</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <label htmlFor="date-select">Select Date:</label>
-          <select id="date-select" onChange={(e) => setSelectedDate(e.target.value)}>
-            <option value="">All Dates</option>
-            {data.map(entry => (
-              <option key={entry.creationDate} value={entry.creationDate}>
-                {new Date(entry.creationDate).toLocaleDateString()}
-              </option>
-            ))}
-          </select>
-        </div>
-        <WeightTrendChart data={filteredData} />
-        <MuscleMassTrendChart data={filteredData} />
-        <BodyFatTrendChart data={filteredData} />
-        <MuscleFatComparisonChart data={filteredData} />
-        <HeightTrendChart data={filteredData} />
-        <BMITrendChart data={filteredData} />
-        <TrainingChart></TrainingChart>
-      </CardContent>
-    </Card>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <NavBarTrainer />
+      <Card className="flex-grow w-full">
+        <CardHeader>
+          <CardTitle>Client Physical Status Advanced Dashboard</CardTitle>
+          <CardDescription>Comprehensive and diverse view of client's physical measurements over time</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col space-y-4">
+          <div className="mb-4">
+            <label htmlFor="date-select">Select Date:</label>
+            <select id="date-select" onChange={(e) => setSelectedDate(e.target.value)}>
+              <option value="">All Dates</option>
+              {data.map(entry => (
+                <option key={entry.creationDate} value={entry.creationDate}>
+                  {new Date(entry.creationDate).toLocaleDateString()}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <WeightTrendChart data={filteredData} />
+            <MuscleMassTrendChart data={filteredData} />
+            <BodyFatTrendChart data={filteredData} />
+            <MuscleFatComparisonChart data={filteredData} />
+            <HeightTrendChart data={filteredData} />
+            <BMITrendChart data={filteredData} />
+          </div>
+          <TrainingChart />
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
-function WeightTrendChart({ data }: { data: ClientStatus[] }) {
+function WeightTrendChart({ data }: { data: ClientStats[] }) {
   const chartData = {
     labels: data.map(entry => new Date(entry.creationDate).toLocaleDateString()),
     datasets: [
@@ -112,7 +115,7 @@ function WeightTrendChart({ data }: { data: ClientStatus[] }) {
   )
 }
 
-function MuscleMassTrendChart({ data }: { data: ClientStatus[] }) {
+function MuscleMassTrendChart({ data }: { data: ClientStats[] }) {
   const chartData = {
     labels: data.map(entry => new Date(entry.creationDate).toLocaleDateString()),
     datasets: [
@@ -133,7 +136,7 @@ function MuscleMassTrendChart({ data }: { data: ClientStatus[] }) {
   )
 }
 
-function BodyFatTrendChart({ data }: { data: ClientStatus[] }) {
+function BodyFatTrendChart({ data }: { data: ClientStats[] }) {
   const chartData = {
     labels: data.map(entry => new Date(entry.creationDate).toLocaleDateString()),
     datasets: [
@@ -154,7 +157,7 @@ function BodyFatTrendChart({ data }: { data: ClientStatus[] }) {
   )
 }
 
-function MuscleFatComparisonChart({ data }: { data: ClientStatus[] }) {
+function MuscleFatComparisonChart({ data }: { data: ClientStats[] }) {
   const chartData = {
     labels: data.map(entry => new Date(entry.creationDate).toLocaleDateString()),
     datasets: [
@@ -182,7 +185,7 @@ function MuscleFatComparisonChart({ data }: { data: ClientStatus[] }) {
   )
 }
 
-function HeightTrendChart({ data }: { data: ClientStatus[] }) {
+function HeightTrendChart({ data }: { data: ClientStats[] }) {
   const chartData = {
     labels: data.map(entry => new Date(entry.creationDate).toLocaleDateString()),
     datasets: [
@@ -203,7 +206,7 @@ function HeightTrendChart({ data }: { data: ClientStatus[] }) {
   )
 }
 
-function BMITrendChart({ data }: { data: ClientStatus[] }) {
+function BMITrendChart({ data }: { data: ClientStats[] }) {
   const chartData = {
     labels: data.map(entry => new Date(entry.creationDate).toLocaleDateString()),
     datasets: [
