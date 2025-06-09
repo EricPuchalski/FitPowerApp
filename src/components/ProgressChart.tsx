@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { ChartContainer } from "../../components/ui/chart";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Cell } from 'recharts';
@@ -127,6 +127,9 @@ export default function ProgressChart() {
   return (
     <div className="bg-gray-100 min-h-screen">
       <NavBarTrainer />
+      <Link to="/trainer/client/32423431/report" className="text-blue-500 hover:underline">
+            Generar Informe del Cliente
+          </Link>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

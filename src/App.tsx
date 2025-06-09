@@ -17,6 +17,8 @@ import ClientTrainingDiaries from './components/ClientTrainingDiaries';
 import TrainingPlansList from './components/ClientTrainingPlans';
 import ClientPhysicalStatusChart from './components/ClientPhysicalStatusChart';
 import ProgressChart from './components/ProgressChart';
+import ReportChart from './components/ReportChart';
+import Report from './components/Report';
 
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
         <Route path="/trainer/client/:clientDni/training-plan/history" element={<TrainingPlansList />} />
         {/* <Route path="/trainer/client/:clientDni/charts" element={<ClientPhysicalStatusChart />} /> */}
                  <Route path="/trainer/client/:clientDni/charts" element={<ProgressChart clientDni={''} />} /> 
+                 <Route path="/trainer/client/:clientDni/report" element={<Report clientDni={''} />} /> 
+
         <Route path="/modificar-rutina/:routineId" element={<ModifyRoutine />} />
         <Route path="/trainerCrud" element={<TrainerCrud />} />
         <Route path="/nutritionistCrud" element={<NutritionistCrud />} />
