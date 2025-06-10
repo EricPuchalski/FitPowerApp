@@ -3,12 +3,9 @@ export type Client = {
     name: string;
     lastname: string;
     dni: string;
-    phone: string;
+    phoneNumber: string;
     address: string;
     email: string;
     goal: string;
     gymName: string;
-    trainerDni: string;
-    nutritionistDni: string;
-    initialPhysicalState: string
   };
