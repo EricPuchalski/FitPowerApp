@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react";
 import { FooterPag } from "./Footer";
 import { motion } from "framer-motion";
@@ -22,155 +20,19 @@ import {
 import { Clock, Dumbbell, Play, CheckCircle, XCircle } from "lucide-react";
 import NavBarTrainer from "./NavBarTrainer";
 import { NavBarClient } from "./NavBarClient";
+import {
+  getClientData
+} from "../services/TrainingService";
+import { getActiveTrainingPlan } from "../services/TrainingPlanService";
+import { activateRoutine } from "../services/RoutineService";
+import { getActiveRoutines } from "../services/RoutineService";
 
-const baseUrl = "http://localhost:8080/api/routines/client/email/";
-const clientUrl = "http://localhost:8080/api/clients/email/";
+import { createTrainingDiary } from "../services/TrainingDiaryService";
+import { Routine } from "../model/Routine";
+import { Client } from "../model/Client";
+import { TrainingPlan } from "../model/TrainingPlan";
 
-// Función para obtener el plan de entrenamiento activo del cliente
-async function getActiveTrainingPlan(clientDni, token) {
-  try {
-    const response = await fetch(`http://localhost:8080/api/training-plans/active/${clientDni}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Error en la solicitud: ${response.statusText}`);
-    }
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error al obtener el plan de entrenamiento activo:", error);
-    throw error;
-  }
-}
-
-// Función para obtener las rutinas activas del plan de entrenamiento
-async function getActiveRoutines(trainingPlanId, token) {
-  try {
-    const response = await fetch(`http://localhost:8080/api/training-plans/${trainingPlanId}/active-routines`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Error en la solicitud: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error al obtener las rutinas activas del plan de entrenamiento:", error);
-    throw error;
-  }
-}
-
-// Función para obtener los datos del cliente
-async function getClientData(email, token) {
-  try {
-    const response = await fetch(`${clientUrl}${email}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Error en la solicitud: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error al obtener los datos del cliente:", error);
-    throw error;
-  }
-}
-
-// Función para activar una rutina
-async function activateRoutine(routineId, token, clientDni) {
-  try {
-    const response = await fetch(`http://localhost:8080/api/routines/activate/${clientDni}/${routineId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error en la solicitud: ${response.statusText}`);
-    }
-
-    return response;
-  } catch (error) {
-    console.error("Error al activar la rutina:", error);
-    throw error;
-  }
-}
-
-// Función para crear un TrainingDiary
-async function createTrainingDiary(clientDni, token) {
-  try {
-    const response = await fetch("http://localhost:8080/api/training-diaries", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        clientDni: clientDni,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error en la solicitud: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.id;
-  } catch (error) {
-    console.error("Error al crear el TrainingDiary:", error);
-    throw error;
-  }
-}
-
-// Tipos de datos
-type Session = {
-  id: number;
-  exerciseName: string;
-  sets: number;
-  reps: number;
-  restTime: number;
-};
-
-type Routine = {
-  id: number;
-  name: string;
-  completed: boolean;
-  clientDNI: string;
-  sessions: Session[];
-  active: boolean; // Añadido el campo active
-};
-
-type Client = {
-  id: number;
-  name: string;
-  lastname: string;
-  dni: string;
-  phone: string;
-  address: string;
-  email: string;
-  goal: string;
-};
-
-type TrainingPlan = {
-  id: number;
-  clientDni: string;
-  active: boolean;
-  name: string;
-  description: string;
-  routines: Routine[];
-};
 
 export default function TrainingClient() {
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
@@ -194,13 +56,21 @@ export default function TrainingClient() {
         setClient(clientData);
 
         if (clientData) {
-          const trainingPlan = await getActiveTrainingPlan(clientData.dni, token);
+          const trainingPlan = await getActiveTrainingPlan(
+            clientData.dni,
+            token
+          );
           setTrainingPlan(trainingPlan);
-          const activeRoutines = await getActiveRoutines(trainingPlan.id, token);
+          const activeRoutines = await getActiveRoutines(
+            trainingPlan.id,
+            token
+          );
           setRoutines(activeRoutines);
         }
       } catch (error) {
-        setError("Error al obtener los datos del cliente o el plan de entrenamiento");
+        setError(
+          "Error al obtener los datos del cliente o el plan de entrenamiento"
+        );
       }
     };
 
@@ -228,7 +98,11 @@ export default function TrainingClient() {
     if (selectedRoutine && token && client) {
       try {
         const diaryId = await createTrainingDiary(client.dni, token);
-        await activateRoutine(selectedRoutine.id, token, selectedRoutine.clientDNI);
+        await activateRoutine(
+          selectedRoutine.id,
+          token,
+          selectedRoutine.clientDNI
+        );
         window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`;
       } catch (error) {
         console.error("Error al activar la rutina:", error);
@@ -252,83 +126,95 @@ export default function TrainingClient() {
         <div className="container p-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white center">
           <NavBarClient />
           <h1 className="text-4xl font-bold my-8 text-center">
-            {client?.name} {client?.lastname}, bienvenido a tu plan de entrenamiento: {trainingPlan?.name}
+            {client?.name} {client?.lastname}, bienvenido a tu plan de
+            entrenamiento: {trainingPlan?.name}
           </h1>
           <p className="text-lg text-center mb-8">
             {trainingPlan?.description}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-            {routines.sort((a, b) => a.id - b.id).map((routine) => (
-              <motion.div
-                key={routine.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Card className={`bg-gray-800 border-gray-700 ${routine.active ? '' : 'bg-gray-400 opacity-75'}`}>
-                  <CardHeader>
-                    <CardTitle className="text-2xl font-bold">
-                      {routine.name}
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      {routine.sessions.length} ejercicios
-                    </CardDescription>
-                    <div className="flex items-center mt-2">
-                      {routine.completed ? (
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 transition duration-2000 ease-in-out" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-red-500 mr-2 transition duration-2000 ease-in-out" />
+            {routines
+              .sort((a, b) => a.id - b.id)
+              .map((routine) => (
+                <motion.div
+                  key={routine.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card
+                    className={`bg-gray-800 border-gray-700 ${
+                      routine.active ? "" : "bg-gray-400 opacity-75"
+                    }`}
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-2xl font-bold">
+                        {routine.name}
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        {routine.sessions.length} ejercicios
+                      </CardDescription>
+                      <div className="flex items-center mt-2">
+                        {routine.completed ? (
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 transition duration-2000 ease-in-out" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-red-500 mr-2 transition duration-2000 ease-in-out" />
+                        )}
+                        <span>
+                          {routine.completed ? "Completada" : "No completada"}
+                        </span>
+                      </div>
+                      {!routine.active && (
+                        <span className="text-red-500 font-semibold">
+                          Desactivado
+                        </span>
                       )}
-                      <span>
-                        {routine.completed ? "Completada" : "No completada"}
-                      </span>
-                    </div>
-                    {!routine.active && (
-                      <span className="text-red-500 font-semibold">Desactivado</span>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="exercises">
-                        <AccordionTrigger className="text-blue-400 hover:text-blue-300">
-                          Ver ejercicios
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <ScrollArea className="h-[200px] w-full rounded-md border border-gray-700 p-4">
-                            {routine.sessions.map((session) => (
-                              <div key={session.id} className="mb-4 last:mb-0">
-                                <h4 className="font-semibold text-lg mb-2">
-                                  {session.exerciseName}
-                                </h4>
-                                <div className="flex justify-between text-sm text-gray-400">
-                                  <span className="flex items-center">
-                                    <Dumbbell className="w-4 h-4 mr-1" />
-                                    {session.sets} x {session.reps}
-                                  </span>
-                                  <span className="flex items-center">
-                                    <Clock className="w-4 h-4 mr-1" />
-                                    {session.restTime}s descanso
-                                  </span>
+                    </CardHeader>
+                    <CardContent>
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="exercises">
+                          <AccordionTrigger className="text-blue-400 hover:text-blue-300">
+                            Ver ejercicios
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <ScrollArea className="h-[200px] w-full rounded-md border border-gray-700 p-4">
+                              {routine.sessions.map((session) => (
+                                <div
+                                  key={session.id}
+                                  className="mb-4 last:mb-0"
+                                >
+                                  <h4 className="font-semibold text-lg mb-2">
+                                    {session.exerciseName}
+                                  </h4>
+                                  <div className="flex justify-between text-sm text-gray-400">
+                                    <span className="flex items-center">
+                                      <Dumbbell className="w-4 h-4 mr-1" />
+                                      {session.sets} x {session.reps}
+                                    </span>
+                                    <span className="flex items-center">
+                                      <Clock className="w-4 h-4 mr-1" />
+                                      {session.restTime}s descanso
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                          </ScrollArea>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => handleStartRoutine(routine)}
-                      disabled={!routine.active}
-                    >
-                      <Play className="w-4 h-4 mr-2" /> Comenzar Rutina
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            ))}
+                              ))}
+                            </ScrollArea>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => handleStartRoutine(routine)}
+                        disabled={!routine.active}
+                      >
+                        <Play className="w-4 h-4 mr-2" /> Comenzar Rutina
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
           </div>
           {selectedRoutine && (
             <motion.div
@@ -374,42 +260,42 @@ export default function TrainingClient() {
             </motion.div>
           )}
           {showConfirmModal && (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.3 }}
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-  >
-    <Card className="w-full max-w-md bg-orange-200 border-orange-300">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-orange-800">
-          Advertencia
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-lg mb-4 text-orange-800">
-          Ya has realizado este entrenamiento esta semana. ¿Quieres volver a hacerlo?
-        </p>
-      </CardContent>
-      <CardFooter className="flex justify-end">
-        <Button
-          className="bg-green-600 hover:bg-green-700 text-white mr-2"
-          onClick={handleConfirmModal}
-        >
-          Sí
-        </Button>
-        <Button
-          variant="outline"
-          className="bg-transparent text-orange-800 border-orange-300 hover:bg-orange-300"
-          onClick={handleCancelModal}
-        >
-          No
-        </Button>
-      </CardFooter>
-    </Card>
-  </motion.div>
-)}
-
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            >
+              <Card className="w-full max-w-md bg-orange-200 border-orange-300">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-orange-800">
+                    Advertencia
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-lg mb-4 text-orange-800">
+                    Ya has realizado este entrenamiento esta semana. ¿Quieres
+                    volver a hacerlo?
+                  </p>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white mr-2"
+                    onClick={handleConfirmModal}
+                  >
+                    Sí
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="bg-transparent text-orange-800 border-orange-300 hover:bg-orange-300"
+                    onClick={handleCancelModal}
+                  >
+                    No
+                  </Button>
+                </CardFooter>
+              </Card>
+            </motion.div>
+          )}
         </div>
       </div>
       <FooterPag />

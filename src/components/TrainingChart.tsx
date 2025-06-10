@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Line, Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js'
+import { TrainingDiary } from '../model/TrainingDiary'
+import { getTrainingDiaries } from '../services/TrainingDiaryService'
 
 ChartJS.register(
   CategoryScale,
@@ -25,27 +27,21 @@ export default function TrainingChart() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8080/api/training-diaries/client/32423432', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Network response was not ok')
-        }
-        const result = await response.json()
-        setData(result)
+        const clientId = '32423432'; // Reemplaza con el ID del cliente adecuado
+        const result = await getTrainingDiaries(clientId, token);
+        setData(result);
       } catch (error) {
-        setError('Error fetching data')
+        setError('Error fetching data');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchData()
+    fetchData();
   }, [])
 
   if (loading) return <div>Loading...</div>
   if (error) return <div>Error: {error}</div>
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">

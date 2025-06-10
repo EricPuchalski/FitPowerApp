@@ -2,21 +2,9 @@
 
 import { useState } from 'react'
 import { Plus, Pencil, Trash2, User, Apple, Mail, Phone, MapPin, Briefcase, Award, Building, Users, Calendar } from 'lucide-react'
+import { Nutritionist } from '../model/Nutritionist'
 
-type Nutritionist = {
-  id: string
-  nombre: string
-  apellido: string
-  dni: string
-  email: string
-  telefono: string
-  direccion: string
-  especialidad: string
-  experiencia: string
-  gimnasioAsignado: string
-  certificaciones: string
-  clientesAsignados: number
-}
+
 
 const initialNutritionists: Nutritionist[] = [
   {
