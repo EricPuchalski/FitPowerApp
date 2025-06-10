@@ -18,7 +18,7 @@ export default function LogIn() {
     e.preventDefault(); // Evitar el comportamiento por defecto del formulario
 
     try {
-      const response = await fetch("http://localhost:8080/auth/signin", {
+      const response = await fetch("http://localhost:8080/api/v1/auth/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,6 +34,8 @@ export default function LogIn() {
         localStorage.setItem('userId', data.id);
         localStorage.setItem('username', data.username);
         localStorage.setItem('userEmail', data.email);
+        localStorage.setItem('userDni', data.dni);
+
         // Redirigir al dashboard según el rol
         if (data.roles.includes("ROLE_NUTRITIONIST")) {
           navigate("/nutritionist");

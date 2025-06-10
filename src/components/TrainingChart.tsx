@@ -44,19 +44,23 @@ export default function TrainingChart() {
 
 
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle>Training Diary Dashboard</CardTitle>
-        <CardDescription>Comprehensive view of client's training sessions</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <RepsByExerciseChart data={data} />
-        <WeightByExerciseChart data={data} />
-        <TotalRepsBySessionChart data={data} />
-        <TotalWeightBySessionChart data={data} />
-        <ExercisesBySessionChart data={data} />
-      </CardContent>
-    </Card>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Card className="flex-grow w-full">
+        <CardHeader>
+          <CardTitle>Training Diary Dashboard</CardTitle>
+          <CardDescription>Comprehensive view of client's training sessions</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <RepsByExerciseChart data={data} />
+            <WeightByExerciseChart data={data} />
+            <TotalRepsBySessionChart data={data} />
+            <TotalWeightBySessionChart data={data} />
+            <ExercisesBySessionChart data={data} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 

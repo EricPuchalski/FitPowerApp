@@ -33,8 +33,9 @@ import { Routine } from "../model/Routine";
 import { Session } from "../model/Session";
 import { Client } from "../model/Client";
 
-
-
+type Exercise = {
+  name: string;
+};
 
 
 const initialRoutine: Routine = {
@@ -257,12 +258,12 @@ export default function TrainerRoutine() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       <NavBarTrainer />
       <h1 className="text-3xl font-bold my-6 text-center text-gray-800">
         Crear Rutina a clientes
       </h1>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 flex-grow">
         <Card className="mb-6 bg-white">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">
@@ -301,179 +302,180 @@ export default function TrainerRoutine() {
                     clientDni: value,
                   }));
                 }}
-              >              <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Selecciona un cliente" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              {clients.map((client) => (
-                <SelectItem key={client.dni} value={client.dni}>
-                  {client.name} {client.lastname}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {selectedClient && (
-          <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
-            <p className="font-bold text-lg">
-              El cliente tiene como objetivo {selectedClient.goal}
-            </p>
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Selecciona un cliente" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  {clients.map((client) => (
+                    <SelectItem key={client.dni} value={client.dni}>
+                      {client.name} {client.lastname}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedClient && (
+              <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
+                <p className="font-bold text-lg">
+                  El cliente tiene como objetivo {selectedClient.goal}
+                </p>
+              </div>
+            )}
+            {showCreateButton && (
+              <Button
+                onClick={handleCreateRoutine}
+                className="w-full h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
+              >
+                <Save className="w-4 h-4 mr-2" /> Crear Rutina
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+        {routineCreated && (
+          <Card className="mb-6 bg-white">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold">
+                Sesiones de Entrenamiento
+              </CardTitle>
+              <CardDescription>
+                Visualiza y edita los detalles de cada sesión de tu entrenamiento
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                <Accordion type="single" collapsible className="w-full" value={`session-${openSessionIndex}`}>
+                  {routine.sessions.map((session, index) => (
+                    <AccordionItem key={index} value={`session-${index}`}>
+                      <AccordionTrigger className="text-lg font-medium">
+                        {index + 1}. {session.exerciseName}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor={`sets-${index}`}>Series</Label>
+                            <Input
+                              id={`sets-${index}`}
+                              type="number"
+                              value={session.sets}
+                              onChange={(e) =>
+                                handleSessionChange(
+                                  index,
+                                  "sets",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                              min={1}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`reps-${index}`}>
+                              Repeticiones
+                            </Label>
+                            <Input
+                              id={`reps-${index}`}
+                              type="number"
+                              value={session.reps}
+                              onChange={(e) =>
+                                handleSessionChange(
+                                  index,
+                                  "reps",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                              min={1}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`rest-${index}`}>
+                              Tiempo de Descanso
+                            </Label>
+                            <Input
+                              id={`rest-${index}`}
+                              type="time"
+                              value={session.restTime}
+                              onChange={(e) =>
+                                handleSessionChange(
+                                  index,
+                                  "restTime",
+                                  e.target.value
+                                )
+                              }
+                              step="1"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`exercise-${index}`}>
+                              Ejercicio
+                            </Label>
+                            <Select
+                              value={session.exerciseName}
+                              onValueChange={(value) =>
+                                handleSessionChange(
+                                  index,
+                                  "exerciseName",
+                                  value
+                                )
+                              }
+                            >
+                              <SelectTrigger className="bg-white">
+                                <SelectValue placeholder="Selecciona un ejercicio" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white">
+                                {exerciseOptions.map((exercise) => (
+                                  <SelectItem key={exercise} value={exercise}>
+                                    {exercise}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              onClick={() => handleDeleteSession(index)}
+                              className="bg-red-500 hover:bg-red-600 text-white transition-colors"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleConfirmSession(index)}
+                              className="bg-green-500 hover:bg-green-600 text-white transition-colors"
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      {routineCreated && (
+        <div className="flex items-center justify-center p-4">
+          <div className="w-1/2 mr-4">
+            <Button
+              onClick={handleAddSession}
+              className="w-full h-20 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
+            >
+              <Dumbbell className="w-4 h-4 mr-2" /> Añadir Sesión
+            </Button>
           </div>
-        )}
-        {showCreateButton && (
-          <Button
-            onClick={handleCreateRoutine}
-            className="w-full h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
-          >
-            <Save className="w-4 h-4 mr-2" /> Crear Rutina
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-    {routineCreated && (
-      <Card className="mb-6 bg-white">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold">
-            Sesiones de Entrenamiento
-          </CardTitle>
-          <CardDescription>
-            Visualiza y edita los detalles de cada sesión de tu entrenamiento
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-            <Accordion type="single" collapsible className="w-full" value={`session-${openSessionIndex}`}>
-              {routine.sessions.map((session, index) => (
-                <AccordionItem key={index} value={`session-${index}`}>
-                  <AccordionTrigger className="text-lg font-medium">
-                    {index + 1}. {session.exerciseName}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor={`sets-${index}`}>Series</Label>
-                        <Input
-                          id={`sets-${index}`}
-                          type="number"
-                          value={session.sets}
-                          onChange={(e) =>
-                            handleSessionChange(
-                              index,
-                              "sets",
-                              parseInt(e.target.value)
-                            )
-                          }
-                          min={1}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`reps-${index}`}>
-                          Repeticiones
-                        </Label>
-                        <Input
-                          id={`reps-${index}`}
-                          type="number"
-                          value={session.reps}
-                          onChange={(e) =>
-                            handleSessionChange(
-                              index,
-                              "reps",
-                              parseInt(e.target.value)
-                            )
-                          }
-                          min={1}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`rest-${index}`}>
-                          Tiempo de Descanso
-                        </Label>
-                        <Input
-                          id={`rest-${index}`}
-                          type="time"
-                          value={session.restTime}
-                          onChange={(e) =>
-                            handleSessionChange(
-                              index,
-                              "restTime",
-                              e.target.value
-                            )
-                          }
-                          step="1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`exercise-${index}`}>
-                          Ejercicio
-                        </Label>
-                        <Select
-                          value={session.exerciseName}
-                          onValueChange={(value) =>
-                            handleSessionChange(
-                              index,
-                              "exerciseName",
-                              value
-                            )
-                          }
-                        >
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="Selecciona un ejercicio" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white">
-                            {exerciseOptions.map((exercise) => (
-                              <SelectItem key={exercise} value={exercise}>
-                                {exercise}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          onClick={() => handleDeleteSession(index)}
-                          className="bg-red-500 hover:bg-red-600 text-white transition-colors"
-                        >
-                          <Trash className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleConfirmSession(index)}
-                          className="bg-green-500 hover:bg-green-600 text-white transition-colors"
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    )}
-  </div>
-  {routineCreated && (
-    <div className="flex items-center justify-center p-4">
-      <div className="w-1/2 mr-4">
-        <Button
-          onClick={handleAddSession}
-          className="w-full h-20 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
-        >
-          <Dumbbell className="w-4 h-4 mr-2" /> Añadir Sesión
-        </Button>
-      </div>
-      <div className="w-1/2 ml-4">
-        <Button
-          onClick={handleSaveRoutine}
-          className="w-full h-20 bg-green-500 hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
-        >
-          <Save className="w-4 h-4 mr-2" /> Guardar Rutina
-        </Button>
-      </div>
+          <div className="w-1/2 ml-4">
+            <Button
+              onClick={handleSaveRoutine}
+              className="w-full h-20 bg-green-500 hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 text-white font-semibold flex items-center justify-center"
+            >
+              <Save className="w-4 h-4 mr-2" /> Guardar Rutina
+            </Button>
+          </div>
+        </div>
+      )}
+      <FooterPag className="mt-auto" />
+      <ToastContainer />
     </div>
-  )}
-  <FooterPag />
-  <ToastContainer />
-</div>
-);
+  );
 }
