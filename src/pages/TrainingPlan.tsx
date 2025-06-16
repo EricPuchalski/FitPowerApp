@@ -1,29 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FooterPag } from '../components/Footer';
+import { TrainingPlan } from '../model/TrainingPlan';
+import { ExerciseRoutine } from '../model/ExerciseRoutine';
 
-interface Exercise {
-  routineId: number;
-  exerciseId: number;
-  exerciseName: string;
-  series: number;
-  repetitions: number;
-  weight: number;
-  day: string;
-}
-
-interface TrainingPlan {
-  id: number;
-  name: string;
-  createdAt: string;
-  trainerDni: string;
-  trainerName: string;
-  clientDni: string;
-  clientName: string;
-  trainerSpecification: string;
-  clientGoal: string;
-  active: boolean;
-  exercises: Exercise[];
-}
 
 const TrainingPlanPage: React.FC = () => {
   const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
@@ -63,7 +43,7 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
   }, []);
 
   // Organizar ejercicios por día
-  const exercisesByDay: Record<string, Exercise[]> = {
+  const exercisesByDay: Record<string, ExerciseRoutine[]> = {
     MONDAY: [],
     TUESDAY: [],
     WEDNESDAY: [],
@@ -270,11 +250,8 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
       </main>
 
       {/* Footer */}
-      <footer className="bg-white py-4 shadow-inner">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} FITPOWER - Todos los derechos reservados</p>
-        </div>
-      </footer>
+      <FooterPag></FooterPag>
+
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Client } from '../model/Client';
 import { useNavigate } from 'react-router-dom';
+import { FooterPag } from '../components/Footer';
 
 const ClientDashboard: React.FC = () => {
   const [client, setClient] = useState<Client | null>(null);
@@ -212,11 +213,8 @@ const response = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}`
       </main>
 
       {/* Footer */}
-      <footer className="bg-white py-4 shadow-inner">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} FITPOWER - Todos los derechos reservados</p>
-        </div>
-      </footer>
+      <FooterPag></FooterPag>
+
     </div>
   );
 };

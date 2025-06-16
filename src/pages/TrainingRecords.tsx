@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { FooterPag } from '../components/Footer';
 
 interface TrainingRecord {
   id: number;
@@ -13,7 +16,7 @@ interface TrainingRecord {
   restTime: string;
   exerciseId: number;
   trainingPlanId: number;
-  exerciseName?: string; // Agregado para mostrar el nombre del ejercicio
+  exerciseName?: string;
 }
 
 interface Exercise {
@@ -29,7 +32,7 @@ const TrainingRecordsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingRecord, setEditingRecord] = useState<TrainingRecord | null>(null);
-          const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token');
 
   const [formData, setFormData] = useState({
     observation: '',
@@ -41,7 +44,6 @@ const TrainingRecordsPage: React.FC = () => {
   });
   const navigate = useNavigate();
 
-  // Obtener el DNI del cliente desde localStorage
   const clientDni = localStorage.getItem('userDni') || '';
 
   useEffect(() => {
@@ -49,33 +51,21 @@ const TrainingRecordsPage: React.FC = () => {
       try {
         setLoading(true);
         
-        // Primero obtener los ejercicios disponibles
-        const exercisesResponse = await fetch(`http://localhost:8080/api/v1/exercises`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
+        const exercisesResponse = await fetch(`http://localhost:8080/api/v1/exercises`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (!exercisesResponse.ok) throw new Error('Error al cargar ejercicios');
         const exercisesData = await exercisesResponse.json();
         setExercises(exercisesData);
         
-        // Luego obtener los registros del plan de entrenamiento
         const recordsResponse = await fetch(
           `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${trainingPlanId}/records`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
+          { headers: { 'Authorization': `Bearer ${token}` } }
         );
         
         if (!recordsResponse.ok) throw new Error('Error al cargar registros');
         
         const recordsData: TrainingRecord[] = await recordsResponse.json();
-        
-        // Agregar nombres de ejercicios a los registros
         const recordsWithExerciseNames = recordsData.map(record => {
           const exercise = exercisesData.find(ex => ex.id === record.exerciseId);
           return {
@@ -87,6 +77,7 @@ const TrainingRecordsPage: React.FC = () => {
         setRecords(recordsWithExerciseNames);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido');
+        toast.error(err instanceof Error ? err.message : 'Ocurrió un error desconocido');
       } finally {
         setLoading(false);
       }
@@ -140,22 +131,23 @@ const TrainingRecordsPage: React.FC = () => {
           ...savedRecord,
           exerciseName: exercises.find(ex => ex.id === savedRecord.exerciseId)?.name || 'Ejercicio desconocido'
         } : r));
+        toast.success('Registro actualizado correctamente');
       } else {
         setRecords(prev => [{
           ...savedRecord,
           exerciseName: exercises.find(ex => ex.id === savedRecord.exerciseId)?.name || 'Ejercicio desconocido'
         }, ...prev]);
+        toast.success('Registro creado correctamente');
       }
       
       resetForm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocurrió un error al guardar');
+      const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error al guardar';
+      toast.error(errorMessage);
     }
   };
 
-  const handleDelete = async (recordId: number) => {
-    if (!window.confirm('¿Estás seguro de eliminar este registro?')) return;
-    
+  const confirmDelete = async (recordId: number) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
@@ -171,9 +163,40 @@ const TrainingRecordsPage: React.FC = () => {
       if (!response.ok) throw new Error('Error al eliminar el registro');
       
       setRecords(prev => prev.filter(r => r.id !== recordId));
+      toast.success('Registro eliminado correctamente');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocurrió un error al eliminar');
+      const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error al eliminar';
+      toast.error(errorMessage);
     }
+  };
+
+  const handleDelete = async (recordId: number) => {
+    toast.info(
+      <div>
+        <p>¿Estás seguro de eliminar este registro?</p>
+        <div className="flex justify-center space-x-4 mt-2">
+          <button 
+            onClick={() => {
+              toast.dismiss();
+              confirmDelete(recordId);
+            }}
+            className="px-3 py-1 bg-red-500 text-white rounded"
+          >
+            Eliminar
+          </button>
+          <button 
+            onClick={() => toast.dismiss()}
+            className="px-3 py-1 bg-gray-500 text-white rounded"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleEdit = (record: TrainingRecord) => {
@@ -186,7 +209,6 @@ const TrainingRecordsPage: React.FC = () => {
       restTime: record.restTime,
       exerciseId: record.exerciseId
     });
-    setShowForm(true);
   };
 
   const resetForm = () => {
@@ -210,6 +232,126 @@ const TrainingRecordsPage: React.FC = () => {
     const [hours, minutes, seconds] = timeString.split(':');
     return `${minutes}' ${seconds}''`;
   };
+
+  // Componente para el formulario inline
+  const InlineEditForm = ({ record }: { record: TrainingRecord }) => (
+    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mt-4">
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="text-lg font-semibold text-blue-800">Editando: {record.exerciseName}</h4>
+        <button 
+          onClick={resetForm}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Ejercicio</label>
+          <select
+            name="exerciseId"
+            value={formData.exerciseId}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="">Selecciona un ejercicio</option>
+            {exercises.map(exercise => (
+              <option key={exercise.id} value={exercise.id}>{exercise.name}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Series</label>
+            <input
+              type="number"
+              name="series"
+              min="1"
+              value={formData.series}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Repeticiones</label>
+            <input
+              type="number"
+              name="repetitions"
+              min="1"
+              value={formData.repetitions}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
+            <input
+              type="number"
+              name="weight"
+              step="0.1"
+              min="0"
+              value={formData.weight}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Tiempo de Descanso (HH:mm:ss)</label>
+          <input
+            type="text"
+            name="restTime"
+            value={formData.restTime}
+            onChange={handleInputChange}
+            placeholder="00:01:30"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
+            pattern="\d{2}:\d{2}:\d{2}"
+            title="Formato HH:mm:ss"
+          />
+          <p className="text-xs text-gray-500 mt-1">Ejemplo: 00:01:30 para 1 minuto y 30 segundos</p>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+          <textarea
+            name="observation"
+            rows={3}
+            value={formData.observation}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          ></textarea>
+        </div>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={resetForm}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Actualizar
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -237,7 +379,18 @@ const TrainingRecordsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      
       <header className="bg-indigo-800 text-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <button 
@@ -250,13 +403,11 @@ const TrainingRecordsPage: React.FC = () => {
             Volver
           </button>
           <h1 className="text-2xl font-bold">Registros de Entrenamiento</h1>
-          <div className="w-10"></div> {/* Espaciador para alinear el título */}
+          <div className="w-10"></div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
-        {/* Actions Bar */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-800">Mis Registros</h2>
           <button
@@ -270,13 +421,10 @@ const TrainingRecordsPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Formulario (modal-like) */}
-        {showForm && (
+        {showForm && !editingRecord && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {editingRecord ? 'Editar Registro' : 'Nuevo Registro'}
-              </h3>
+              <h3 className="text-lg font-semibold">Nuevo Registro</h3>
               <button 
                 onClick={resetForm}
                 className="text-gray-500 hover:text-gray-700"
@@ -385,14 +533,13 @@ const TrainingRecordsPage: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                 >
-                  {editingRecord ? 'Actualizar' : 'Guardar'}
+                  Guardar
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        {/* Lista de Registros */}
         {records.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -470,18 +617,18 @@ const TrainingRecordsPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Formulario de edición inline */}
+                {editingRecord && editingRecord.id === record.id && (
+                  <InlineEditForm record={record} />
+                )}
               </div>
             ))}
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white py-4 shadow-inner">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} FITPOWER - Todos los derechos reservados</p>
-        </div>
-      </footer>
+      <FooterPag></FooterPag>
     </div>
   );
 };
