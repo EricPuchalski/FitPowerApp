@@ -4,15 +4,8 @@ import React, { useState } from 'react'
 import { ChevronDown, ChevronUp, Trash } from 'lucide-react'
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
+import { ClientStats } from '../model/ClientStatus'
 
-type ClientStats = {
-  id: number
-  weight: number
-  height: number
-  bodymass: number
-  bodyfat: number
-  creationDate: string
-}
 
 interface PhysicalStatusHistoryProps {
   clientStats: ClientStats[]
