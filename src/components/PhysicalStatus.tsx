@@ -1,5 +1,6 @@
 
 import { User } from "lucide-react";
+import { ClientStats } from "../model/ClientStatus";
 
 
 interface PhysicalStatusProps {

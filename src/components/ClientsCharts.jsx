@@ -1,7 +1,7 @@
 // src/App.js
 import React, { useEffect, useState } from 'react';
 import { getClientStatuses } from '../services/ClientStatusApi';
-import WeightChart from './WeightChart';
+import WeightChart from './ClientPhysicalStatusChart';
 
 const ClientsCharts = () => {
   const [clientStatuses, setClientStatuses] = useState([]);

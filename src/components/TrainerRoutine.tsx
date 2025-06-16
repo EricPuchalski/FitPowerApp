@@ -37,6 +37,7 @@ type Exercise = {
   name: string;
 };
 
+
 const initialRoutine: Routine = {
   id: 0,
   name: "",

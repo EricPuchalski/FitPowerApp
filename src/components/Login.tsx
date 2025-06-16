@@ -35,6 +35,8 @@ export default function LogIn() {
         localStorage.setItem('username', data.username);
         localStorage.setItem('userEmail', data.email);
         localStorage.setItem('userDni', data.dni);
+        localStorage.setItem('gymName', data.gymName);
+
 
         // Redirigir al dashboard según el rol
         if (data.roles.includes("ROLE_NUTRITIONIST")) {

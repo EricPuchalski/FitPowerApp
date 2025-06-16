@@ -13,17 +13,7 @@ import {
 import { Link } from 'react-router-dom'
 import { FooterPag } from './Footer'
 import NavBarTrainer from './NavBarTrainer'
-
-type Client = {
-  id: number
-  name: string
-  lastname: string
-  dni: string
-  goal: string
-  height: number
-  weight: number
-  address: string
-}
+import { Client } from '../model/Client'
 
 export default function TrainerClientList() {
   const [clients, setClients] = useState<Client[]>([])
