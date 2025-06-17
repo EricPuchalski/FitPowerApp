@@ -8,4 +8,6 @@ export type Client = {
     email: string;
     goal: string;
     gymName: string;
+    height: number;
+    weight: number;
   };

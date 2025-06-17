@@ -101,7 +101,7 @@ export default function TrainingClient() {
         await activateRoutine(
           selectedRoutine.id,
           token,
-          selectedRoutine.clientDNI
+          selectedRoutine.clientDni
         );
         window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`;
       } catch (error) {

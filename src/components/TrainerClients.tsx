@@ -18,7 +18,7 @@ import { Client } from '../model/Client'
 export default function TrainerClientList() {
   const [clients, setClients] = useState<Client[]>([])
   const [filteredClients, setFilteredClients] = useState<Client[]>([])
-  const [expandedRow, setExpandedRow] = useState<string | null>(null)
+  const [expandedRow, setExpandedRow] = useState<number | null>(null)
   const [dniFilter, setDniFilter] = useState<string>('')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const clientsPerPage = 20
@@ -54,7 +54,7 @@ export default function TrainerClientList() {
     setCurrentPage(1) // Reset to the first page when filtering
   }, [dniFilter, clients])
 
-  const toggleRow = (id: string) => {
+  const toggleRow = (id: number) => {
     setExpandedRow(expandedRow === id ? null : id)
   }
 
@@ -124,7 +124,7 @@ export default function TrainerClientList() {
                           </Link>
                         </TableCell>
                       </TableRow>
-                      {expandedRow === client.id && (
+                      {expandedRow !== null && Number(expandedRow) === Number(client.id) && (
                         <TableRow>
                           <TableCell colSpan={6}>
                             <div className="p-4 bg-gray-100 rounded-lg">
