@@ -1,124 +1,124 @@
-import { useEffect, useState } from "react";
-import { FooterPag } from "./Footer";
-import { motion } from "framer-motion";
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { ScrollArea } from "../../components/ui/scroll-area";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../../components/ui/accordion";
-import { Clock, Dumbbell, Play, CheckCircle, XCircle } from "lucide-react";
-import NavBarTrainer from "./NavBarTrainer";
-import { NavBarClient } from "./NavBarClient";
-import {
-  getClientData
-} from "../services/TrainingService";
-import { getActiveTrainingPlan } from "../services/TrainingPlanService";
-import { activateRoutine } from "../services/RoutineService";
-import { getActiveRoutines } from "../services/RoutineService";
+"use client"
 
-import { createTrainingDiary } from "../services/TrainingDiaryService";
-import { Routine } from "../model/Routine";
-import { Client } from "../model/Client";
-import { TrainingPlan } from "../model/TrainingPlan";
+import { useEffect, useState } from "react"
+import { FooterPag } from "./Footer"
+import { motion } from "framer-motion"
+import { Button } from "../../components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
+import { ScrollArea } from "../../components/ui/scroll-area"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion"
+import { Clock, Dumbbell, Play, CheckCircle, XCircle } from "lucide-react"
+import { NavBarClient } from "./NavBarClient"
 
+// ✅ IMPORTS CORREGIDOS - usando los nombres reales de tus archivos
+import { getActiveTrainingPlan } from "../services/TrainingPlanService"
+import { activateRoutine, getActiveRoutines } from "../services/RoutineService"
+import { createTrainingDiary } from "../services/TrainingDiaryService"
 
+import type { Routine } from "../model/Routine"
+import type { Client } from "../model/Client"
+import type { TrainingPlan } from "../model/TrainingPlan"
 
 export default function TrainingClient() {
-  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
-  const [routines, setRoutines] = useState<Routine[]>([]);
-  const [client, setClient] = useState<Client | null>(null);
-  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const token = localStorage.getItem("token");
-  const email = localStorage.getItem("userEmail");
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
+  const [routines, setRoutines] = useState<Routine[]>([])
+  const [client, setClient] = useState<Client | null>(null)
+  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+
+  // ✅ CAMBIO PRINCIPAL: Usar DNI en lugar de email
+  const token = localStorage.getItem("token")
+  const clientDni = localStorage.getItem("userDni") // Asegúrate de guardar esto en el login
 
   useEffect(() => {
-    if (!token || !email) {
-      setError("Token o email no disponibles");
-      return;
+    if (!token || !clientDni) {
+      setError("Token o DNI no disponibles")
+      return
     }
 
     const fetchData = async () => {
       try {
-        const clientData = await getClientData(email, token);
-        setClient(clientData);
+        // ✅ NUEVA LÓGICA: Fetch directo usando tu endpoint existente
+        const clientResponse = await fetch(`http://localhost:8080/api/clients/${clientDni}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (!clientResponse.ok) {
+          throw new Error("Error fetching client data")
+        }
+
+        const clientData = await clientResponse.json()
+        setClient(clientData)
 
         if (clientData) {
-          const trainingPlan = await getActiveTrainingPlan(
-            clientData.dni,
-            token
-          );
-          setTrainingPlan(trainingPlan);
-          const activeRoutines = await getActiveRoutines(
-            trainingPlan.id,
-            token
-          );
-          setRoutines(activeRoutines);
+          const trainingPlan = await getActiveTrainingPlan(clientData.dni, token)
+          setTrainingPlan(trainingPlan)
+          const activeRoutines = await getActiveRoutines(trainingPlan.id, token)
+          setRoutines(activeRoutines)
         }
       } catch (error) {
-        setError(
-          "Error al obtener los datos del cliente o el plan de entrenamiento"
-        );
+        setError("Error al obtener los datos del cliente o el plan de entrenamiento")
+        console.error("Error:", error)
       }
-    };
+    }
 
-    fetchData();
+    fetchData()
 
     // Polling every 5 seconds
     const intervalId = setInterval(async () => {
-      await fetchData();
-    }, 5000);
+      await fetchData()
+    }, 5000)
 
     // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [email, token]);
+    return () => clearInterval(intervalId)
+  }, [clientDni, token]) // ✅ CAMBIO: clientDni en lugar de email
 
   const handleStartRoutine = (routine: Routine) => {
     if (routine.completed) {
-      setSelectedRoutine(routine);
-      setShowConfirmModal(true);
+      setSelectedRoutine(routine)
+      setShowConfirmModal(true)
     } else {
-      setSelectedRoutine(routine);
+      setSelectedRoutine(routine)
     }
-  };
+  }
 
   const handleConfirmStart = async () => {
     if (selectedRoutine && token && client) {
       try {
-        const diaryId = await createTrainingDiary(client.dni, token);
-        await activateRoutine(
-          selectedRoutine.id,
-          token,
-          selectedRoutine.clientDni
-        );
-        window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`;
+        const diaryId = await createTrainingDiary(client.dni, token)
+        await activateRoutine(selectedRoutine.id, token, selectedRoutine.clientDni)
+        window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`
       } catch (error) {
-        console.error("Error al activar la rutina:", error);
+        console.error("Error al activar la rutina:", error)
       }
     }
-  };
+  }
 
   const handleConfirmModal = () => {
-    setShowConfirmModal(false);
-    handleConfirmStart();
-  };
+    setShowConfirmModal(false)
+    handleConfirmStart()
+  }
 
   const handleCancelModal = () => {
-    setShowConfirmModal(false);
-    setSelectedRoutine(null);
-  };
+    setShowConfirmModal(false)
+    setSelectedRoutine(null)
+  }
+
+  // ✅ MOSTRAR ERROR SI HAY PROBLEMAS
+  if (error) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center bg-[#220901]">
+        <div className="text-white text-center">
+          <h2 className="text-2xl font-bold mb-4">Error</h2>
+          <p>{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -126,12 +126,9 @@ export default function TrainingClient() {
         <div className="container p-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white center">
           <NavBarClient />
           <h1 className="text-4xl font-bold my-8 text-center">
-            {client?.name} {client?.lastname}, bienvenido a tu plan de
-            entrenamiento: {trainingPlan?.name}
+            {client?.name} {client?.lastname}, bienvenido a tu plan de entrenamiento: {trainingPlan?.name}
           </h1>
-          <p className="text-lg text-center mb-8">
-            {trainingPlan?.description}
-          </p>
+          <p className="text-lg text-center mb-8">{trainingPlan?.name}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
             {routines
               .sort((a, b) => a.id - b.id)
@@ -142,33 +139,19 @@ export default function TrainingClient() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card
-                    className={`bg-gray-800 border-gray-700 ${
-                      routine.active ? "" : "bg-gray-400 opacity-75"
-                    }`}
-                  >
+                  <Card className={`bg-gray-800 border-gray-700 ${routine.active ? "" : "bg-gray-400 opacity-75"}`}>
                     <CardHeader>
-                      <CardTitle className="text-2xl font-bold">
-                        {routine.name}
-                      </CardTitle>
-                      <CardDescription className="text-gray-400">
-                        {routine.sessions.length} ejercicios
-                      </CardDescription>
+                      <CardTitle className="text-2xl font-bold">{routine.name}</CardTitle>
+                      <CardDescription className="text-gray-400">{routine.sessions.length} ejercicios</CardDescription>
                       <div className="flex items-center mt-2">
                         {routine.completed ? (
                           <CheckCircle className="w-4 h-4 text-green-500 mr-2 transition duration-2000 ease-in-out" />
                         ) : (
                           <XCircle className="w-4 h-4 text-red-500 mr-2 transition duration-2000 ease-in-out" />
                         )}
-                        <span>
-                          {routine.completed ? "Completada" : "No completada"}
-                        </span>
+                        <span>{routine.completed ? "Completada" : "No completada"}</span>
                       </div>
-                      {!routine.active && (
-                        <span className="text-red-500 font-semibold">
-                          Desactivado
-                        </span>
-                      )}
+                      {!routine.active && <span className="text-red-500 font-semibold">Desactivado</span>}
                     </CardHeader>
                     <CardContent>
                       <Accordion type="single" collapsible className="w-full">
@@ -179,13 +162,8 @@ export default function TrainingClient() {
                           <AccordionContent>
                             <ScrollArea className="h-[200px] w-full rounded-md border border-gray-700 p-4">
                               {routine.sessions.map((session) => (
-                                <div
-                                  key={session.id}
-                                  className="mb-4 last:mb-0"
-                                >
-                                  <h4 className="font-semibold text-lg mb-2">
-                                    {session.exerciseName}
-                                  </h4>
+                                <div key={session.id} className="mb-4 last:mb-0">
+                                  <h4 className="font-semibold text-lg mb-2">{session.exerciseName}</h4>
                                   <div className="flex justify-between text-sm text-gray-400">
                                     <span className="flex items-center">
                                       <Dumbbell className="w-4 h-4 mr-1" />
@@ -225,27 +203,18 @@ export default function TrainingClient() {
             >
               <Card className="w-full max-w-md bg-gray-800 border-gray-700">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-bold">
-                    {selectedRoutine.name}
-                  </CardTitle>
-                  <CardDescription className="text-gray-400">
-                    ¡Comienza tu entrenamiento!
-                  </CardDescription>
+                  <CardTitle className="text-2xl font-bold">{selectedRoutine.name}</CardTitle>
+                  <CardDescription className="text-gray-400">¡Comienza tu entrenamiento!</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-lg mb-4">
-                    Has seleccionado la rutina: {selectedRoutine.name}
-                  </p>
+                  <p className="text-lg mb-4">Has seleccionado la rutina: {selectedRoutine.name}</p>
                   <p className="text-gray-400">
-                    Esta rutina consta de {selectedRoutine.sessions.length}{" "}
-                    ejercicios. ¡Prepárate para un gran entrenamiento!
+                    Esta rutina consta de {selectedRoutine.sessions.length} ejercicios. ¡Prepárate para un gran
+                    entrenamiento!
                   </p>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button
-                    className="bg-green-600 hover:bg-green-700 text-white mr-2"
-                    onClick={handleConfirmStart}
-                  >
+                  <Button className="bg-green-600 hover:bg-green-700 text-white mr-2" onClick={handleConfirmStart}>
                     Confirmar Inicio
                   </Button>
                   <Button
@@ -268,21 +237,15 @@ export default function TrainingClient() {
             >
               <Card className="w-full max-w-md bg-orange-200 border-orange-300">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-orange-800">
-                    Advertencia
-                  </CardTitle>
+                  <CardTitle className="text-2xl font-bold text-orange-800">Advertencia</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg mb-4 text-orange-800">
-                    Ya has realizado este entrenamiento esta semana. ¿Quieres
-                    volver a hacerlo?
+                    Ya has realizado este entrenamiento esta semana. ¿Quieres volver a hacerlo?
                   </p>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button
-                    className="bg-green-600 hover:bg-green-700 text-white mr-2"
-                    onClick={handleConfirmModal}
-                  >
+                  <Button className="bg-green-600 hover:bg-green-700 text-white mr-2" onClick={handleConfirmModal}>
                     Sí
                   </Button>
                   <Button
@@ -300,5 +263,5 @@ export default function TrainingClient() {
       </div>
       <FooterPag />
     </>
-  );
+  )
 }

@@ -26,7 +26,6 @@ interface DashboardTrainerProps {
 }
 
 export default function DashboardTrainer({ user }: DashboardTrainerProps) {
-    console.log("✅ Entró a DashboardTrainer"); 
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +61,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
           dni: trainerData.dni,
           name: trainerData.name,
           gymName: trainerData.gymName,
-          role: "ROLE_TRAINER",
+          role: "TRAINER",
         })
       }
     } catch (error) {
