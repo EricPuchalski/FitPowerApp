@@ -1,4 +1,4 @@
-
+//src/services/RoutineService.ts
 // Función para activar una rutina
 export async function activateRoutine(routineId: number, token: string, clientDni: string) {
     try {

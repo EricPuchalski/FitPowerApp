@@ -1,3 +1,4 @@
+//src/services/ClientService.ts
 import { useState, useEffect } from "react";
 import { Client} from '../model/Client'; // Asegúrate de importar tus modelos
 import { Trainer } from "../model/Trainer";
