@@ -49,7 +49,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
   const fetchTrainerInfo = async (dni: string) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`/api/v1/trainers/${dni}`, {
+      const response = await fetch(`http://localhost:8080/api/v1/trainers/${dni}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -78,7 +78,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
       setLoading(true)
       const token = localStorage.getItem("token")
 
-      const response = await fetch(`/api/v1/clients/gym/${encodeURIComponent(currentUser.gymName)}`, {
+      const response = await fetch(`http://localhost:8080/api/v1/clients/gym/${encodeURIComponent(currentUser.gymName)}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
