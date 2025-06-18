@@ -47,6 +47,8 @@ function App() {
         <Route path="/trainer/client/:clientId/training-plans/:planId/edit" element={<TrainingPlanEdit />} />
         <Route path="/trainer/client/:clientId/progress" element={<ClientProgress />} />
 
+
+//Crear compomente para la ruta http://localhost:5173/trainers
       </Routes>
     </Router>
   )

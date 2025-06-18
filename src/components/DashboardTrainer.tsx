@@ -16,9 +16,9 @@ interface Client {
   dni: string
   name: string
   email: string
-  phone: string
-  membershipType: string
-  joinDate: string
+  phone: string//deberia llamarse phoneNumber sino no funcionaria . 
+  membershipType: string//este tampoco
+  joinDate: string//no funcionaria porque no tenesmo en los endpoints
 }
 
 interface DashboardTrainerProps {
