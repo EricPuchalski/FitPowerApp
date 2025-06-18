@@ -42,7 +42,7 @@ export default function LogIn() {
         } else if (data.roles.includes("ROLE_CLIENT")) {
           navigate("/client");
         } else if (data.roles.includes("ROLE_TRAINER")) {
-          navigate("/trainer/clients");
+          navigate("/trainer/dashboard"); // Redirigir al dashboard del entrenador
         } else if (data.roles.includes("ROLE_ADMIN")) {
           navigate("/admin");
         } else {
