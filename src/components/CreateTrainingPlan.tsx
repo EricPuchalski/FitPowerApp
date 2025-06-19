@@ -1,8 +1,13 @@
+// src/components/CreateTrainingPlan.tsx
 import React from 'react';
-import Swal from 'sweetalert2'; // Asegúrate de instalar sweetalert2
-import { Button } from "../../components/ui/button"; // Asegúrate de importar el componente Button
+import Swal from 'sweetalert2';
+import { Button } from "../../components/ui/button";
 
-const CreateNewTrainingPlan = ({ clientDni }) => {
+type CreateNewTrainingPlanProps = {
+  clientId: number; // ✅ Usamos el ID real, no el DNI
+};
+
+const CreateNewTrainingPlan: React.FC<CreateNewTrainingPlanProps> = ({ clientId }) => {
   const handleCreatePlan = async () => {
     Swal.fire({
       title: '¿Estás seguro?',
@@ -17,45 +22,54 @@ const CreateNewTrainingPlan = ({ clientDni }) => {
       if (result.isConfirmed) {
         Swal.fire({
           title: 'Crear Nuevo Plan',
-          html:
-            '<input id="name" class="swal2-input" placeholder="Nombre del plan">' +
-            '<input id="description" class="swal2-input" placeholder="Descripción del plan">',
+          html: '<input id="name" class="swal2-input" placeholder="Nombre del plan">',
           focusConfirm: false,
           preConfirm: () => {
-            const name = Swal.getPopup().querySelector('#name').value;
-            const description = Swal.getPopup().querySelector('#description').value;
-            if (!name || !description) {
-              Swal.showValidationMessage(`Por favor, ingresa el nombre y la descripción del plan.`);
+            const name = (Swal.getPopup()?.querySelector('#name') as HTMLInputElement)?.value;
+            if (!name) {
+              Swal.showValidationMessage(`Por favor, ingresa el nombre del plan.`);
             }
-            return { name, description };
+            return { name };
           }
         }).then((result) => {
           if (result.isConfirmed) {
-            const { name, description } = result.value;
-            fetch(`http://localhost:8080/api/training-plans`, {
+            const { name } = result.value!;
+            
+            // ⚠️ Usa la clave correcta según como guardaste el ID
+            const trainerId = Number(localStorage.getItem("trainerId")); 
+            const token = localStorage.getItem("token");
+
+            if (!trainerId || !token) {
+              Swal.fire('Error', 'No se encontró el ID del entrenador o el token.', 'error');
+              return;
+            }
+
+            // ✅ CORREGIDO: Ruta correcta del backend
+            fetch(`http://localhost:8080/api/v1/training-plans`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({
                 name,
-                description,
-                clientDni,
-                active: true, // Asegúrate de que el nuevo plan esté activo
+                trainerId,
+                clientId
               }),
             })
               .then((response) => {
                 if (response.ok) {
                   Swal.fire('Creado', 'El nuevo plan de entrenamiento ha sido creado.', 'success');
-                  window.location.reload()
-                  // Aquí puedes actualizar el estado o hacer cualquier otra cosa necesaria
+                  window.location.reload();
                 } else {
-                  throw new Error('Error al crear el plan de entrenamiento');
+                  // Si no fue exitoso, intenta obtener el texto de error
+                  return response.text().then(text => {
+                    throw new Error(text || 'Error al crear el plan de entrenamiento');
+                  });
                 }
               })
               .catch((error) => {
-                console.error("Error creating training plan:", error);
+                console.error("❌ Error creando el plan:", error);
                 Swal.fire('Error', 'Hubo un problema al crear el plan de entrenamiento.', 'error');
               });
           }
@@ -66,7 +80,6 @@ const CreateNewTrainingPlan = ({ clientDni }) => {
 
   return (
     <Button
-      asChild
       variant="outline"
       className="flex items-center space-x-2 bg-green-500 text-white hover:bg-green-600"
       onClick={handleCreatePlan}
@@ -79,3 +92,4 @@ const CreateNewTrainingPlan = ({ clientDni }) => {
 };
 
 export default CreateNewTrainingPlan;
+// src/components/CreateTrainingPlan.tsx

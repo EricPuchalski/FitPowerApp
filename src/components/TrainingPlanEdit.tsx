@@ -1,3 +1,4 @@
+//src/components/TrainingPlanEdit.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -73,7 +74,7 @@ export default function TrainingPlanEdit() {
       const token = localStorage.getItem("token")
 
       // Obtener detalles del plan
-      const planResponse = await fetch(`/api/v1/training-plans/${planId}`, {
+      const planResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -84,7 +85,7 @@ export default function TrainingPlanEdit() {
         const planData = await planResponse.json()
         
         // Obtener ejercicios del plan
-        const exercisesResponse = await fetch(`/api/v1/training-plans/${planId}/exercises`, {
+        const exercisesResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}/exercises`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -146,63 +147,84 @@ export default function TrainingPlanEdit() {
   }
 
   const savePlan = async () => {
+    setSaving(true);
+    if (!plan.name) {
+      alert("Completa el nombre del plan.");
+      setSaving(false);
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const trainerId = Number(localStorage.getItem("trainerId"));
+    const clientIdNum = Number(clientId);
+    if (isNaN(trainerId) || isNaN(clientIdNum)) {
+      alert("Faltan datos de trainerId o clientId.");
+      setSaving(false);
+      return;
+    }
+
     try {
-      setSaving(true)
+      // Enviar solo los campos que el backend espera
+      const planPayload = {
+        name: plan.name,
+        description: plan.description,
+        startDate: plan.startDate,
+        endDate: plan.endDate,
+        trainerId,
+        clientDni: clientId
+      };
 
-      // Validate required fields
-      if (!plan.name || !plan.startDate || !plan.endDate) {
-        alert("Por favor, completa todos los campos obligatorios")
-        setSaving(false)
-        return
+      const createRes = await fetch('http://localhost:8080/api/v1/training-plans', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(planPayload)
+      });
+
+      if (!createRes.ok) {
+        console.error("Error al crear plan:", await createRes.text());
+        throw new Error("No se creó el plan.");
       }
 
-      const token = localStorage.getItem("token")
+      const createdPlan = await createRes.json();
 
-      if (isNewPlan) {
-        // Crear nuevo plan
-        const planPayload = {
-          name: plan.name,
-          description: plan.description,
-          startDate: plan.startDate,
-          endDate: plan.endDate,
-          clientDni: plan.clientDni
-        }
-
-        const response = await fetch('/api/v1/training-plans', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(planPayload)
-        })
-
-        if (response.ok) {
-          const createdPlan = await response.json()
-          
-          // Agregar ejercicios al plan creado
-          for (const exercise of plan.exercises) {
-            await fetch(`/api/v1/training-plans/${createdPlan.id}/exercises`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(exercise)
-            })
+      // Enviar ejercicios correctamente formateados
+      for (const ex of plan.exercises) {
+        const exPayload = {
+          exerciseName: ex.exerciseName,
+          series: ex.series,
+          repetitions: ex.repetitions,
+          weight: ex.weight,
+          dayOfWeek: ex.dayOfWeek,
+          restTime: ex.restTime,
+          notes: ex.notes
+        };
+        
+        const exRes = await fetch(
+          `http://localhost:8080/api/v1/training-plans/${createdPlan.id}/exercises`,
+          {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${token}`, 
+              'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify(exPayload)
           }
+        );
+        
+        if (!exRes.ok) {
+          console.error("Error creando ejercicio:", await exRes.text());
         }
-      } else {
-        // Actualizar plan existente - necesitarías implementar PUT en el backend
-        console.log("Actualizar plan existente no implementado")
       }
 
-      navigate(`/trainer/client/${clientId}/training-plans`)
-    } catch (error) {
-      console.error("Error saving plan:", error)
-      alert("Error al guardar el plan")
+      navigate(`/trainer/client/${clientId}/training-plans`);
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar el plan.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
