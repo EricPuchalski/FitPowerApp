@@ -1,3 +1,4 @@
+// This file is part of the FitPower project. And the route is src/components/DashboardTrainer.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -15,10 +16,14 @@ interface Client {
   id: number
   dni: string
   name: string
+  lastName: string
   email: string
-  phone: string//deberia llamarse phoneNumber sino no funcionaria . 
-  membershipType: string//este tampoco
-  joinDate: string//no funcionaria porque no tenesmo en los endpoints
+  phoneNumber: string
+  address: string
+  goal: string
+  initialPhysicalCondition: string
+  gymName: string
+  createdAt: string // 👈 sirve como joinDate
 }
 
 interface DashboardTrainerProps {

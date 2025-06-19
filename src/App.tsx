@@ -40,7 +40,7 @@ function App() {
         <Route path="/trainerCrud" element={<TrainerCrud />} />
         <Route path="/nutritionistCrud" element={<NutritionistCrud />} />
         <Route path="/traineers" element={<TraineersManager />} />
-
+    
         {/* NUEVAS Rutas del Entrenador - Reemplazan las viejas que no funcionaban */}
         <Route path="/trainer/dashboard" element={<DashboardTrainer />} />
         <Route path="/trainer/client/:clientId/training-plans" element={<TrainingPlans />} />
