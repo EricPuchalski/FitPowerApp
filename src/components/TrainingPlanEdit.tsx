@@ -49,6 +49,7 @@ export default function TrainingPlanEdit() {
     clientDni: clientId || "",
     exercises: [],
   })
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const isNewPlan = planId === "new"
 
@@ -72,6 +73,11 @@ export default function TrainingPlanEdit() {
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
+      
+      if (!token) {
+        setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.")
+        return
+      }
 
       // Obtener detalles del plan
       const planResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}`, {
@@ -81,34 +87,41 @@ export default function TrainingPlanEdit() {
         }
       })
 
-      if (planResponse.ok) {
-        const planData = await planResponse.json()
-        
-        // Obtener ejercicios del plan
-        const exercisesResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}/exercises`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-
-        let exercises = []
-        if (exercisesResponse.ok) {
-          exercises = await exercisesResponse.json()
+      if (!planResponse.ok) {
+        if (planResponse.status === 401 || planResponse.status === 403) {
+          setAuthError("No tienes permisos para acceder a este plan. Por favor verifica tus credenciales.")
+          return
         }
-
-        setPlan({
-          id: planData.id,
-          name: planData.name,
-          description: planData.description,
-          startDate: planData.startDate,
-          endDate: planData.endDate,
-          clientDni: clientId || "",
-          exercises: exercises
-        })
+        throw new Error(`Error al obtener el plan: ${planResponse.statusText}`)
       }
+
+      const planData = await planResponse.json()
+      
+      // Obtener ejercicios del plan
+      const exercisesResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}/exercises`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      let exercises = []
+      if (exercisesResponse.ok) {
+        exercises = await exercisesResponse.json()
+      }
+
+      setPlan({
+        id: planData.id,
+        name: planData.name,
+        description: planData.description,
+        startDate: planData.startDate,
+        endDate: planData.endDate,
+        clientDni: clientId || "",
+        exercises: exercises
+      })
     } catch (error) {
       console.error("Error fetching training plan:", error)
+      setAuthError("Ocurrió un error al cargar el plan. Por favor intenta nuevamente.")
     } finally {
       setLoading(false)
     }
@@ -147,32 +160,85 @@ export default function TrainingPlanEdit() {
   }
 
   const savePlan = async () => {
-    setSaving(true);
+    setSaving(true)
+    setAuthError(null)
+    
     if (!plan.name) {
-      alert("Completa el nombre del plan.");
-      setSaving(false);
-      return;
+      alert("Completa el nombre del plan.")
+      setSaving(false)
+      return
     }
 
-    const token = localStorage.getItem("token");
-    const trainerId = Number(localStorage.getItem("trainerId"));
-    const clientIdNum = Number(clientId);
-    if (isNaN(trainerId) || isNaN(clientIdNum)) {
-      alert("Faltan datos de trainerId o clientId.");
-      setSaving(false);
-      return;
+    const token = localStorage.getItem("token")
+    const trainerIdStr = localStorage.getItem("trainerId")
+    const userRole = localStorage.getItem("userRole")
+
+    // Debug authentication info
+    console.log("Auth Debug:", {
+      tokenExists: !!token,
+      tokenLength: token?.length,
+      trainerId: trainerIdStr,
+      userRole: userRole
+    })
+
+    if (!token) {
+      setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.")
+      setSaving(false)
+      return
+    }
+
+    if (!trainerIdStr) {
+      alert("No se encontró el ID del entrenador. Por favor vuelve a intentar.")
+      setSaving(false)
+      return
+    }
+
+    const trainerId = Number(trainerIdStr)
+    if (isNaN(trainerId) || trainerId <= 0) {
+      alert("El ID del entrenador no es válido.")
+      setSaving(false)
+      return
+    }
+
+    const clientIdNum = Number(clientId)
+    if (isNaN(clientIdNum)) {
+      alert("El DNI del cliente no es válido.")
+      setSaving(false)
+      return
     }
 
     try {
-      // Enviar solo los campos que el backend espera
+      // Verificar que el cliente existe antes de crear el plan
+      const clientCheckRes = await fetch(`http://localhost:8080/api/v1/clients/${clientIdNum}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!clientCheckRes.ok) {
+        if (clientCheckRes.status === 401 || clientCheckRes.status === 403) {
+          setAuthError("No tienes permisos para acceder a este cliente. Por favor verifica tus credenciales.")
+          return
+        }
+        const errorText = await clientCheckRes.text()
+        console.error("Cliente no encontrado - Error completo:", errorText)
+        alert("El cliente no existe en la base de datos o no tienes permisos para acceder.")
+        return
+      }
+      
+      const clientData = await clientCheckRes.json()
+      console.log("Cliente encontrado:", clientData)
+
+      // Crear payload completamente limpio sin ningún id
       const planPayload = {
-        name: plan.name,
-        description: plan.description,
+        name: plan.name.trim(),
+        description: plan.description.trim(),
         startDate: plan.startDate,
         endDate: plan.endDate,
-        trainerId,
-        clientDni: clientId
-      };
+        trainerId: trainerId,
+        clientId: clientData.id  // AGREGADO 
+      }
 
       const createRes = await fetch('http://localhost:8080/api/v1/training-plans', {
         method: 'POST',
@@ -181,14 +247,20 @@ export default function TrainingPlanEdit() {
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify(planPayload)
-      });
+      })
 
       if (!createRes.ok) {
-        console.error("Error al crear plan:", await createRes.text());
-        throw new Error("No se creó el plan.");
+        if (createRes.status === 401 || createRes.status === 403) {
+          setAuthError("No tienes permisos para crear planes. Por favor verifica tus credenciales.")
+          return
+        }
+        const errorText = await createRes.text()
+        console.error("Error response body:", errorText)
+        throw new Error("No se creó el plan.")
       }
 
-      const createdPlan = await createRes.json();
+      const createdPlan = await createRes.json()
+      console.log("Plan creado exitosamente:", createdPlan)
 
       // Enviar ejercicios correctamente formateados
       for (const ex of plan.exercises) {
@@ -200,7 +272,7 @@ export default function TrainingPlanEdit() {
           dayOfWeek: ex.dayOfWeek,
           restTime: ex.restTime,
           notes: ex.notes
-        };
+        }
         
         const exRes = await fetch(
           `http://localhost:8080/api/v1/training-plans/${createdPlan.id}/exercises`,
@@ -212,19 +284,19 @@ export default function TrainingPlanEdit() {
             },
             body: JSON.stringify(exPayload)
           }
-        );
+        )
         
         if (!exRes.ok) {
-          console.error("Error creando ejercicio:", await exRes.text());
+          console.error("Error creando ejercicio:", await exRes.text())
         }
       }
 
-      navigate(`/trainer/client/${clientId}/training-plans`);
+      navigate(`/trainer/client/${clientId}/training-plans`)
     } catch (err) {
-      console.error(err);
-      alert("Error al guardar el plan.");
+      console.error("Error completo:", err)
+      setAuthError("Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente.")
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
@@ -236,6 +308,32 @@ export default function TrainingPlanEdit() {
           <div className="space-y-4">
             <div className="h-32 bg-gray-200 rounded-lg"></div>
             <div className="h-48 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (authError) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                {authError}
+              </p>
+              <div className="mt-4">
+                <Link to="/login" className="text-sm font-medium text-red-700 hover:text-red-600">
+                  Volver a iniciar sesión <span aria-hidden="true">&rarr;</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -267,6 +365,24 @@ export default function TrainingPlanEdit() {
           <span>{saving ? "Guardando..." : "Guardar Plan"}</span>
         </button>
       </div>
+
+      {/* Error message */}
+      {authError && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                {authError}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Plan Details */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">

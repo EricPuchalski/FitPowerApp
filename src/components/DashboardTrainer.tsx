@@ -31,7 +31,7 @@ interface DashboardTrainerProps {
 }
 
 export default function DashboardTrainer({ user }: DashboardTrainerProps) {
-    console.log("✅ Entró a DashboardTrainer"); 
+  console.log("✅ Entró a DashboardTrainer"); 
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -63,6 +63,12 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
 
       if (response.ok) {
         const trainerData = await response.json()
+
+        // ✅ Guardar el ID real del entrenador en localStorage
+        localStorage.setItem("trainerId", trainerData.id.toString());
+        // ✅ AGREGAR ESTA LÍNEA - Guardar el rol del usuario
+        localStorage.setItem("userRole", "ROLE_TRAINER");
+
         setCurrentUser({
           dni: trainerData.dni,
           name: trainerData.name,
@@ -194,13 +200,11 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                   <span className="font-medium">Email:</span> {client.email}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Teléfono:</span> {client.phone}
+                  <span className="font-medium">Teléfono:</span> {client.phoneNumber}
                 </p>
+              
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Membresía:</span> {client.membershipType}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Desde:</span> {new Date(client.joinDate).toLocaleDateString("es-ES")}
+                  <span className="font-medium">Desde:</span> {new Date(client.createdAt).toLocaleDateString("es-ES")}
                 </p>
               </div>
 
@@ -211,12 +215,23 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                   </button>
                 </Link>
 
-                <Link to={`/trainer/client/${client.dni}/training-plans/new/edit`}>
-                  <button className="w-full bg-pink-400 hover:bg-pink-500 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center">
+                {localStorage.getItem("trainerId") && localStorage.getItem("userRole") === "ROLE_TRAINER" ? (
+                  <Link to={`/trainer/client/${client.dni}/training-plans/new/edit`}>
+                    <button className="w-full bg-pink-400 hover:bg-pink-500 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear Plan
+                    </button>
+                  </Link>
+                ) : (
+                  <button 
+                    disabled
+                    className="w-full bg-gray-300 text-white py-2 px-4 rounded-md cursor-not-allowed flex items-center justify-center"
+                    title="Cargando datos del entrenador..."
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Crear Plan
                   </button>
-                </Link>
+                )}
 
                 <Link to={`/trainer/client/${client.dni}/progress`}>
                   <button className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-md transition-colors flex items-center justify-center">
