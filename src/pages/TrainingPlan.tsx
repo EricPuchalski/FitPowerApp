@@ -97,7 +97,7 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
         <h2 className="text-2xl font-bold text-gray-700 mb-4">No se encontró un plan de entrenamiento activo</h2>
-        <p className="text-gray-600">Por favor, contacta a tu entrenador.</p>
+        <p className="text-gray-600">Por favor aguarda, tu entrenador está creando tu entrenamiento personalizado para vos!.</p>
       </div>
     );
   }
@@ -118,32 +118,32 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <ul className="container mx-auto px-4 flex">
-          <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
-            <button 
-              onClick={() => navigate('/client')}
-              className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
-            >
-              Inicio
-            </button>
-          </li>
-          <li className="flex-1 text-center border-b-4 border-red-500">
-            <button className="w-full py-4 font-medium text-red-500">Plan de Entrenamiento</button>
-          </li>
-          <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
-            <button 
-              onClick={() => navigate('/nutrition-plan')}
-              className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
-            >
-              Plan de Nutrición
-            </button>
-          </li>
-          <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
-            <button className="w-full py-4 font-medium text-gray-600 hover:text-gray-900">Progreso</button>
-          </li>
-        </ul>
-      </nav>
+<nav className="bg-white shadow-sm">
+  <ul className="container mx-auto px-4 flex">
+    <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
+      <button
+        onClick={() => navigate("/client")}
+        className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
+      >
+        Inicio
+      </button>
+    </li>
+    <li className="flex-1 text-center border-b-4 border-red-500">
+      <button className="w-full py-4 font-medium text-red-500">
+        Plan de Entrenamiento
+      </button>
+    </li>
+    <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
+      <button
+        onClick={() => navigate("/client/nutrition-plan")}
+        className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
+      >
+        Plan de Nutrición
+      </button>
+    </li>
+  </ul>
+</nav>
+
 
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
@@ -233,7 +233,7 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  Tu plan de entrenamiento no tiene ejercicios asignados para ningún día. Por favor contacta a tu entrenador.
+                  Tu plan de entrenamiento no tiene ejercicios asignados para ningún día. Por favor aguarda, tu entrenador está creando tu entrenamiento personalizado para vos!
                 </p>
               </div>
             </div>
@@ -241,12 +241,12 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
         )}
 
         {/* Actions */}
-        <div className="flex justify-end space-x-4">
+        {/* <div className="flex justify-end space-x-4">
           <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
             Descargar PDF
           </button>
 
-        </div>
+        </div> */}
       </main>
 
       {/* Footer */}
