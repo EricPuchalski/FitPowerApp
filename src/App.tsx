@@ -13,6 +13,9 @@ import TrainingPlanEdit from './components/TrainingPlanEdit';
 import ClientProgress from './components/ClientProgress';
 import NutritionPlanPage from './pages/NutritionPlan';
 import NutritionRecordsPage from './pages/NutritionRecords';
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 function App() {
@@ -24,6 +27,9 @@ function App() {
 =======
         
         {/* Entrenamiento - cliente */}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         <Route path="/client" element={<ClientDashboard />} />
         <Route path="/client/training-plan" element={<TrainingPlanPage />} />
@@ -42,6 +48,11 @@ function App() {
 
         <Route path="/modificar-rutina/:routineId" element={<ModifyRoutine />} />
 =======
+        {/* Nutricion- cliente*/}
+        <Route path="/client/nutrition-plan" element={<NutritionPlanPage />} />
+        <Route path="/client/nutrition-plans/:nutritionPlanId/records" element={<NutritionRecordsPage />} />
+
+
         {/* Nutricion- cliente*/}
         <Route path="/client/nutrition-plan" element={<NutritionPlanPage />} />
         <Route path="/client/nutrition-plans/:nutritionPlanId/records" element={<NutritionRecordsPage />} />
