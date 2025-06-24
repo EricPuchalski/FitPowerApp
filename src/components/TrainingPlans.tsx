@@ -213,8 +213,8 @@ export default function TrainingPlans() {
                 </div>
 
                 <div className="mt-4 flex flex-col space-y-2">
-                  <Link to={`/trainer/training-plans/${plan.id}/edit`}>
-                    <button className="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center">
+                + <Link to={`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`}>
+                <button className="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center">
                       <Dumbbell className="h-4 w-4 mr-2" />
                       Editar ejercicios
                     </button>

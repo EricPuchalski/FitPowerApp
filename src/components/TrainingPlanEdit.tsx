@@ -1,4 +1,3 @@
-//src/components/TrainingPlanEdit.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -37,7 +36,7 @@ const DAYS_OF_WEEK = [
 ]
 
 export default function TrainingPlanEdit() {
-  const { clientId, planId } = useParams<{ clientId: string; planId: string }>()
+  const { clientDni, planId } = useParams<{ clientDni: string; planId: string }>()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -46,7 +45,7 @@ export default function TrainingPlanEdit() {
     description: "",
     startDate: "",
     endDate: "",
-    clientDni: clientId || "",
+    clientDni: clientDni || "",
     exercises: [],
   })
   const [authError, setAuthError] = useState<string | null>(null)
@@ -60,14 +59,14 @@ export default function TrainingPlanEdit() {
         description: "",
         startDate: new Date().toISOString().split("T")[0],
         endDate: "",
-        clientDni: clientId || "",
+        clientDni: clientDni || "",
         exercises: [],
       })
       setLoading(false)
     } else {
       fetchTrainingPlan()
     }
-  }, [planId, isNewPlan, clientId])
+  }, [planId, isNewPlan, clientDni])
 
   const fetchTrainingPlan = async () => {
     try {
@@ -79,7 +78,6 @@ export default function TrainingPlanEdit() {
         return
       }
 
-      // Obtener detalles del plan
       const planResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -97,7 +95,6 @@ export default function TrainingPlanEdit() {
 
       const planData = await planResponse.json()
       
-      // Obtener ejercicios del plan
       const exercisesResponse = await fetch(`http://localhost:8080/api/v1/training-plans/${planId}/exercises`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -116,7 +113,7 @@ export default function TrainingPlanEdit() {
         description: planData.description,
         startDate: planData.startDate,
         endDate: planData.endDate,
-        clientDni: clientId || "",
+        clientDni: clientDni || "",
         exercises: exercises
       })
     } catch (error) {
@@ -173,14 +170,6 @@ export default function TrainingPlanEdit() {
     const trainerIdStr = localStorage.getItem("trainerId")
     const userRole = localStorage.getItem("userRole")
 
-    // Debug authentication info
-    console.log("Auth Debug:", {
-      tokenExists: !!token,
-      tokenLength: token?.length,
-      trainerId: trainerIdStr,
-      userRole: userRole
-    })
-
     if (!token) {
       setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.")
       setSaving(false)
@@ -200,7 +189,7 @@ export default function TrainingPlanEdit() {
       return
     }
 
-    const clientIdNum = Number(clientId)
+    const clientIdNum = Number(clientDni)
     if (isNaN(clientIdNum)) {
       alert("El DNI del cliente no es válido.")
       setSaving(false)
@@ -208,7 +197,6 @@ export default function TrainingPlanEdit() {
     }
 
     try {
-      // Verificar que el cliente existe antes de crear el plan
       const clientCheckRes = await fetch(`http://localhost:8080/api/v1/clients/${clientIdNum}`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -230,68 +218,99 @@ export default function TrainingPlanEdit() {
       const clientData = await clientCheckRes.json()
       console.log("Cliente encontrado:", clientData)
 
-      // Crear payload completamente limpio sin ningún id
-      const planPayload = {
-        name: plan.name.trim(),
-        description: plan.description.trim(),
-        startDate: plan.startDate,
-        endDate: plan.endDate,
-        trainerId: trainerId,
-        clientId: clientData.id  // AGREGADO 
-      }
-
-      const createRes = await fetch('http://localhost:8080/api/v1/training-plans', {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`, 
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(planPayload)
-      })
-
-      if (!createRes.ok) {
-        if (createRes.status === 401 || createRes.status === 403) {
-          setAuthError("No tienes permisos para crear planes. Por favor verifica tus credenciales.")
-          return
+      if (isNewPlan) {
+        const planPayload = {
+          name: plan.name.trim(),
+          description: plan.description.trim(),
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          trainerId: trainerId,
+          clientId: clientData.id
         }
-        const errorText = await createRes.text()
-        console.error("Error response body:", errorText)
-        throw new Error("No se creó el plan.")
-      }
 
-      const createdPlan = await createRes.json()
-      console.log("Plan creado exitosamente:", createdPlan)
+        const createRes = await fetch('http://localhost:8080/api/v1/training-plans', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`, 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(planPayload)
+        })
 
-      // Enviar ejercicios correctamente formateados
-      for (const ex of plan.exercises) {
-        const exPayload = {
-          exerciseName: ex.exerciseName,
-          series: ex.series,
-          repetitions: ex.repetitions,
-          weight: ex.weight,
-          dayOfWeek: ex.dayOfWeek,
-          restTime: ex.restTime,
-          notes: ex.notes
-        }
-        
-        const exRes = await fetch(
-          `http://localhost:8080/api/v1/training-plans/${createdPlan.id}/exercises`,
-          {
-            method: 'POST',
-            headers: { 
-              'Authorization': `Bearer ${token}`, 
-              'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(exPayload)
+        if (!createRes.ok) {
+          if (createRes.status === 401 || createRes.status === 403) {
+            setAuthError("No tienes permisos para crear planes. Por favor verifica tus credenciales.")
+            return
           }
-        )
-        
-        if (!exRes.ok) {
-          console.error("Error creando ejercicio:", await exRes.text())
+          const errorText = await createRes.text()
+          console.error("Error response body:", errorText)
+          throw new Error("No se creó el plan.")
         }
-      }
 
-      navigate(`/trainer/client/${clientId}/training-plans`)
+        const createdPlan = await createRes.json()
+        console.log("Plan creado exitosamente:", createdPlan)
+
+        for (const ex of plan.exercises) {
+          const exPayload = {
+            exerciseName: ex.exerciseName,
+            series: ex.series,
+            repetitions: ex.repetitions,
+            weight: ex.weight,
+            dayOfWeek: ex.dayOfWeek,
+            restTime: ex.restTime,
+            notes: ex.notes
+          }
+          
+          const exRes = await fetch(
+            `http://localhost:8080/api/v1/training-plans/${createdPlan.id}/exercises`,
+            {
+              method: 'POST',
+              headers: { 
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': 'application/json' 
+              },
+              body: JSON.stringify(exPayload)
+            }
+          )
+          
+          if (!exRes.ok) {
+            console.error("Error creando ejercicio:", await exRes.text())
+          }
+        }
+
+        // Redirección CORRECTA después de crear el plan
+        navigate(`/trainer/client/${clientDni}/training-plans/${createdPlan.id}/edit`)
+        return
+      } else {
+        for (const ex of plan.exercises) {
+          if (ex.id) continue
+
+          const exPayload = {
+            exerciseName: ex.exerciseName,
+            series: ex.series,
+            repetitions: ex.repetitions,
+            weight: ex.weight,
+            dayOfWeek: ex.dayOfWeek,
+            restTime: ex.restTime,
+            notes: ex.notes
+          }
+
+          await fetch(
+            `http://localhost:8080/api/v1/training-plans/${plan.id}/exercises`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(exPayload)
+            }
+          )
+        }
+
+        // Redirección para edición de plan existente
+        navigate(`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`)
+      }
     } catch (err) {
       console.error("Error completo:", err)
       setAuthError("Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente.")
@@ -342,10 +361,9 @@ export default function TrainingPlanEdit() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
-          <Link to={`/trainer/client/${clientId}/training-plans`}>
+          <Link to={`/trainer/client/${clientDni}/training-plans`}>
             <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
               <ArrowLeft className="h-4 w-4" />
               <span>Volver</span>
@@ -366,7 +384,6 @@ export default function TrainingPlanEdit() {
         </button>
       </div>
 
-      {/* Error message */}
       {authError && (
         <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
           <div className="flex">
@@ -384,7 +401,6 @@ export default function TrainingPlanEdit() {
         </div>
       )}
 
-      {/* Plan Details */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">
         <div className="bg-cyan-50 rounded-t-lg p-4">
           <h2 className="text-lg font-semibold text-gray-900">Detalles del Plan</h2>
@@ -448,135 +464,115 @@ export default function TrainingPlanEdit() {
         </div>
       </div>
 
-      {/* Exercises */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-        <div className="bg-cyan-50 rounded-t-lg p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Ejercicios</h2>
-            <button 
-              onClick={addExercise} 
-              className="bg-pink-400 hover:bg-pink-500 text-white px-3 py-1 rounded-md flex items-center space-x-2 text-sm"
+      {!isNewPlan && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">
+          <div className="bg-green-50 rounded-t-lg p-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Ejercicios del Plan</h2>
+            <button
+              onClick={addExercise}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md flex items-center space-x-1"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="w-4 h-4" />
               <span>Agregar Ejercicio</span>
             </button>
           </div>
-        </div>
-        <div className="p-6">
-          {plan.exercises.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No hay ejercicios en este plan</p>
-              <button 
-                onClick={addExercise} 
-                className="bg-pink-400 hover:bg-pink-500 text-white px-4 py-2 rounded-md flex items-center space-x-2 mx-auto"
+          <div className="p-6 space-y-6">
+            {plan.exercises.map((exercise, index) => (
+              <div
+                key={index}
+                className="border border-gray-300 p-4 rounded-md space-y-4"
               >
-                <Plus className="h-4 w-4" />
-                <span>Agregar Primer Ejercicio</span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {plan.exercises.map((exercise, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-medium text-gray-900">Ejercicio {index + 1}</h4>
-                    <button
-                      onClick={() => removeExercise(index)}
-                      className="text-red-600 border border-red-300 hover:bg-red-50 px-2 py-1 rounded-md flex items-center space-x-1"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Ejercicio</label>
-                      <input
-                        type="text"
-                        value={exercise.exerciseName}
-                        onChange={(e) => updateExercise(index, "exerciseName", e.target.value)}
-                        placeholder="Ej: Sentadillas"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Series</label>
-                      <input
-                        type="number"
-                        value={exercise.series}
-                        onChange={(e) => updateExercise(index, "series", Number.parseInt(e.target.value) || 0)}
-                        min="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Repeticiones</label>
-                      <input
-                        type="number"
-                        value={exercise.repetitions}
-                        onChange={(e) => updateExercise(index, "repetitions", Number.parseInt(e.target.value) || 0)}
-                        min="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
-                      <input
-                        type="number"
-                        value={exercise.weight}
-                        onChange={(e) => updateExercise(index, "weight", Number.parseFloat(e.target.value) || 0)}
-                        min="0"
-                        step="0.5"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Día</label>
-                      <select
-                        value={exercise.dayOfWeek}
-                        onChange={(e) => updateExercise(index, "dayOfWeek", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        {DAYS_OF_WEEK.map((day) => (
-                          <option key={day.value} value={day.value}>
-                            {day.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Descanso (seg)</label>
-                      <input
-                        type="number"
-                        value={exercise.restTime}
-                        onChange={(e) => updateExercise(index, "restTime", Number.parseInt(e.target.value) || 0)}
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div className="md:col-span-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-                      <input
-                        type="text"
-                        value={exercise.notes}
-                        onChange={(e) => updateExercise(index, "notes", e.target.value)}
-                        placeholder="Instrucciones adicionales..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-md font-semibold">Ejercicio #{index + 1}</h3>
+                  <button
+                    onClick={() => removeExercise(index)}
+                    className="text-red-500 hover:text-red-600 flex items-center space-x-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Eliminar</span>
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Nombre del ejercicio"
+                    value={exercise.exerciseName}
+                    onChange={(e) =>
+                      updateExercise(index, "exerciseName", e.target.value)
+                    }
+                    className="border px-3 py-2 rounded-md w-full"
+                  />
+
+                  <select
+                    value={exercise.dayOfWeek}
+                    onChange={(e) =>
+                      updateExercise(index, "dayOfWeek", e.target.value)
+                    }
+                    className="border px-3 py-2 rounded-md w-full"
+                  >
+                    {DAYS_OF_WEEK.map((day) => (
+                      <option key={day.value} value={day.value}>
+                        {day.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    type="number"
+                    placeholder="Series"
+                    value={exercise.series}
+                    onChange={(e) =>
+                      updateExercise(index, "series", Number(e.target.value))
+                    }
+                    className="border px-3 py-2 rounded-md w-full"
+                  />
+
+                  <input
+                    type="number"
+                    placeholder="Repeticiones"
+                    value={exercise.repetitions}
+                    onChange={(e) =>
+                      updateExercise(index, "repetitions", Number(e.target.value))
+                    }
+                    className="border px-3 py-2 rounded-md w-full"
+                  />
+
+                  <input
+                    type="number"
+                    placeholder="Peso (kg)"
+                    value={exercise.weight}
+                    onChange={(e) =>
+                      updateExercise(index, "weight", Number(e.target.value))
+                    }
+                    className="border px-3 py-2 rounded-md w-full"
+                  />
+
+                  <input
+                    type="number"
+                    placeholder="Descanso (seg)"
+                    value={exercise.restTime}
+                    onChange={(e) =>
+                      updateExercise(index, "restTime", Number(e.target.value))
+                    }
+                    className="border px-3 py-2 rounded-md w-full"
+                  />
+                </div>
+
+                <textarea
+                  placeholder="Notas"
+                  value={exercise.notes}
+                  onChange={(e) =>
+                    updateExercise(index, "notes", e.target.value)
+                  }
+                  className="border px-3 py-2 rounded-md w-full"
+                  rows={2}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

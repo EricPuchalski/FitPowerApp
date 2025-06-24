@@ -45,7 +45,7 @@ function App() {
         {/* NUEVAS Rutas del Entrenador - Reemplazan las viejas que no funcionaban */}
         <Route path="/trainer/dashboard" element={<DashboardTrainer />} />
         <Route path="/trainer/client/:clientDni/training-plans" element={<TrainingPlans />} />
-        <Route path="/trainer/client/:clientId/training-plans/:planId/edit" element={<TrainingPlanEdit />} />
+        <Route path="/trainer/client/:clientDni/training-plans/:planId/edit" element={<TrainingPlanEdit />} />
         <Route path="/trainer/client/:clientId/progress" element={<ClientProgress />} />
 
 
