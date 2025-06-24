@@ -1,3 +1,4 @@
+//src/model/Client.ts
 export type Client = {
     id: number;
     name: string;

@@ -1,3 +1,4 @@
+//src/client/ClientStatus.ts
 export type ClientStats = {
     id: number
     weight: number

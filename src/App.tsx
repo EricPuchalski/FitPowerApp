@@ -1,3 +1,4 @@
+//src/App.tsx
 import './index.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LogIn from './components/Login'
@@ -43,7 +44,7 @@ function App() {
     
         {/* NUEVAS Rutas del Entrenador - Reemplazan las viejas que no funcionaban */}
         <Route path="/trainer/dashboard" element={<DashboardTrainer />} />
-        <Route path="/trainer/client/:clientId/training-plans" element={<TrainingPlans />} />
+        <Route path="/trainer/client/:clientDni/training-plans" element={<TrainingPlans />} />
         <Route path="/trainer/client/:clientId/training-plans/:planId/edit" element={<TrainingPlanEdit />} />
         <Route path="/trainer/client/:clientId/progress" element={<ClientProgress />} />
 
