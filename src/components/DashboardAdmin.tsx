@@ -100,30 +100,29 @@ export default function DashboardAdmin() {
           </div>
         </div>
 
-        <div className="mt-12 grid md:grid-cols-3 gap-8">
+        <div className="mt-12 grid md:grid-cols-4 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-800 hover:shadow-xl transition duration-300">
             <Dumbbell className="w-12 h-12 text-blue-800 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Programas de Entrenamiento</h2>
             <p className="text-gray-600">Diseña y gestiona programas personalizados para tus clientes.</p>
-            {/* <a href="#" className="mt-4 inline-flex items-center text-blue-800 hover:text-blue-900">
-              Explorar <ChevronRight size={20} />
-            </a> */}
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-indigo-600 hover:shadow-xl transition duration-300">
             <Apple className="w-12 h-12 text-indigo-600 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Planes Nutricionales</h2>
             <p className="text-gray-600">Crea planes de alimentación adaptados a las necesidades de cada cliente.</p>
-            {/* <a href="#" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
-              Explorar <ChevronRight size={20} />
-            </a> */}
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-pink-600 hover:shadow-xl transition duration-300">
             <Users className="w-12 h-12 text-pink-600 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Gestión de Miembros</h2>
             <p className="text-gray-600">Administra fácilmente la información y progreso de tus clientes.</p>
-            {/* <a href="#" className="mt-4 inline-flex items-center text-pink-600 hover:text-pink-800">
-              Explorar <ChevronRight size={20} />
-            </a> */}
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-600 hover:shadow-xl transition duration-300">
+            <Settings className="w-12 h-12 text-green-600 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Ejercicios</h2>
+            <p className="text-gray-600">Administra y crea ejercicios disponibles para los entrenadores.</p>
+            <a href="/exercises" className="mt-4 inline-flex items-center text-green-600 hover:text-green-800">
+              Ir a ejercicios <ChevronRight size={20} />
+            </a>
           </div>
         </div>
 

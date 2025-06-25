@@ -142,6 +142,14 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
           Gestiona los planes de entrenamiento de tus clientes en {currentUser?.gymName || 'FitPower'}
         </p>
       </div>
+      {/* Acceso a Gestión de Ejercicios */}
+<div className="mb-8">
+  <Link to="/exercises">
+    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
+      Ir a Gestión de Ejercicios
+    </button>
+  </Link>
+</div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

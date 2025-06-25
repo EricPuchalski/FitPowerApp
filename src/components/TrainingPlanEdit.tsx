@@ -1,12 +1,19 @@
+// src/components/TrainingPlanEdit.tsx
 "use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react'
 
+interface SimpleExercise {
+  id: number
+  name: string
+}
+
 interface Exercise {
   id?: number
-  exerciseName: string
+  exerciseId: number
+  exerciseName?: string
   series: number
   repetitions: number
   weight: number
@@ -40,6 +47,7 @@ export default function TrainingPlanEdit() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [allExercises, setAllExercises] = useState<SimpleExercise[]>([])
   const [plan, setPlan] = useState<TrainingPlan>({
     name: "",
     description: "",
@@ -53,6 +61,19 @@ export default function TrainingPlanEdit() {
   const isNewPlan = planId === "new"
 
   useEffect(() => {
+    const token = localStorage.getItem("token")
+    
+    // Cargar catálogo de ejercicios
+    fetch("http://localhost:8080/api/v1/exercises", {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(setAllExercises)
+      .catch(console.error)
+
     if (isNewPlan) {
       setPlan({
         name: "",
@@ -105,6 +126,12 @@ export default function TrainingPlanEdit() {
       let exercises = []
       if (exercisesResponse.ok) {
         exercises = await exercisesResponse.json()
+        // Mapear los ejercicios existentes al nuevo formato
+        exercises = exercises.map((ex: any) => ({
+          ...ex,
+          exerciseId: ex.exercise?.id || 0,
+          exerciseName: ex.exercise?.name || ""
+        }))
       }
 
       setPlan({
@@ -126,7 +153,7 @@ export default function TrainingPlanEdit() {
 
   const addExercise = () => {
     const newExercise: Exercise = {
-      exerciseName: "",
+      exerciseId: 0,
       series: 3,
       repetitions: 10,
       weight: 0,
@@ -164,6 +191,15 @@ export default function TrainingPlanEdit() {
       alert("Completa el nombre del plan.")
       setSaving(false)
       return
+    }
+
+    // Validar que todos los ejercicios tengan un exerciseId válido
+    for (const ex of plan.exercises) {
+      if (ex.exerciseId <= 0) {
+        alert("Por favor selecciona un ejercicio válido para todas las rutinas.")
+        setSaving(false)
+        return
+      }
     }
 
     const token = localStorage.getItem("token")
@@ -221,9 +257,6 @@ export default function TrainingPlanEdit() {
       if (isNewPlan) {
         const planPayload = {
           name: plan.name.trim(),
-          description: plan.description.trim(),
-          startDate: plan.startDate,
-          endDate: plan.endDate,
           trainerId: trainerId,
           clientId: clientData.id
         }
@@ -252,11 +285,11 @@ export default function TrainingPlanEdit() {
 
         for (const ex of plan.exercises) {
           const exPayload = {
-            exerciseName: ex.exerciseName,
+            exerciseId: ex.exerciseId,
             series: ex.series,
             repetitions: ex.repetitions,
             weight: ex.weight,
-            dayOfWeek: ex.dayOfWeek,
+            day: ex.dayOfWeek,
             restTime: ex.restTime,
             notes: ex.notes
           }
@@ -278,7 +311,6 @@ export default function TrainingPlanEdit() {
           }
         }
 
-        // Redirección CORRECTA después de crear el plan
         navigate(`/trainer/client/${clientDni}/training-plans/${createdPlan.id}/edit`)
         return
       } else {
@@ -286,11 +318,11 @@ export default function TrainingPlanEdit() {
           if (ex.id) continue
 
           const exPayload = {
-            exerciseName: ex.exerciseName,
+            exerciseId: ex.exerciseId,
             series: ex.series,
             repetitions: ex.repetitions,
             weight: ex.weight,
-            dayOfWeek: ex.dayOfWeek,
+            day: ex.dayOfWeek,
             restTime: ex.restTime,
             notes: ex.notes
           }
@@ -308,7 +340,6 @@ export default function TrainingPlanEdit() {
           )
         }
 
-        // Redirección para edición de plan existente
         navigate(`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`)
       }
     } catch (err) {
@@ -494,15 +525,28 @@ export default function TrainingPlanEdit() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Nombre del ejercicio"
-                    value={exercise.exerciseName}
-                    onChange={(e) =>
-                      updateExercise(index, "exerciseName", e.target.value)
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ejercicio *</label>
+                    <select
+                      value={exercise.exerciseId}
+                      onChange={(e) =>
+                        updateExercise(index, "exerciseId", Number(e.target.value))
+                      }
+                      className="border px-3 py-2 rounded-md w-full"
+                    >
+                      <option value={0}>— Selecciona ejercicio —</option>
+                      {allExercises.map((ex) => (
+                        <option key={ex.id} value={ex.id}>
+                          {ex.name}
+                        </option>
+                      ))}
+                    </select>
+                    {exercise.exerciseId > 0 && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Seleccionado: {allExercises.find(ex => ex.id === exercise.exerciseId)?.name}
+                      </p>
+                    )}
+                  </div>
 
                   <select
                     value={exercise.dayOfWeek}
