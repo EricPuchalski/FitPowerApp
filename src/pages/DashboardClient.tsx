@@ -372,7 +372,6 @@ const ClientDashboard: React.FC = () => {
           </section>
 
           {/* Quick Actions Card */}
-          {/* Quick Actions Card */}
 <section className="bg-white rounded-lg shadow-sm p-6">
   <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
     Acciones Rápidas
@@ -404,6 +403,13 @@ const ClientDashboard: React.FC = () => {
         <span className="text-xs text-red-500 mt-1">Sin plan activo</span>
       )}
     </button>
+      <button
+    className="flex flex-col items-center justify-center p-4 bg-white border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all"
+    onClick={() => navigate(`/client/history/${client.dni}`)}
+  >
+    <div className="text-3xl mb-2">📊</div>
+    <span className="text-sm font-medium text-center">Ver mi historial</span>
+  </button>
   </div>
 </section>
         </div>

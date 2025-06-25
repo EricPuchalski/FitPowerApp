@@ -4,7 +4,6 @@ import { FooterPag } from '../components/Footer';
 import { TrainingPlan } from '../model/TrainingPlan';
 import { ExerciseRoutine } from '../model/ExerciseRoutine';
 
-
 const TrainingPlanPage: React.FC = () => {
   const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -20,12 +19,13 @@ const TrainingPlanPage: React.FC = () => {
           throw new Error('No se encontró el DNI del cliente en el almacenamiento local');
         }
 
-const response = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`, {
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  },
-});
+        const response = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -54,8 +54,10 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
   };
 
   if (trainingPlan) {
-    trainingPlan.exercises.forEach(exercise => {
-      exercisesByDay[exercise.day].push(exercise);
+    trainingPlan.exercises?.forEach(exercise => {
+      if (exercisesByDay[exercise.day]) {
+        exercisesByDay[exercise.day].push(exercise);
+      }
     });
   }
 
@@ -83,7 +85,7 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
         <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
         <p className="text-gray-700 mb-6">{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
@@ -118,37 +120,35 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
       </header>
 
       {/* Navigation */}
-<nav className="bg-white shadow-sm">
-  <ul className="container mx-auto px-4 flex">
-    <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
-      <button
-        onClick={() => navigate("/client")}
-        className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
-      >
-        Inicio
-      </button>
-    </li>
-    <li className="flex-1 text-center border-b-4 border-red-500">
-      <button className="w-full py-4 font-medium text-red-500">
-        Plan de Entrenamiento
-      </button>
-    </li>
-    <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
-      <button
-        onClick={() => navigate("/client/nutrition-plan")}
-        className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
-      >
-        Plan de Nutrición
-      </button>
-    </li>
-  </ul>
-</nav>
-
+      <nav className="bg-white shadow-sm">
+        <ul className="container mx-auto px-4 flex">
+          <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => navigate("/client")}
+              className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
+            >
+              Inicio
+            </button>
+          </li>
+          <li className="flex-1 text-center border-b-4 border-red-500">
+            <button className="w-full py-4 font-medium text-red-500">
+              Plan de Entrenamiento
+            </button>
+          </li>
+          <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => navigate("/client/nutrition-plan")}
+              className="w-full py-4 font-medium text-gray-600 hover:text-gray-900"
+            >
+              Plan de Nutrición
+            </button>
+          </li>
+        </ul>
+      </nav>
 
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Plan Header */}
-        
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
@@ -158,13 +158,13 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
             <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium inline-block">
               {trainingPlan.active ? 'Activo' : 'Inactivo'}
             </div>
-              <button 
-  className="flex flex-col items-center justify-center p-4 bg-white border border-gray-400 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all"
-  onClick={() => navigate(`${trainingPlan.id}/records`)}
->
-  <div className="text-3xl mb-2">📝</div>
-  <span className="text-sm font-medium text-center">Registrar entrenamiento</span>
-</button>
+            <button
+              className="flex flex-col items-center justify-center p-4 bg-white border border-gray-400 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all"
+              onClick={() => navigate(`${trainingPlan.id}/records`)}
+            >
+              <div className="text-3xl mb-2">📝</div>
+              <span className="text-sm font-medium text-center">Registrar entrenamiento</span>
+            </button>
           </div>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -183,11 +183,11 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
         {/* Weekly Plan */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Rutina Semanal</h3>
-          
+
           <div className="space-y-4">
             {Object.entries(exercisesByDay).map(([day, exercises]) => {
               if (exercises.length === 0) return null;
-              
+
               return (
                 <div key={day} className="bg-white rounded-lg shadow-sm overflow-hidden">
                   <div className="bg-gray-800 text-white px-4 py-3">
@@ -211,7 +211,6 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
                               </div>
                             </div>
                           </div>
-    
                         </div>
                       </div>
                     ))}
@@ -239,19 +238,10 @@ const response = await fetch(`http://localhost:8080/api/v1/training-plans/client
             </div>
           </div>
         )}
-
-        {/* Actions */}
-        {/* <div className="flex justify-end space-x-4">
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
-            Descargar PDF
-          </button>
-
-        </div> */}
       </main>
 
       {/* Footer */}
-      <FooterPag></FooterPag>
-
+      <FooterPag />
     </div>
   );
 };
