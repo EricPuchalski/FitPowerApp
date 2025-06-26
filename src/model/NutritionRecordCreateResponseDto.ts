@@ -1,3 +1,5 @@
+import { MealTime } from "./MealTime";
+
 export interface NutritionRecordCreateResponseDto {
   id: number;
   createdAt: string;
