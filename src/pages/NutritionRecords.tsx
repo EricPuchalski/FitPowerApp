@@ -72,14 +72,33 @@ const NutritionRecordsPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setNewRecord(prev => ({
-      ...prev,
-      [name]: name === 'calories' ? parseInt(value) || 0 : value
-    }));
+
+    if (name === 'calories') {
+      const caloriesValue = parseInt(value) || 0;
+      if (caloriesValue < 0) {
+        toast.error('Las calorías deben ser un valor positivo');
+        return;
+      }
+      setNewRecord(prev => ({
+        ...prev,
+        [name]: caloriesValue
+      }));
+    } else {
+      setNewRecord(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (newRecord.calories <= 0) {
+      toast.error('Las calorías deben ser un valor positivo');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const clientDni = dni || localStorage.getItem('userDni');
@@ -308,7 +327,7 @@ const NutritionRecordsPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comida</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Momento</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calorías</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observacion</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observacion</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
@@ -323,15 +342,15 @@ const NutritionRecordsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {record.mealTime === MealTime.BREAKFAST ? 'Desayuno' :
-                        record.mealTime === MealTime.MID_MORNING ? 'Media Mañana' :
-                          record.mealTime === MealTime.LUNCH ? 'Almuerzo' :
-                            record.mealTime === MealTime.AFTERNOON_SNACK ? 'Merienda' :
-                              record.mealTime === MealTime.DINNER ? 'Cena' : 'Refrigerio Nocturno'}
+                      record.mealTime === MealTime.MID_MORNING ? 'Media Mañana' :
+                      record.mealTime === MealTime.LUNCH ? 'Almuerzo' :
+                      record.mealTime === MealTime.AFTERNOON_SNACK ? 'Merienda' :
+                      record.mealTime === MealTime.DINNER ? 'Cena' : 'Refrigerio Nocturno'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {record.calories} kcal
                     </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {record.observations}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -405,10 +424,10 @@ const NutritionRecordsPage: React.FC = () => {
                       {Object.values(MealTime).map(time => (
                         <option key={time} value={time}>
                           {time === MealTime.BREAKFAST ? 'Desayuno' :
-                            time === MealTime.MID_MORNING ? 'Media Mañana' :
-                              time === MealTime.LUNCH ? 'Almuerzo' :
-                                time === MealTime.AFTERNOON_SNACK ? 'Merienda' :
-                                  time === MealTime.DINNER ? 'Cena' : 'Refrigerio Nocturno'}
+                          time === MealTime.MID_MORNING ? 'Media Mañana' :
+                          time === MealTime.LUNCH ? 'Almuerzo' :
+                          time === MealTime.AFTERNOON_SNACK ? 'Merienda' :
+                          time === MealTime.DINNER ? 'Cena' : 'Refrigerio Nocturno'}
                         </option>
                       ))}
                     </select>
