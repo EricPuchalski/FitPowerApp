@@ -36,6 +36,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(user || null)
+  const [activePlansCount, setActivePlansCount] = useState<number>(0)
 
   useEffect(() => {
     // Get user from localStorage if not provided as prop
@@ -109,10 +110,35 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
       setLoading(false)
     }
   }
+  
+  const fetchTrainingPlans = async () => {
+    const trainerId = localStorage.getItem("trainerId")
+    const token = localStorage.getItem("token")
+    if (!trainerId || !token) return
+  
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/training-plans/trainer/${trainerId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      if (!res.ok) throw new Error("Error al obtener planes")
+      const data = await res.json()
+  
+      // Filtrar por campo `active` directamente
+      const activos = data.filter((plan: any) => plan.active === true)
+  
+      setActivePlansCount(activos.length)
+    } catch (err) {
+      console.error("Error al cargar planes:", err)
+      setActivePlansCount(0)
+    }
+  }
 
   useEffect(() => {
     if (currentUser) {
       fetchClients()
+      fetchTrainingPlans()
     }
   }, [currentUser])
 
@@ -143,16 +169,16 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         </p>
       </div>
       {/* Acceso a Gestión de Ejercicios */}
-<div className="mb-8">
-  <Link to="/exercises">
-    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
-      Ir a Gestión de Ejercicios
-    </button>
-  </Link>
-</div>
+      <div className="mb-8">
+        <Link to="/exercises">
+          <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
+            Ir a Gestión de Ejercicios
+          </button>
+        </Link>
+      </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -167,21 +193,12 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-700">Planes Activos</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
+              <p className="text-2xl font-bold text-gray-900">{activePlansCount}</p>
             </div>
             <Calendar className="h-8 w-8 text-pink-600" />
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Progreso Semanal</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
       </div>
 
       {/* Clients Grid */}
@@ -241,12 +258,6 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                   </button>
                 )}
 
-                <Link to={`/trainer/client/${client.dni}/progress`}>
-                  <button className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-md transition-colors flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Ver Progreso
-                  </button>
-                </Link>
               </div>
             </div>
           </div>

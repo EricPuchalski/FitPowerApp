@@ -219,7 +219,7 @@ export default function TrainingPlanEdit() {
     }
 
     const trainerId = Number(trainerIdStr)
-    if (isNaN(trainerId) || trainerId <= 0) {
+    if (isNaN(trainerId)) {
       alert("El ID del entrenador no es válido.")
       setSaving(false)
       return
@@ -525,93 +525,118 @@ export default function TrainingPlanEdit() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ejercicio *</label>
-                    <select
-                      value={exercise.exerciseId}
-                      onChange={(e) =>
-                        updateExercise(index, "exerciseId", Number(e.target.value))
-                      }
-                      className="border px-3 py-2 rounded-md w-full"
-                    >
-                      <option value={0}>— Selecciona ejercicio —</option>
-                      {allExercises.map((ex) => (
-                        <option key={ex.id} value={ex.id}>
-                          {ex.name}
-                        </option>
-                      ))}
-                    </select>
-                    {exercise.exerciseId > 0 && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Seleccionado: {allExercises.find(ex => ex.id === exercise.exerciseId)?.name}
-                      </p>
-                    )}
-                  </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Ejercicio *</label>
+    <select
+      value={exercise.exerciseId}
+      onChange={(e) =>
+        updateExercise(index, "exerciseId", Number(e.target.value))
+      }
+      className="border px-3 py-2 rounded-md w-full"
+    >
+      <option value={0}>— Selecciona ejercicio —</option>
+      {allExercises.map((ex) => (
+        <option key={ex.id} value={ex.id}>
+          {ex.name}
+        </option>
+      ))}
+    </select>
+    {exercise.exerciseId > 0 && (
+      <p className="text-sm text-gray-600 mt-1">
+        Seleccionado: {allExercises.find(ex => ex.id === exercise.exerciseId)?.name}
+      </p>
+    )}
+  </div>
 
-                  <select
-                    value={exercise.dayOfWeek}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Día de la semana *</label>
+    <select
+      value={exercise.dayOfWeek}
+      onChange={(e) =>
+        updateExercise(index, "dayOfWeek", e.target.value)
+      }
+      className="border px-3 py-2 rounded-md w-full"
+    >
+      {DAYS_OF_WEEK.map((day) => (
+        <option key={day.value} value={day.value}>
+          {day.label}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mt-4">
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Series *</label>
+    <input
+      type="number"
+      value={exercise.series}
+      onChange={(e) =>
+        updateExercise(index, "series", Number(e.target.value))
+      }
+      className="border px-3 py-2 rounded-md w-full"
+      placeholder="Ej: 3"
+      min={0}
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Repeticiones *</label>
+    <input
+      type="number"
+      value={exercise.repetitions}
+      onChange={(e) =>
+        updateExercise(index, "repetitions", Number(e.target.value))
+      }
+      className="border px-3 py-2 rounded-md w-full"
+      placeholder="Ej: 10"
+      min={0}
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
+    <input
+      type="number"
+      value={exercise.weight}
+      onChange={(e) =>
+        updateExercise(index, "weight", Number(e.target.value))
+      }
+      className="border px-3 py-2 rounded-md w-full"
+      placeholder="Ej: 0"
+      min={0}
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Descanso (seg)</label>
+    <input
+      type="number"
+      value={exercise.restTime}
+      onChange={(e) =>
+        updateExercise(index, "restTime", Number(e.target.value))
+      }
+      className="border px-3 py-2 rounded-md w-full"
+      placeholder="Ej: 60"
+      min={0}
+    />
+  </div>
+</div>
+
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                  <textarea
+                    placeholder="Notas opcionales para este ejercicio..."
+                    value={exercise.notes}
                     onChange={(e) =>
-                      updateExercise(index, "dayOfWeek", e.target.value)
+                      updateExercise(index, "notes", e.target.value)
                     }
                     className="border px-3 py-2 rounded-md w-full"
-                  >
-                    {DAYS_OF_WEEK.map((day) => (
-                      <option key={day.value} value={day.value}>
-                        {day.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="number"
-                    placeholder="Series"
-                    value={exercise.series}
-                    onChange={(e) =>
-                      updateExercise(index, "series", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                  />
-
-                  <input
-                    type="number"
-                    placeholder="Repeticiones"
-                    value={exercise.repetitions}
-                    onChange={(e) =>
-                      updateExercise(index, "repetitions", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                  />
-
-                  <input
-                    type="number"
-                    placeholder="Peso (kg)"
-                    value={exercise.weight}
-                    onChange={(e) =>
-                      updateExercise(index, "weight", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                  />
-
-                  <input
-                    type="number"
-                    placeholder="Descanso (seg)"
-                    value={exercise.restTime}
-                    onChange={(e) =>
-                      updateExercise(index, "restTime", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
+                    rows={2}
                   />
                 </div>
-
-                <textarea
-                  placeholder="Notas"
-                  value={exercise.notes}
-                  onChange={(e) =>
-                    updateExercise(index, "notes", e.target.value)
-                  }
-                  className="border px-3 py-2 rounded-md w-full"
-                  rows={2}
-                />
               </div>
             ))}
           </div>
