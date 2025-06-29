@@ -7,6 +7,7 @@ import TrainingRecordsPage from './pages/TrainingRecords';
 import NutritionPlanPage from './pages/NutritionPlan';
 import NutritionRecordsPage from './pages/NutritionRecords';
 import ClientHistory from './pages/ClientHistory';
+import ProgressPage from './pages/ProgressPage';
 
 
 
@@ -24,6 +25,11 @@ function App() {
         {/* Entrenamiento - cliente */}
         <Route path="/client/training-plan" element={<TrainingPlanPage />} />
         <Route path="/client/training-plan/:trainingPlanId/records" element={<TrainingRecordsPage />} />
+
+        {/* Progreso - cliente */}
+        <Route path="/client/:dni/progress" element={<ProgressPage />} />
+
+
 
         {/* <Route path="/admin" element={<DashboardAdmin />} />
         <Route path="/trainer/client/:clientDni/training-plans/:trainingPlanId/routine" element={<TrainerRoutine />} />
@@ -50,7 +56,7 @@ function App() {
         <Route path="/admin/clients" element={<ClientCrud />} />
         <Route path="/client/training" element={<TrainingClient />} />
         <Route path="/client/training/routine" element={<ClientRoutine />} /> */} 
-         */}
+
       </Routes>
     </Router>
   )

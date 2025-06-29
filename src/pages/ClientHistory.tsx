@@ -252,7 +252,7 @@ const TrainingRecordsSection = ({ trainingRecords }) => (
                 Fecha
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
-                Observación
+                Ejercicio
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                 Series
@@ -263,6 +263,9 @@ const TrainingRecordsSection = ({ trainingRecords }) => (
               <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                 Peso
               </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
+                Observación
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -272,7 +275,7 @@ const TrainingRecordsSection = ({ trainingRecords }) => (
                   {new Date(record.createdAt).toLocaleString()}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                  {record.observation || "-"}
+                  {record.exerciseName || "-"}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                   {record.series}
@@ -282,6 +285,9 @@ const TrainingRecordsSection = ({ trainingRecords }) => (
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                   {record.weight} kg
+                </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                  {record.observation || "-"}
                 </td>
               </tr>
             ))}
