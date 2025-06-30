@@ -257,6 +257,11 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                     Crear Plan
                   </button>
                 )}
+                <Link to={`/trainer/client/${client.id}/progress`}>
+  <button className="w-full bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded-md transition-colors">
+    Ver Historial Físico
+  </button>
+</Link>
 
               </div>
             </div>

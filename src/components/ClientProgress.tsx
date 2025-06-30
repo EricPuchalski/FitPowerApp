@@ -1,28 +1,37 @@
+// src/components/ClientProgress.tsx
 "use client"
 
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { ArrowLeft, TrendingUp, Calendar, Target, Award } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import PhysicalStatusHistory from "./PhysicalStatusHistory"
 
+// Modelo del cliente
 interface Client {
   dni: string
   name: string
 }
 
+// Modelo de estado físico
+import { ClientStats } from "../model/ClientStatus";
+
+
 export default function ClientProgress() {
   const { clientId } = useParams<{ clientId: string }>()
   const [client, setClient] = useState<Client | null>(null)
+  const [stats, setStats] = useState<ClientStats[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchClientInfo()
+    if (clientId) {
+      fetchClientInfo()
+      fetchClientStats()
+    }
   }, [clientId])
 
   const fetchClientInfo = async () => {
     try {
-      setLoading(true)
       const token = localStorage.getItem("token")
-      
       const response = await fetch(`/api/v1/clients/${clientId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -38,7 +47,28 @@ export default function ClientProgress() {
         })
       }
     } catch (error) {
-      console.error("Error fetching client info:", error)
+      console.error("Error al obtener cliente:", error)
+    }
+  }
+
+  const fetchClientStats = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`/api/v1/physical-stats/client/${clientId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const statsData = await response.json()
+        setStats(statsData)
+      } else {
+        console.error("Error al obtener historial físico")
+      }
+    } catch (error) {
+      console.error("Error al obtener historial físico:", error)
     } finally {
       setLoading(false)
     }
@@ -77,14 +107,14 @@ export default function ClientProgress() {
         </div>
       </div>
 
-      {/* Placeholder for future progress implementation */}
-      <div className="text-center py-12">
-        <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Progreso en Desarrollo</h3>
-        <p className="text-gray-600">
-          Esta funcionalidad estará disponible cuando implementes los endpoints de progreso en tu backend.
-        </p>
-      </div>
+      {/* Historial de estados físicos */}
+      {stats.length > 0 ? (
+        <PhysicalStatusHistory clientStats={stats} />
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-600">Este cliente aún no tiene historial de estado físico registrado.</p>
+        </div>
+      )}
     </div>
   )
 }
