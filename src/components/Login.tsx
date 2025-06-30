@@ -42,6 +42,7 @@ export default function LogIn() {
         localStorage.setItem("userEmail", data.email);
         localStorage.setItem("userDni", data.dni);
         localStorage.setItem("userRole", data.roles[0]);
+        localStorage.setItem("gymName", data.gymName);
 
         // Manejo específico para entrenadores
         if (data.roles.includes("ROLE_TRAINER")) {

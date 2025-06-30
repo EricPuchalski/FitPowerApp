@@ -90,6 +90,7 @@ export default function TrainingClient() {
     if (selectedRoutine && token && client) {
       try {
         const diaryId = await createTrainingDiary(client.dni, token)
+        // ✅ CORRECCIÓN: Usar clientDni (consistente con el resto del código)
         await activateRoutine(selectedRoutine.id, token, selectedRoutine.clientDni)
         window.location.href = `http://localhost:5173/client/training/routine?trainingDiaryId=${diaryId}&routineId=${selectedRoutine.id}`
       } catch (error) {
@@ -126,7 +127,7 @@ export default function TrainingClient() {
         <div className="container p-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white center">
           <NavBarClient />
           <h1 className="text-4xl font-bold my-8 text-center">
-            {client?.name} {client?.lastname}, bienvenido a tu plan de entrenamiento: {trainingPlan?.name}
+            {client?.name} {client?.lastName}, bienvenido a tu plan de entrenamiento: {trainingPlan?.name}
           </h1>
           <p className="text-lg text-center mb-8">{trainingPlan?.name}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">

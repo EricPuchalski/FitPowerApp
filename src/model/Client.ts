@@ -2,7 +2,7 @@
 export type Client = {
     id: number;
     name: string;
-    lastname: string;
+    lastName: string;
     dni: string;
     phoneNumber: string;
     address: string;
