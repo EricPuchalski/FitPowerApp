@@ -76,7 +76,7 @@ export default function LogIn() {
 
         // Redirigir según el rol
         if (data.roles.includes("ROLE_NUTRITIONIST")) {
-          navigate("/nutritionist");
+          navigate("/nutritionist/dashboard");
         } else if (data.roles.includes("ROLE_CLIENT")) {
           navigate("/client");
         } else if (data.roles.includes("ROLE_TRAINER")) {
