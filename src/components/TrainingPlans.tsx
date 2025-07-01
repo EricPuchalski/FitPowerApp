@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Calendar, Plus, Dumbbell, ArrowLeft, Users } from 'lucide-react'
 import { TrainingPlan } from "../model/TrainingPlan"
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 export default function TrainingPlans() {
   const { clientDni } = useParams<{ clientDni: string }>()
@@ -25,14 +27,16 @@ export default function TrainingPlans() {
           }
         })
         
-        if (clientRes.ok) {
-          const clientData = await clientRes.json()
-          setClientInfo({
-            name: clientData.name,
-            email: clientData.email,
-            phone: clientData.phoneNumber
-          })
+        if (!clientRes.ok) {
+          throw new Error("Error al cargar la información del cliente")
         }
+
+        const clientData = await clientRes.json()
+        setClientInfo({
+          name: clientData.name,
+          email: clientData.email,
+          phone: clientData.phoneNumber
+        })
 
         // Obtener planes de entrenamiento
         const plansRes = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}`, {
@@ -41,12 +45,24 @@ export default function TrainingPlans() {
           }
         })
 
-        if (!plansRes.ok) throw new Error("Error al cargar los planes")
+        if (!plansRes.ok) throw new Error("Error al cargar los planes de entrenamiento")
         
-        const plansData = await plansRes.json()
+        const rawPlansData = await plansRes.json()
+        console.log("Raw plans data:", rawPlansData)
+        
+        // Normalizar los datos
+        const plansData = rawPlansData.map((p: any) => ({
+          ...p,
+          exercises: p.exercises ?? p.exerciseRoutines ?? []
+        }))
+        
         setPlans(plansData)
+        toast.success("Datos cargados correctamente")
+
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido")
+        const errorMessage = err instanceof Error ? err.message : "Error desconocido"
+        setError(errorMessage)
+        toast.error(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -66,6 +82,7 @@ export default function TrainingPlans() {
             ))}
           </div>
         </div>
+        <ToastContainer />
       </div>
     )
   }
@@ -76,12 +93,26 @@ export default function TrainingPlans() {
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <p className="text-red-800">{error}</p>
         </div>
+        <ToastContainer />
       </div>
     )
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      
       <div className="mb-8">
         <Link 
           to="/trainer/dashboard" 
@@ -144,6 +175,7 @@ export default function TrainingPlans() {
         <Link 
           to={`/trainer/client/${clientDni}/training-plans/new/edit`}
           className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-md flex items-center"
+          onClick={() => toast.info("Creando nuevo plan de entrenamiento")}
         >
           <Plus className="h-4 w-4 mr-2" />
           Crear nuevo plan
@@ -158,6 +190,7 @@ export default function TrainingPlans() {
           <Link 
             to={`/trainer/client/${clientDni}/training-plans/new/edit`}
             className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-md inline-flex items-center"
+            onClick={() => toast.info("Creando primer plan de entrenamiento")}
           >
             <Plus className="h-4 w-4 mr-2" />
             Crear primer plan
@@ -213,14 +246,20 @@ export default function TrainingPlans() {
                 </div>
 
                 <div className="mt-4 flex flex-col space-y-2">
-                + <Link to={`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`}>
-                <button className="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center">
+                  <Link 
+                    to={`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`}
+                    onClick={() => toast.info(`Editando plan: ${plan.name}`)}
+                  >
+                    <button className="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center">
                       <Dumbbell className="h-4 w-4 mr-2" />
                       Editar ejercicios
                     </button>
                   </Link>
 
-                  <Link to={`/trainer/client/${clientDni}/progress`}>
+                  <Link 
+                    to={`/trainer/client/${clientDni}/progress`}
+                    onClick={() => toast.info(`Viendo progreso del cliente`)}
+                  >
                     <button className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-md transition-colors flex items-center justify-center">
                       Ver progreso
                     </button>

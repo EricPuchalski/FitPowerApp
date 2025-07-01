@@ -4,6 +4,8 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 interface SimpleExercise {
   id: number
@@ -73,6 +75,7 @@ export default function TrainingPlanEdit() {
         })
         const data = await res.json()
         setAllExercises(data)
+        toast.success("Ejercicios cargados correctamente")
 
         if (isNewPlan) {
           setPlan({
@@ -90,6 +93,7 @@ export default function TrainingPlanEdit() {
         }
       } catch (error) {
         console.error("Error al cargar ejercicios:", error)
+        toast.error("Error al cargar ejercicios. Por favor intenta nuevamente.")
         setAuthError("Error al cargar ejercicios. Por favor intenta nuevamente.")
       }
     }
@@ -102,6 +106,7 @@ export default function TrainingPlanEdit() {
       setLoading(true)
       const token = localStorage.getItem("token")
       if (!token) {
+        toast.error("No se encontró token de autenticación")
         setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.")
         return
       }
@@ -123,6 +128,7 @@ export default function TrainingPlanEdit() {
 
       if (!planResponse.ok) {
         if (planResponse.status === 401 || planResponse.status === 403) {
+          toast.error("No tienes permisos para acceder a este plan")
           setAuthError("No tienes permisos para acceder a este plan. Por favor verifica tus credenciales.")
         }
         throw new Error(`Error al obtener el plan: ${planResponse.statusText}`)
@@ -168,8 +174,11 @@ export default function TrainingPlanEdit() {
         clientDni: clientDni || "",
         exercises: exercises
       })
+      
+      toast.success("Plan de entrenamiento cargado correctamente")
     } catch (error) {
       console.error("Error fetching training plan:", error)
+      toast.error("Error al cargar el plan de entrenamiento")
       setAuthError("Ocurrió un error al cargar el plan. Por favor intenta nuevamente.")
     } finally {
       setLoading(false)
@@ -191,6 +200,7 @@ export default function TrainingPlanEdit() {
       ...prev,
       exercises: [...prev.exercises, newExercise],
     }))
+    toast.success("Nuevo ejercicio agregado")
   }
 
   const updateExercise = (exerciseIndex: number, field: keyof Exercise, value: any) => {
@@ -201,6 +211,9 @@ export default function TrainingPlanEdit() {
           // Si estamos actualizando el ID del ejercicio, también actualizamos el nombre
           if (field === "exerciseId") {
             const selectedExercise = allExercises.find(ex => ex.id === Number(value))
+            if (selectedExercise) {
+              toast.info(`Ejercicio cambiado a: ${selectedExercise.name}`)
+            }
             return {
               ...exercise,
               exerciseId: Number(value),
@@ -224,18 +237,26 @@ export default function TrainingPlanEdit() {
       if (!confirmed) return
 
       try {
-        await fetch(`http://localhost:8080/api/v1/training-plans/${plan.id}/exercises/${exercise.id}`, {
+        const response = await fetch(`http://localhost:8080/api/v1/training-plans/${plan.id}/exercises/${exercise.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         })
+        
+        if (response.ok) {
+          toast.success(`Ejercicio "${exerciseName}" eliminado correctamente`)
+        } else {
+          throw new Error('Error en la respuesta del servidor')
+        }
       } catch (error) {
         console.error("Error al eliminar ejercicio:", error)
-        alert("Error al eliminar ejercicio del backend.")
+        toast.error("Error al eliminar ejercicio del servidor")
         return
       }
+    } else {
+      toast.success("Ejercicio eliminado")
     }
 
     // Actualiza el estado local
@@ -249,7 +270,7 @@ export default function TrainingPlanEdit() {
     setSaving(true)
     setAuthError(null)
     if (!plan.name) {
-      alert("Completa el nombre del plan.")
+      toast.error("Por favor completa el nombre del plan")
       setSaving(false)
       return
     }
@@ -257,7 +278,7 @@ export default function TrainingPlanEdit() {
     // Validar que todos los ejercicios tengan un exerciseId válido
     for (const ex of plan.exercises) {
       if (ex.exerciseId <= 0) {
-        alert("Por favor selecciona un ejercicio válido para todas las rutinas.")
+        toast.error("Por favor selecciona un ejercicio válido para todas las rutinas")
         setSaving(false)
         return
       }
@@ -268,32 +289,35 @@ export default function TrainingPlanEdit() {
     const userRole = localStorage.getItem("userRole")
 
     if (!token) {
+      toast.error("No se encontró token de autenticación")
       setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.")
       setSaving(false)
       return
     }
 
     if (!trainerIdStr) {
-      alert("No se encontró el ID del entrenador. Por favor vuelve a intentar.")
+      toast.error("No se encontró el ID del entrenador")
       setSaving(false)
       return
     }
 
     const trainerId = Number(trainerIdStr)
     if (isNaN(trainerId)) {
-      alert("El ID del entrenador no es válido.")
+      toast.error("El ID del entrenador no es válido")
       setSaving(false)
       return
     }
 
     const clientIdNum = Number(clientDni)
     if (isNaN(clientIdNum)) {
-      alert("El DNI del cliente no es válido.")
+      toast.error("El DNI del cliente no es válido")
       setSaving(false)
       return
     }
 
     try {
+      toast.info("Guardando plan de entrenamiento...")
+      
       const clientCheckRes = await fetch(`http://localhost:8080/api/v1/clients/${clientIdNum}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -302,12 +326,13 @@ export default function TrainingPlanEdit() {
       })
       if (!clientCheckRes.ok) {
         if (clientCheckRes.status === 401 || clientCheckRes.status === 403) {
+          toast.error("No tienes permisos para acceder a este cliente")
           setAuthError("No tienes permisos para acceder a este cliente. Por favor verifica tus credenciales.")
           return
         }
         const errorText = await clientCheckRes.text()
         console.error("Cliente no encontrado - Error completo:", errorText)
-        alert("El cliente no existe en la base de datos o no tienes permisos para acceder.")
+        toast.error("El cliente no existe o no tienes permisos para acceder")
         return
       }
       const clientData = await clientCheckRes.json()
@@ -333,7 +358,9 @@ export default function TrainingPlanEdit() {
         }
 
         const createdPlan = await createRes.json()
+        toast.success("Plan de entrenamiento creado exitosamente")
 
+        // Agregar ejercicios al plan creado
         for (const ex of plan.exercises) {
           const exPayload = {
             exerciseId: ex.exerciseId,
@@ -357,6 +384,7 @@ export default function TrainingPlanEdit() {
           )
         }
 
+        toast.success("Ejercicios agregados al plan correctamente")
         navigate(`/trainer/client/${clientDni}/training-plans/${createdPlan.id}/edit`)
         return
       } else {
@@ -388,10 +416,12 @@ export default function TrainingPlanEdit() {
           })
         }
 
+        toast.success("Plan de entrenamiento actualizado correctamente")
         navigate(`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`)
       }
     } catch (err) {
       console.error("Error completo:", err)
+      toast.error("Error al guardar el plan. Por favor intenta nuevamente.")
       setAuthError("Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente.")
     } finally {
       setSaving(false)
@@ -408,6 +438,18 @@ export default function TrainingPlanEdit() {
             <div className="h-48 bg-gray-200 rounded-lg"></div>
           </div>
         </div>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </div>
     )
   }
@@ -434,6 +476,18 @@ export default function TrainingPlanEdit() {
             </div>
           </div>
         </div>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </div>
     )
   }
@@ -499,9 +553,6 @@ export default function TrainingPlanEdit() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
-        
-    
           </div>
         </div>
       </div>
@@ -665,6 +716,19 @@ export default function TrainingPlanEdit() {
           ))}
         </div>
       </div>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   )
 }
