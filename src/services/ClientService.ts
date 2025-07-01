@@ -12,7 +12,7 @@ const ClientService = () => {
 
   const fetchClients = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:8080/api/clients", {
+      const response = await fetch("http://localhost:8080/api/v1/clients", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -92,68 +92,7 @@ const ClientService = () => {
     }
   };
 
-  const assignGymToClient = async (gymName: string, clientDni: string, token: string) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/gyms/add/${gymName}/clients/${clientDni}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        setClients((prevClients) =>
-          prevClients.map((client) =>
-            client.dni === clientDni ? { ...client, gymName } : client
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error al asignar el gimnasio al cliente:", error);
-    }
-  };
-
-  const assignNutritionistToClient = async (nutritionistDni: string, clientDni: string, token: string) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/gyms/assign/${nutritionistDni}/nutritionist-to-client/${clientDni}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        setClients((prevClients) =>
-          prevClients.map((client) =>
-            client.dni === clientDni ? { ...client, nutritionistDni } : client
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error al asignar el nutricionista al cliente:", error);
-    }
-  };
-
-  const assignTrainerToClient = async (trainerDni: string, clientDni: string, token: string) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/gyms/assign/${trainerDni}/trainer-to-client/${clientDni}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        setClients((prevClients) =>
-          prevClients.map((client) =>
-            client.dni === clientDni ? { ...client, trainerDni } : client
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error al asignar el entrenador al cliente:", error);
-    }
-  };
+ 
 
   return {
     clients,
@@ -164,10 +103,7 @@ const ClientService = () => {
     fetchTrainers,
     fetchNutritionists,
     fetchGyms,
-    createClient,
-    assignGymToClient,
-    assignNutritionistToClient,
-    assignTrainerToClient,
+    createClient
   };
 };
 

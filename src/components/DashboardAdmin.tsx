@@ -1,7 +1,7 @@
 "use client"
 import { useEffect } from 'react'
 import { useState } from 'react'
-import { Menu, X, Dumbbell, Users, Apple, ChevronRight, BarChart2, Calendar, Settings } from 'lucide-react'
+import { Menu, X, Dumbbell, Users, Apple, ChevronRight, BarChart2, Calendar, Settings, Home } from 'lucide-react'
 import { FooterPag } from './Footer'
 import { FaUsers, FaClipboardList, FaAppleAlt } from 'react-icons/fa';
 
@@ -48,7 +48,11 @@ export default function DashboardAdmin() {
             <h1 className="text-2xl font-bold">FitPower Admin</h1>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <a href="#" className="hover:text-blue-200 transition flex items-center space-x-1">
+                        <a href="/admin" className="hover:text-blue-200 transition flex items-center space-x-1">
+  <Home size={18} />
+  <span>Inicio</span>
+</a>
+            <a href="admin/nutritionists" className="hover:text-blue-200 transition flex items-center space-x-1">
               <Apple size={18} />
               <span>Nutricionistas</span>
             </a>
@@ -56,7 +60,7 @@ export default function DashboardAdmin() {
               <Users size={18} />
               <span>Clientes</span>
             </a>
-            <a href="#" className="hover:text-blue-200 transition flex items-center space-x-1">
+            <a href="admin/trainers" className="hover:text-blue-200 transition flex items-center space-x-1">
               <Dumbbell size={18} />
               <span>Entrenadores</span>
             </a>
@@ -100,32 +104,7 @@ export default function DashboardAdmin() {
           </div>
         </div>
 
-        <div className="mt-12 grid md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-800 hover:shadow-xl transition duration-300">
-            <Dumbbell className="w-12 h-12 text-blue-800 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Programas de Entrenamiento</h2>
-            <p className="text-gray-600">Diseña y gestiona programas personalizados para tus clientes.</p>
-            {/* <a href="#" className="mt-4 inline-flex items-center text-blue-800 hover:text-blue-900">
-              Explorar <ChevronRight size={20} />
-            </a> */}
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-indigo-600 hover:shadow-xl transition duration-300">
-            <Apple className="w-12 h-12 text-indigo-600 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Planes Nutricionales</h2>
-            <p className="text-gray-600">Crea planes de alimentación adaptados a las necesidades de cada cliente.</p>
-            {/* <a href="#" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
-              Explorar <ChevronRight size={20} />
-            </a> */}
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-pink-600 hover:shadow-xl transition duration-300">
-            <Users className="w-12 h-12 text-pink-600 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Gestión de Miembros</h2>
-            <p className="text-gray-600">Administra fácilmente la información y progreso de tus clientes.</p>
-            {/* <a href="#" className="mt-4 inline-flex items-center text-pink-600 hover:text-pink-800">
-              Explorar <ChevronRight size={20} />
-            </a> */}
-          </div>
-        </div>
+    
 
         <div className="mt-12 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-semibold mb-4">Resumen</h2>
