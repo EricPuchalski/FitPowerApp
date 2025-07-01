@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Award, Info, ChevronDown, Zap } from 'lucide-react';
 
-export const RmProgressSection = ({ data }) => {
+export const RmProgressSection = ({ data}) => {
   const [selectedExercise, setSelectedExercise] = useState(
     data ? Object.keys(data.currentMaxRms)[0] : ''
   );

@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { FooterPag } from "./Footer";
 import { useNavigate } from "react-router-dom";
+import authService from "../auth/service/AuthService";
 
 export default function LogIn() {
   const navigate = useNavigate();
@@ -20,79 +21,15 @@ export default function LogIn() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/signin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Limpiar localStorage primero
-        localStorage.clear();
-        
-        // Almacenar datos básicos de autenticación
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.roles[0]);
-        localStorage.setItem("userId", data.id.toString());
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("userEmail", data.email);
-        localStorage.setItem("userDni", data.dni);
-        localStorage.setItem("userRole", data.roles[0]);
-        localStorage.setItem("gymName", data.gymName);
-
-        // Manejo específico para entrenadores
-        if (data.roles.includes("ROLE_TRAINER")) {
-          try {
-            const trainerResponse = await fetch(`http://localhost:8080/api/v1/trainers/${data.dni}`, {
-              headers: {
-                'Authorization': `Bearer ${data.token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (trainerResponse.ok) {
-              const trainerData = await trainerResponse.json();
-              localStorage.setItem("trainerId", trainerData.id.toString());
-              console.log("✅ Datos del entrenador guardados:", {
-                trainerId: trainerData.id,
-                trainerName: trainerData.name,
-                gymName: trainerData.gymName
-              });
-            } else {
-              console.error("Error al obtener datos del entrenador:", trainerResponse.status);
-              throw new Error("No se pudo obtener la información del entrenador");
-            }
-          } catch (trainerError) {
-            console.error("Error fetching trainer data:", trainerError);
-            setError("Error al cargar datos del entrenador. Intente nuevamente.");
-            setLoading(false);
-            return;
-          }
-        }
-
-        // Redirigir según el rol
-        if (data.roles.includes("ROLE_NUTRITIONIST")) {
-          navigate("/nutritionist/dashboard");
-        } else if (data.roles.includes("ROLE_CLIENT")) {
-          navigate("/client");
-        } else if (data.roles.includes("ROLE_TRAINER")) {
-          navigate("/trainer/dashboard");
-        } else if (data.roles.includes("ROLE_ADMIN")) {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
-      } else {
-        setError(data.message || "Credenciales incorrectas. Verifique su usuario y contraseña.");
-      }
-    } catch (error) {
+      const userData = await authService.login({ username, password });
+      
+      // Redirigir según el rol usando el método del servicio
+      const redirectPath = authService.getRedirectPath(userData.roles);
+      navigate(redirectPath);
+      
+    } catch (error: any) {
       console.error("Error al iniciar sesión:", error);
-      setError("Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.");
-      localStorage.clear();
+      setError(error.message || "Error desconocido. Intente nuevamente.");
     } finally {
       setLoading(false);
     }
