@@ -1,7 +1,7 @@
 "use client"
 import { useEffect } from 'react'
 import { useState } from 'react'
-import { Menu, X, Dumbbell, Users, Apple, ChevronRight, BarChart2, Calendar, Settings } from 'lucide-react'
+import { Menu, X, Dumbbell, Users, Apple, ChevronRight, BarChart2, Calendar, Settings, Home } from 'lucide-react'
 import { FooterPag } from './Footer'
 import { FaUsers, FaClipboardList, FaAppleAlt } from 'react-icons/fa';
 
@@ -48,7 +48,11 @@ export default function DashboardAdmin() {
             <h1 className="text-2xl font-bold">FitPower Admin</h1>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <a href="#" className="hover:text-blue-200 transition flex items-center space-x-1">
+                        <a href="/admin" className="hover:text-blue-200 transition flex items-center space-x-1">
+  <Home size={18} />
+  <span>Inicio</span>
+</a>
+            <a href="admin/nutritionists" className="hover:text-blue-200 transition flex items-center space-x-1">
               <Apple size={18} />
               <span>Nutricionistas</span>
             </a>
@@ -56,7 +60,7 @@ export default function DashboardAdmin() {
               <Users size={18} />
               <span>Clientes</span>
             </a>
-            <a href="#" className="hover:text-blue-200 transition flex items-center space-x-1">
+            <a href="admin/trainers" className="hover:text-blue-200 transition flex items-center space-x-1">
               <Dumbbell size={18} />
               <span>Entrenadores</span>
             </a>
@@ -125,6 +129,7 @@ export default function DashboardAdmin() {
             </a>
           </div>
         </div>
+    
 
         <div className="mt-12 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-semibold mb-4">Resumen</h2>

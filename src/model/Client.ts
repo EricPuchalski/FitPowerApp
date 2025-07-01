@@ -8,7 +8,7 @@ export type Client = {
     address: string;
     email: string;
     goal: string;
+    initialPhysicalCondition: string;
     gymName: string;
-    height: number;
-    weight: number;
+    active: boolean;
   };
