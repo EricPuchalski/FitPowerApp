@@ -1,12 +1,31 @@
-// src/components/TrainingPlans.tsx
+// src/pages/Client/TrainingPlan.tsx
 "use client"
 
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { Calendar, Plus, Dumbbell, ArrowLeft, Users } from 'lucide-react'
-import { TrainingPlan } from "../model/TrainingPlan"
+import { Calendar, Plus, Dumbbell, ArrowLeft, Users, History } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+
+// Definición de tipos
+interface Exercise {
+  routineId: number
+  exerciseName: string
+  series: number
+  repetitions: number
+  weight?: number
+  day?: string
+}
+
+interface TrainingPlan {
+  id: number
+  name: string
+  clientGoal: string
+  trainerSpecification: string
+  active: boolean
+  createdAt: string
+  exercises: Exercise[]
+}
 
 export default function TrainingPlans() {
   const { clientDni } = useParams<{ clientDni: string }>()
@@ -114,23 +133,34 @@ export default function TrainingPlans() {
       />
       
       <div className="mb-8">
-        <Link 
-          to="/trainer/dashboard" 
-          className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5 mr-1" />
-          Volver al dashboard
-        </Link>
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Planes de Entrenamiento
-        </h1>
-        <div className="flex items-center text-gray-600 mb-6">
-          <Users className="h-5 w-5 mr-2" />
+        <div className="flex justify-between items-start">
           <div>
-            <p>Cliente: <span className="font-medium">{clientInfo?.name || 'No disponible'}</span></p>
-            <p className="text-sm">DNI: {clientDni}</p>
+            <Link 
+              to="/trainer/dashboard" 
+              className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
+            >
+              <ArrowLeft className="h-5 w-5 mr-1" />
+              Volver al dashboard
+            </Link>
+            
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Planes de Entrenamiento
+            </h1>
+            <div className="flex items-center text-gray-600">
+              <Users className="h-5 w-5 mr-2" />
+              <div>
+                <p>Cliente: <span className="font-medium">{clientInfo?.name || 'No disponible'}</span></p>
+                <p className="text-sm">DNI: {clientDni}</p>
+              </div>
+            </div>
           </div>
+          <Link 
+            to={`/trainer/client/${clientDni}/history`}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center h-fit"
+          >
+            <History className="h-4 w-4 mr-2" />
+            Ver historial completo
+          </Link>
         </div>
       </div>
 
@@ -231,7 +261,7 @@ export default function TrainingPlans() {
                   </p>
                   {plan.exercises.length > 0 ? (
                     <div className="space-y-2">
-                      {plan.exercises.slice(0, 2).map((exercise) => (
+                      {plan.exercises.slice(0, 2).map((exercise: Exercise) => (
                         <div key={exercise.routineId} className="text-sm text-gray-600">
                           • {exercise.exerciseName} ({exercise.series}x{exercise.repetitions})
                         </div>

@@ -91,7 +91,14 @@ function App() {
             </ClientRoute>
           } 
         />
-
+        <Route 
+  path="/trainer/client/:dni/history" 
+  element={
+    <TrainerRoute>
+      <ClientHistory />
+    </TrainerRoute>
+  } 
+/>
         {/* ==================== RUTAS DEL ADMINISTRADOR ==================== */}
         <Route 
           path="/admin" 
