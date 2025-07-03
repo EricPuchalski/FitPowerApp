@@ -11,4 +11,5 @@ export type Nutritionist = {
     gimnasioAsignado: string
     certificaciones: string
     clientesAsignados: number
+    active: boolean;
   }

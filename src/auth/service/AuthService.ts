@@ -1,58 +1,22 @@
 // src/services/authService.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { LoginResponse } from '../model/LoginResponse';
+import { Trainer } from '../../model/Trainer';
+import { Nutritionist } from '../../model/Nutritionist';
+import { Client } from '../../model/Client';
+import { LoginCredentials } from '../model/LoginRequest';
 
 const API_URL = 'http://localhost:8080/api/v1/auth';
 
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
 
-interface LoginResponse {
-  token: string;
-  roles: string[];
-  id: number;
-  username: string;
-  email: string;
-  dni: string;
-  gymName: string;
-}
 
-interface TrainerData {
-  id: number;
-  name: string;
-  gymName: string;
-  dni: string;
-  email: string;
-  specialization?: string;
-  // otros campos que tenga tu trainer
-}
 
-interface NutritionistData {
-  id: number;
-  name: string;
-  gymName: string;
-  dni: string;
-  email: string;
-  specialization?: string;
-  // otros campos que tenga tu nutricionista
-}
-
-interface ClientData {
-  id: number;
-  name: string;
-  gymName: string;
-  dni: string;
-  email: string;
-  dateOfBirth?: string;
-  // otros campos que tenga tu cliente
-}
 
 interface UserData extends LoginResponse {
-  trainerData?: TrainerData;
-  nutritionistData?: NutritionistData;
-  clientData?: ClientData;
+  trainerData?: Trainer;
+  nutritionistData?: Nutritionist;
+  clientData?: Client;
 }
 
 // Enum para los roles
@@ -64,55 +28,70 @@ enum UserRole {
 }
 
 const authService = {
-  async login(credentials: LoginCredentials): Promise<UserData> {
-    try {
-      const response = await axios.post(`${API_URL}/signin`, credentials);
-      const data: LoginResponse = response.data;
+async login(credentials: LoginCredentials): Promise<UserData> {
+  try {
+    const response = await axios.post(`${API_URL}/signin`, credentials);
+    const data: LoginResponse = response.data;
 
-      if (data.token) {
-        // Limpiar localStorage primero
-        localStorage.clear();
-        
-        // Almacenar datos básicos de autenticación
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.roles[0]);
-        localStorage.setItem("userId", data.id.toString());
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("userEmail", data.email);
-        localStorage.setItem("userDni", data.dni);
-        localStorage.setItem("userRole", data.roles[0]);
-        localStorage.setItem("gymName", data.gymName);
-
-        let userData: UserData = { ...data };
-
-        // Manejo específico según el rol del usuario
-        await this.fetchUserRoleData(userData, data.token);
-
-        // Almacenar todos los datos del usuario
-        localStorage.setItem('user', JSON.stringify(userData));
-
-        // Almacenar todos los datos del usuario
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        return userData;
-      }
-      
-      throw new Error(data.message || "Credenciales incorrectas");
-    } catch (error: any) {
-      console.error("Error al iniciar sesión:", error);
+    if (data.token) {
+      // Limpiar localStorage primero
       localStorage.clear();
       
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      // Almacenar datos básicos de autenticación
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.roles[0]);
+      localStorage.setItem("userId", data.id.toString());
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("userEmail", data.email);
+      localStorage.setItem("userDni", data.dni);
+      localStorage.setItem("userRole", data.roles[0]);
+      localStorage.setItem("gymName", data.gymName);
+
+      let userData: UserData = { ...data };
+
+      // Manejo específico según el rol del usuario
+      await this.fetchUserRoleData(userData, data.token);
+
+      // Verificar si la cuenta está activa
+      if (userData.roles.includes(UserRole.TRAINER)) {
+        if (userData.trainerData && !userData.trainerData.active) {
+          localStorage.clear();
+          throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+        }
+      } else if (userData.roles.includes(UserRole.NUTRITIONIST)) {
+        if (userData.nutritionistData && !userData.nutritionistData.active) {
+          localStorage.clear();
+          throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+        }
+      } else if (userData.roles.includes(UserRole.CLIENT)) {
+        if (userData.clientData && !userData.clientData.active) {
+          localStorage.clear();
+          throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+        }
       }
+
+      // Almacenar todos los datos del usuario
+      localStorage.setItem('user', JSON.stringify(userData));
       
-      if (error.message) {
-        throw error;
-      }
-      
-      throw new Error("Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.");
+      return userData;
     }
-  },
+    
+    throw new Error(data.message || "Credenciales incorrectas");
+  } catch (error: any) {
+    console.error("Error al iniciar sesión:", error);
+    localStorage.clear();
+    
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    
+    if (error.message) {
+      throw error;
+    }
+    
+    throw new Error("Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.");
+  }
+},
 
   logout(): void {
     localStorage.clear();
@@ -252,17 +231,17 @@ const authService = {
   },
 
   // Obtener datos específicos según el rol
-  getTrainerData(): TrainerData | null {
+  getTrainerData(): Trainer | null {
     const user = this.getCurrentUser();
     return user?.trainerData || null;
   },
 
-  getNutritionistData(): NutritionistData | null {
+  getNutritionistData(): Nutritionist | null {
     const user = this.getCurrentUser();
     return user?.nutritionistData || null;
   },
 
-  getClientData(): ClientData | null {
+  getClientData(): Client | null {
     const user = this.getCurrentUser();
     return user?.clientData || null;
   }
