@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Edit2 } from 'lucide-react'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -20,8 +20,7 @@ interface Exercise {
   repetitions: number
   weight: number
   dayOfWeek: string
-  restTime: number
-  notes: string
+  restTime: string
 }
 
 interface TrainingPlan {
@@ -59,8 +58,37 @@ export default function TrainingPlanEdit() {
     exercises: [],
   })
   const [authError, setAuthError] = useState<string | null>(null)
+  
+  // Estados para el formulario de ejercicio
+  const [exerciseForm, setExerciseForm] = useState<Exercise>({
+    exerciseId: 0,
+    exerciseName: "",
+    series: 3,
+    repetitions: 10,
+    weight: 0,
+    dayOfWeek: "MONDAY",
+    restTime: "00:00:60", // Formato HH:MM:SS
+
+  })
+  const [isEditingExercise, setIsEditingExercise] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const isNewPlan = planId === "new"
+
+  // Limpiar formulario de ejercicio
+  const clearExerciseForm = () => {
+    setExerciseForm({
+      exerciseId: 0,
+      exerciseName: "",
+      series: 3,
+      repetitions: 10,
+      weight: 0,
+      dayOfWeek: "MONDAY",
+      restTime: "00:00:60" // Formato HH:MM:SS
+    })
+    setIsEditingExercise(false)
+    setEditingIndex(null)
+  }
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -88,7 +116,6 @@ export default function TrainingPlanEdit() {
           })
           setLoading(false)
         } else {
-          // ⚠️ Solo cargar el plan luego de tener los ejercicios disponibles
           await fetchTrainingPlan(data)
         }
       } catch (error) {
@@ -139,30 +166,21 @@ export default function TrainingPlanEdit() {
       if (exercisesResponse.ok) {
         const exercisesData = await exercisesResponse.json()
         
-        // =================================================================
-        // ✅ INICIO DE LA CORRECCIÓN APLICADA
-        // =================================================================
-        
         exercises = exercisesData.map((ex: any) => {
-          // Busca en el catálogo global (exerciseCatalog) que ya tiene todos los nombres
           const match = exerciseCatalog.find(e => e.id === ex.exerciseId || e.id === ex.exercise?.id);
           
           return {
             id: ex.id,
             exerciseId: ex.exerciseId || ex.exercise?.id || 0,
-            exerciseName: match?.name || "Sin nombre", // <-- Se usa el nombre del catálogo
+            exerciseName: match?.name || "Sin nombre",
             series: ex.series,
             repetitions: ex.repetitions,
             weight: ex.weight,
             restTime: ex.restTime,
-            dayOfWeek: ex.day,
-            notes: ex.notes || ""
+            dayOfWeek: ex.day
+        
           };
         })
-
-        // =================================================================
-        // ✅ FIN DE LA CORRECCIÓN APLICADA
-        // =================================================================
       }
 
       setPlan({
@@ -185,100 +203,230 @@ export default function TrainingPlanEdit() {
     }
   }
 
-  const addExercise = () => {
-    const newExercise: Exercise = {
-      exerciseId: 0,
-      exerciseName: "",
-      series: 3,
-      repetitions: 10,
-      weight: 0,
-      dayOfWeek: "MONDAY",
-      restTime: 60,
-      notes: "",
-    }
-    setPlan((prev) => ({
-      ...prev,
-      exercises: [...prev.exercises, newExercise],
-    }))
-    toast.success("Nuevo ejercicio agregado")
-  }
-
-  const updateExercise = (exerciseIndex: number, field: keyof Exercise, value: any) => {
-    setPlan((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((exercise, index) => {
-        if (index === exerciseIndex) {
-          // Si estamos actualizando el ID del ejercicio, también actualizamos el nombre
-          if (field === "exerciseId") {
-            const selectedExercise = allExercises.find(ex => ex.id === Number(value))
-            if (selectedExercise) {
-              toast.info(`Ejercicio cambiado a: ${selectedExercise.name}`)
-            }
-            return {
-              ...exercise,
-              exerciseId: Number(value),
-              exerciseName: selectedExercise?.name || ""
-            }
-          }
-          return { ...exercise, [field]: value }
+  // Actualizar campo del formulario de ejercicio
+  const updateExerciseForm = (field: keyof Exercise, value: any) => {
+    setExerciseForm((prev) => {
+      if (field === "exerciseId") {
+        const selectedExercise = allExercises.find(ex => ex.id === Number(value))
+        return {
+          ...prev,
+          exerciseId: Number(value),
+          exerciseName: selectedExercise?.name || ""
         }
-        return exercise
-      }),
-    }))
+      }
+      return { ...prev, [field]: value }
+    })
   }
 
-  const removeExercise = async (exerciseIndex: number) => {
-    const exercise = plan.exercises[exerciseIndex]
+  // Validar ejercicio
+  const validateExercise = (exercise: Exercise): boolean => {
+    if (exercise.exerciseId <= 0) {
+      toast.error("Por favor selecciona un ejercicio válido")
+      return false
+    }
+    if (exercise.series <= 0) {
+      toast.error("El número de series debe ser mayor a 0")
+      return false
+    }
+    if (exercise.repetitions <= 0) {
+      toast.error("El número de repeticiones debe ser mayor a 0")
+      return false
+    }
+    if (!/^\d{2}:\d{2}:\d{2}$/.test(exercise.restTime)) {
+      toast.error("El formato del tiempo de descanso debe ser HH:MM:SS")
+      return false
+    }
+    return true
+  }
+
+  // Agregar o actualizar ejercicio
+  // Agregar o actualizar ejercicio
+const addOrUpdateExercise = async () => {
+  if (!validateExercise(exerciseForm)) {
+    return
+  }
+
+  try {
     const token = localStorage.getItem("token")
+    if (!token) {
+      toast.error("No se encontró token de autenticación")
+      return
+    }
 
+    if (isEditingExercise && editingIndex !== null) {
+      // Actualizar ejercicio existente
+      if (exerciseForm.id) {
+        // Llamada API para actualizar ejercicio existente - ENDPOINT CORREGIDO
+        const response = await fetch(
+          `http://localhost:8080/api/v1/training-plans/exercises/${exerciseForm.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              exerciseId: exerciseForm.exerciseId,
+              series: exerciseForm.series,
+              repetitions: exerciseForm.repetitions,
+              weight: exerciseForm.weight,
+              day: exerciseForm.dayOfWeek,
+              restTime: exerciseForm.restTime
+            })
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`Error al actualizar ejercicio: ${response.statusText}`)
+        }
+
+        // Opcional: Actualizar con los datos devueltos por el servidor
+        const updatedExercise = await response.json()
+        setPlan((prev) => ({
+          ...prev,
+          exercises: prev.exercises.map((exercise, index) => 
+            index === editingIndex ? { ...exercise, ...updatedExercise } : exercise
+          ),
+        }))
+      } else {
+        // Si no tiene ID pero estamos editando, es un caso especial (no debería ocurrir)
+        setPlan((prev) => ({
+          ...prev,
+          exercises: prev.exercises.map((exercise, index) => 
+            index === editingIndex ? { ...exerciseForm } : exercise
+          ),
+        }))
+      }
+      
+      toast.success("Ejercicio actualizado correctamente")
+    } else {
+      // Agregar nuevo ejercicio
+      let newExercise = { ...exerciseForm }
+      
+      // Solo hacemos la llamada API si el plan ya existe (no es nuevo)
+      if (planId !== "new") {
+        const response = await fetch(
+          `http://localhost:8080/api/v1/training-plans/${planId}/exercises`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              exerciseId: exerciseForm.exerciseId,
+              series: exerciseForm.series,
+              repetitions: exerciseForm.repetitions,
+              weight: exerciseForm.weight,
+              day: exerciseForm.dayOfWeek,
+              restTime: exerciseForm.restTime
+            })
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`Error al agregar ejercicio: ${response.statusText}`)
+        }
+
+        const createdExercise = await response.json()
+        newExercise = { ...newExercise, id: createdExercise.id }
+      }
+
+      // Actualizar estado local
+      setPlan((prev) => ({
+        ...prev,
+        exercises: [...prev.exercises, newExercise],
+      }))
+      toast.success("Ejercicio agregado correctamente")
+    }
+
+    clearExerciseForm()
+  } catch (error) {
+    console.error("Error al guardar ejercicio:", error)
+    toast.error("Error al guardar el ejercicio. Por favor intenta nuevamente.")
+  }
+}
+
+  // Editar ejercicio
+  const editExercise = (index: number) => {
+    const exercise = plan.exercises[index]
+    setExerciseForm({ ...exercise })
+    setIsEditingExercise(true)
+    setEditingIndex(index)
+  }
+
+  // Eliminar ejercicio
+const removeExercise = async (exerciseIndex: number) => {
+  const exercise = plan.exercises[exerciseIndex]
+  const exerciseName = exercise.exerciseName || "este ejercicio"
+  
+  const confirmed = window.confirm(`¿Seguro que deseas eliminar "${exerciseName}"?`)
+  if (!confirmed) return
+
+  try {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      toast.error("No se encontró token de autenticación")
+      return
+    }
+
+    // Solo hacer la llamada API si el ejercicio tiene un ID (ya existe en backend)
     if (exercise.id) {
-      const exerciseName = exercise.exerciseName || allExercises.find(ex => ex.id === exercise.exerciseId)?.name || "este ejercicio"
-      const confirmed = window.confirm(`¿Seguro que deseas eliminar "${exerciseName}" permanentemente?`)
-      if (!confirmed) return
-
-      try {
-        const response = await fetch(`http://localhost:8080/api/v1/training-plans/${plan.id}/exercises/${exercise.id}`, {
+      const response = await fetch(
+        `http://localhost:8080/api/v1/training-plans/${planId}/exercises/${exercise.id}`,
+        {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (response.ok) {
-          toast.success(`Ejercicio "${exerciseName}" eliminado correctamente`)
-        } else {
-          throw new Error('Error en la respuesta del servidor')
+            'Content-Type': 'application/json'
+          }
         }
-      } catch (error) {
-        console.error("Error al eliminar ejercicio:", error)
-        toast.error("Error al eliminar ejercicio del servidor")
-        return
+      )
+
+      if (!response.ok) {
+        throw new Error(`Error al eliminar ejercicio: ${response.statusText}`)
       }
-    } else {
-      toast.success("Ejercicio eliminado")
     }
 
-    // Actualiza el estado local
+    // Actualizar el estado local independientemente de si existe en backend
     setPlan((prev) => ({
       ...prev,
       exercises: prev.exercises.filter((_, index) => index !== exerciseIndex),
     }))
+    
+    // Si estamos editando este ejercicio, limpiar el formulario
+    if (isEditingExercise && editingIndex === exerciseIndex) {
+      clearExerciseForm()
+    }
+    
+    toast.success("Ejercicio eliminado correctamente")
+  } catch (error) {
+    console.error("Error al eliminar ejercicio:", error)
+    toast.error("Error al eliminar el ejercicio. Por favor intenta nuevamente.")
   }
+}
 
   const savePlan = async () => {
     setSaving(true)
     setAuthError(null)
+    
+    // Validar plan básico
     if (!plan.name) {
       toast.error("Por favor completa el nombre del plan")
       setSaving(false)
       return
     }
 
-    // Validar que todos los ejercicios tengan un exerciseId válido
+    // Validar que haya al menos un ejercicio
+    if (plan.exercises.length === 0) {
+      toast.error("Debes agregar al menos un ejercicio al plan")
+      setSaving(false)
+      return
+    }
+
+    // Validar cada ejercicio
     for (const ex of plan.exercises) {
-      if (ex.exerciseId <= 0) {
-        toast.error("Por favor selecciona un ejercicio válido para todas las rutinas")
+      if (!validateExercise(ex)) {
         setSaving(false)
         return
       }
@@ -286,7 +434,6 @@ export default function TrainingPlanEdit() {
 
     const token = localStorage.getItem("token")
     const trainerIdStr = localStorage.getItem("trainerId")
-    const userRole = localStorage.getItem("userRole")
 
     if (!token) {
       toast.error("No se encontró token de autenticación")
@@ -324,6 +471,7 @@ export default function TrainingPlanEdit() {
           'Content-Type': 'application/json'
         }
       })
+      
       if (!clientCheckRes.ok) {
         if (clientCheckRes.status === 401 || clientCheckRes.status === 403) {
           toast.error("No tienes permisos para acceder a este cliente")
@@ -337,6 +485,9 @@ export default function TrainingPlanEdit() {
       }
       const clientData = await clientCheckRes.json()
 
+      let planIdToUse = plan.id
+      
+      // Crear o actualizar el plan principal
       if (isNewPlan) {
         const planPayload = {
           name: plan.name.trim(),
@@ -358,67 +509,39 @@ export default function TrainingPlanEdit() {
         }
 
         const createdPlan = await createRes.json()
+        planIdToUse = createdPlan.id
         toast.success("Plan de entrenamiento creado exitosamente")
-
-        // Agregar ejercicios al plan creado
-        for (const ex of plan.exercises) {
-          const exPayload = {
-            exerciseId: ex.exerciseId,
-            series: ex.series,
-            repetitions: ex.repetitions,
-            weight: ex.weight,
-            day: ex.dayOfWeek,
-            restTime: ex.restTime,
-            notes: ex.notes
-          }
-          await fetch(
-            `http://localhost:8080/api/v1/training-plans/${createdPlan.id}/exercises`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(exPayload)
-            }
-          )
-        }
-
-        toast.success("Ejercicios agregados al plan correctamente")
-        navigate(`/trainer/client/${clientDni}/training-plans/${createdPlan.id}/edit`)
-        return
-      } else {
-        // Actualización de plan existente
-        for (const ex of plan.exercises) {
-          const exPayload = {
-            exerciseId: ex.exerciseId,
-            series: ex.series,
-            repetitions: ex.repetitions,
-            weight: ex.weight,
-            day: ex.dayOfWeek,
-            restTime: ex.restTime,
-            notes: ex.notes
-          }
-
-          const endpoint = ex.id
-            ? `http://localhost:8080/api/v1/training-plans/exercises/${ex.id}`
-            : `http://localhost:8080/api/v1/training-plans/${plan.id}/exercises`
-
-          const method = ex.id ? 'PUT' : 'POST'
-
-          await fetch(endpoint, {
-            method,
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(exPayload),
-          })
-        }
-
-        toast.success("Plan de entrenamiento actualizado correctamente")
-        navigate(`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`)
       }
+
+      // Agregar/actualizar ejercicios
+      for (const ex of plan.exercises) {
+        const exPayload = {
+          exerciseId: ex.exerciseId,
+          series: ex.series,
+          repetitions: ex.repetitions,
+          weight: ex.weight,
+          day: ex.dayOfWeek,
+          restTime: ex.restTime,
+        }
+
+        const endpoint = ex.id
+          ? `http://localhost:8080/api/v1/training-plans/exercises/${ex.id}`
+          : `http://localhost:8080/api/v1/training-plans/${planIdToUse}/exercises`
+
+        const method = ex.id ? 'PUT' : 'POST'
+
+        await fetch(endpoint, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(exPayload),
+        })
+      }
+
+      toast.success("Plan de entrenamiento guardado correctamente")
+      navigate(`/trainer/client/${clientDni}/training-plans/${planIdToUse}/edit`)
     } catch (err) {
       console.error("Error completo:", err)
       toast.error("Error al guardar el plan. Por favor intenta nuevamente.")
@@ -534,6 +657,7 @@ export default function TrainingPlanEdit() {
         </div>
       )}
 
+      {/* Detalles del Plan */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">
         <div className="bg-cyan-50 rounded-t-lg p-4">
           <h2 className="text-lg font-semibold text-gray-900">Detalles del Plan</h2>
@@ -557,163 +681,216 @@ export default function TrainingPlanEdit() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">
-        <div className="bg-green-50 rounded-t-lg p-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Ejercicios del Plan</h2>
-          <button
-            onClick={addExercise}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md flex items-center space-x-1"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Agregar Ejercicio</span>
-          </button>
-        </div>
-        <div className="p-6 space-y-6">
-          {plan.exercises.map((exercise, index) => (
-            <div
-              key={index}
-              className="border border-gray-300 p-4 rounded-md space-y-4"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-md font-semibold">
-                    {`Ejercicio #${index + 1}: ${exercise.exerciseName || "Sin nombre"}`}
-                  </h3>
-                  {exercise.exerciseName && (
-                    <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                      <p className="text-sm text-blue-800">
-                        <span className="font-semibold">Ejercicio actual:</span> {exercise.exerciseName}
-                      </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        {exercise.series} series × {exercise.repetitions} repeticiones
-                        {exercise.weight > 0 && ` - ${exercise.weight}kg`}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => removeExercise(index)}
-                  className="text-red-500 hover:text-red-600 flex items-center space-x-1"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Eliminar</span>
-                </button>
-              </div>
+      {/* Layout Master-Detail */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Formulario de Ejercicio (Izquierda) */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="bg-green-50 rounded-t-lg p-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {isEditingExercise ? "Editar Ejercicio" : "Agregar Ejercicio"}
+            </h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ejercicio *
+              </label>
+              <select
+                value={exerciseForm.exerciseId || ""}
+                onChange={(e) => updateExerciseForm("exerciseId", Number(e.target.value))}
+                className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="" disabled>
+                  — Selecciona ejercicio —
+                </option>
+                {allExercises.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {exercise.exerciseName ? "Cambiar ejercicio" : "Seleccionar ejercicio"} *
-                  </label>
-                  <select
-                    value={exercise.exerciseId || ""}
-                    onChange={(e) => {
-                      const selectedId = Number(e.target.value)
-                      updateExercise(index, "exerciseId", selectedId)
-                    }}
-                    className="border px-3 py-2 rounded-md w-full"
-                  >
-                    <option value="" disabled>
-                      — Selecciona ejercicio —
-                    </option>
-                    {allExercises.map((ex) => (
-                      <option key={ex.id} value={ex.id}>
-                        {ex.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Día de la semana *</label>
+              <select
+                value={exerciseForm.dayOfWeek}
+                onChange={(e) => updateExerciseForm("dayOfWeek", e.target.value)}
+                className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                {DAYS_OF_WEEK.map((day) => (
+                  <option key={day.value} value={day.value}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Día de la semana *</label>
-                  <select
-                    value={exercise.dayOfWeek}
-                    onChange={(e) =>
-                      updateExercise(index, "dayOfWeek", e.target.value)
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                  >
-                    {DAYS_OF_WEEK.map((day) => (
-                      <option key={day.value} value={day.value}>
-                        {day.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Series *</label>
-                  <input
-                    type="number"
-                    value={exercise.series}
-                    onChange={(e) =>
-                      updateExercise(index, "series", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                    placeholder="Ej: 3"
-                    min={0}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Repeticiones *</label>
-                  <input
-                    type="number"
-                    value={exercise.repetitions}
-                    onChange={(e) =>
-                      updateExercise(index, "repetitions", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                    placeholder="Ej: 10"
-                    min={0}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
-                  <input
-                    type="number"
-                    value={exercise.weight}
-                    onChange={(e) =>
-                      updateExercise(index, "weight", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                    placeholder="Ej: 0"
-                    min={0}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descanso (seg)</label>
-                  <input
-                    type="number"
-                    value={exercise.restTime}
-                    onChange={(e) =>
-                      updateExercise(index, "restTime", Number(e.target.value))
-                    }
-                    className="border px-3 py-2 rounded-md w-full"
-                    placeholder="Ej: 60"
-                    min={0}
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Series *</label>
+                <input
+                  type="number"
+                  value={exerciseForm.series}
+                  onChange={(e) => updateExerciseForm("series", Number(e.target.value))}
+                  className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: 3"
+                  min={1}
+                  required
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-                <textarea
-                  placeholder="Notas opcionales para este ejercicio..."
-                  value={exercise.notes}
-                  onChange={(e) =>
-                    updateExercise(index, "notes", e.target.value)
-                  }
-                  className="border px-3 py-2 rounded-md w-full"
-                  rows={2}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Repeticiones *</label>
+                <input
+                  type="number"
+                  value={exerciseForm.repetitions}
+                  onChange={(e) => updateExerciseForm("repetitions", Number(e.target.value))}
+                  className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: 10"
+                  min={1}
+                  required
                 />
               </div>
             </div>
-          ))}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
+                <input
+                  type="number"
+                  value={exerciseForm.weight}
+                  onChange={(e) => updateExerciseForm("weight", Number(e.target.value))}
+                  className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: 0"
+                  min={0}
+                />
+              </div>
+
+              <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">Descanso (HH:MM:SS) *</label>
+  <input
+    type="text"
+    value={exerciseForm.restTime}
+    onChange={(e) => updateExerciseForm("restTime", e.target.value)}
+    className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    placeholder="Ej: 00:01:00"
+    pattern="^\d{2}:\d{2}:\d{2}$"
+    required
+  />
+  <p className="text-xs text-gray-500 mt-1">Formato: HH:MM:SS (ej: 00:01:30 para 1 minuto 30 segundos)</p>
+</div>
+            </div>
+
+            
+
+            <div className="flex space-x-3 pt-4">
+              <button
+                onClick={addOrUpdateExercise}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 flex-1"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{isEditingExercise ? "Actualizar" : "Agregar"}</span>
+              </button>
+              
+              {isEditingExercise && (
+                <button
+                  onClick={clearExerciseForm}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla de Ejercicios (Derecha) */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="bg-blue-50 rounded-t-lg p-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Ejercicios del Plan ({plan.exercises.length})
+            </h2>
+          </div>
+          <div className="p-6">
+            {plan.exercises.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No hay ejercicios agregados aún.</p>
+                <p className="text-sm">Usa el formulario de la izquierda para agregar ejercicios.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ejercicio
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Día
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Series
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Reps
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Peso
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                  {plan.exercises.map((exercise, index) => {
+                      const dayLabel = DAYS_OF_WEEK.find(d => d.value === exercise.dayOfWeek)?.label || exercise.dayOfWeek;
+                      
+                      return (
+                        <tr key={index} className={`${index === editingIndex && isEditingExercise ? 'bg-yellow-50' : ''} hover:bg-gray-50`}>
+                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="font-medium">{exercise.exerciseName}</div>
+                          
+                          </td>
+                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {dayLabel}
+                          </td>
+                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {exercise.series}
+                          </td>
+                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {exercise.repetitions}
+                          </td>
+                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {exercise.weight > 0 ? `${exercise.weight} kg` : '-'}
+                          </td>
+                          <td className="px-3 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button
+                              onClick={() => editExercise(index)}
+                              className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                              title="Editar ejercicio"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => removeExercise(index)}
+                              className="text-red-600 hover:text-red-800 inline-flex items-center"
+                              title="Eliminar ejercicio"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

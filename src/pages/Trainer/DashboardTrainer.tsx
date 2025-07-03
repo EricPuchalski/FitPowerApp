@@ -92,7 +92,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
       setLoading(true)
       const token = localStorage.getItem("token")
   
-      const response = await fetch(`http://localhost:8080/api/v1/gyms/clients/gym/${encodeURIComponent(currentUser.gymName)}`, {
+      const response = await fetch(`http://localhost:8080/api/v1/gyms/${encodeURIComponent(currentUser.gymName)}/clients`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -291,15 +291,9 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
             </div>
           </div>
 
-          <div className="bg-pink-50 border border-pink-200 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Planes Activos</p>
-                <p className="text-2xl font-bold text-gray-900">{activePlansCount}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-pink-600" />
-            </div>
-          </div>
+          
+
+
         </div>
 
         {/* Clients Grid */}
@@ -380,4 +374,4 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
       <FooterPag />
     </div>
   )
-}
+} 

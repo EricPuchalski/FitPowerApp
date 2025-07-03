@@ -58,7 +58,7 @@ export default function TrainingPlans() {
         })
 
         // Obtener planes de entrenamiento
-        const plansRes = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}`, {
+        const plansRes = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -70,13 +70,12 @@ export default function TrainingPlans() {
         console.log("Raw plans data:", rawPlansData)
         
         // Normalizar los datos
-        const plansData = rawPlansData.map((p: any) => ({
-          ...p,
-          exercises: p.exercises ?? p.exerciseRoutines ?? []
-        }))
+        const plan = {
+          ...rawPlansData,
+          exercises: rawPlansData.exercises ?? rawPlansData.exerciseRoutines ?? []
+        }
         
-        setPlans(plansData)
-        toast.success("Datos cargados correctamente")
+        setPlans([plan]) // lo envolvemos en un array para que sea compatible con el render
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Error desconocido"
@@ -292,6 +291,14 @@ export default function TrainingPlans() {
                   >
                     <button className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-md transition-colors flex items-center justify-center">
                       Ver progreso
+                    </button>
+                  </Link>
+                  <Link 
+                    to={`/trainer/client/${clientDni}/training-plans/report`}
+                    onClick={() => toast.info(`Viendo progreso del cliente`)}
+                  >
+                    <button className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-md transition-colors flex items-center justify-center">
+                      Crear informe
                     </button>
                   </Link>
                 </div>

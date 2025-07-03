@@ -167,6 +167,15 @@ function App() {
             </TrainerRoute>
           } 
         />
+            <Route 
+          path="/trainer/client/:dni/progress" 
+          element={
+            <TrainerRoute>
+              <ProgressPage />
+            </TrainerRoute>
+          } 
+        />
+  
 
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
