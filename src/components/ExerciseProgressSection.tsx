@@ -59,7 +59,7 @@ export const ExerciseProgressSection = ({ data }) => {
             {/* Barra de progreso mejorada */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-600">Progreso</span>
+                <span className="text-sm font-medium text-gray-600">Progreso en peso</span>
                 <span className={`text-sm font-bold px-2 py-1 rounded-full ${
                   stats.progressPercentage >= 0 
                     ? 'bg-green-100 text-green-700' 

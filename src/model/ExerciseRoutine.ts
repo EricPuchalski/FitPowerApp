@@ -6,6 +6,7 @@ export interface ExerciseRoutine {
   series: number;            
   repetitions: number;       
   weight: number | null;
+  restTime: string;
   day: string;               
   trainingPlanId?: number;
 }
