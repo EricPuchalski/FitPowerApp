@@ -132,9 +132,6 @@ const TrainingPlanPage: React.FC = () => {
               Plan de Nutrición
             </button>
           </li>
-          <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
-            <button className="w-full py-4 font-medium text-gray-600 hover:text-gray-900">Progreso</button>
-          </li>
         </ul>
       </nav>
 

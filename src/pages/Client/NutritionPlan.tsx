@@ -54,7 +54,7 @@ const NutritionPlanPage: React.FC = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center">
       <div className="max-w-md">
         <h2 className="text-2xl font-bold text-gray-700 mb-4">No tienes un plan activo</h2>
-        <p className="text-gray-600 mb-6">Contacta a tu nutricionista para que te asigne un plan personalizado.</p>
+        <p className="text-gray-600 mb-6">Tu nutricionista está realizando tu plan a medida, por favor espera!</p>
         <button 
           onClick={() => navigate('/client')}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"

@@ -26,6 +26,7 @@ import {
   AdminRoute,
   TrainerAdminRoute
 } from "./auth/ProtectedRoute";
+import ReportClient from "./pages/Trainer/ReportClient";
 
 function App() {
   return (
@@ -151,6 +152,15 @@ function App() {
             </TrainerRoute>
           } 
         />
+             <Route 
+          path="/trainer/client/:clientDni/training-plans/report" 
+          element={
+            <TrainerRoute>
+              <ReportClient />
+            </TrainerRoute>
+          } 
+        />
+
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
         <Route 
