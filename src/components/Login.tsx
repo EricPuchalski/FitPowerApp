@@ -1,98 +1,106 @@
-import { useState } from "react"; // Importar useState
+//src/components/Login.tsx
+import { useState, FormEvent } from "react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { FooterPag } from "./Footer";
 import { useNavigate } from "react-router-dom";
+import authService from "../auth/service/AuthService";
 
 export default function LogIn() {
   const navigate = useNavigate();
 
-  // Estado para manejar el email y la contraseña
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // Estado para manejar errores
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Función para manejar el inicio de sesión
-  const login = async (e:any) => {
-    e.preventDefault(); // Evitar el comportamiento por defecto del formulario
+  const login = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/signin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }), // Enviar username y contraseña
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        // Almacenar el token en localStorage
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.roles[0]); // Almacenar el rol del primer elemento en el array de roles
-        localStorage.setItem('userId', data.id);
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('userEmail', data.email);
-        localStorage.setItem('userDni', data.dni);
-
-        // Redirigir al dashboard según el rol
-        if (data.roles.includes("ROLE_NUTRITIONIST")) {
-          navigate("/nutritionist");
-        } else if (data.roles.includes("ROLE_CLIENT")) {
-          navigate("/client");
-        } else if (data.roles.includes("ROLE_TRAINER")) {
-          navigate("/trainer/clients");
-        } else if (data.roles.includes("ROLE_ADMIN")) {
-          navigate("/admin");
-        } else {
-          navigate("/"); // Redirigir a una ruta por defecto si el rol no coincide
-        }
-      } else {
-        setError(data.message || "Error en la autenticación."); // Mostrar mensaje de error
-      }
-    } catch (error) {
+      const userData = await authService.login({ username, password });
+      
+      // Redirigir según el rol usando el método del servicio
+      const redirectPath = authService.getRedirectPath(userData.roles);
+      navigate(redirectPath);
+      
+    } catch (error: any) {
       console.error("Error al iniciar sesión:", error);
-      setError("Error en la autenticación. Por favor, inténtelo de nuevo.");
+      setError(error.message || "Error desconocido. Intente nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-[#220901] relative">
-        <div className="absolute inset-0 bg-cover bg-center z-0" style={{ backgroundImage: "url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/gym-5364404_1280-WLCaZmCO874uBuOz60BJlhr8Tnm6iv.jpg')", opacity: 0.6 }}></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center z-0" 
+          style={{ 
+            backgroundImage: "url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/gym-5364404_1280-WLCaZmCO874uBuOz60BJlhr8Tnm6iv.jpg')", 
+            opacity: 0.6 
+          }}
+        />
         <div className="bg-[#110814] p-8 rounded-lg shadow-xl shadow-[#444245] w-96 z-10">
           <h2 className="text-3xl font-bold mb-6 text-[#F6AA1C] text-center">FitPower</h2>
-          {error && <p className="text-red-500 text-center">{error}</p>} {/* Mostrar error */}
-          <form className="space-y-4" onSubmit={login}> {/* Manejar el submit aquí */}
+          
+          {error && (
+            <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-4">
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+          
+          <form className="space-y-4" onSubmit={login}>
             <div>
-              <Label htmlFor="username" className="text-[#F6AA1C]">User</Label>
-              <Input 
-                id="username" 
-                type="text" 
-                placeholder="Enter your username" 
-                value={username} // Vincular el valor
-                onChange={(e) => setUsername(e.target.value)} // Actualizar el estado
-                className="bg-[#110814] text-[#F6AA1C] placeholder-[#F6AA1C] placeholder-opacity-50 border-[#F6AA1C] focus:border-[#F6AA1C] focus:ring-[#F6AA1C]" 
+              <Label htmlFor="username" className="text-[#F6AA1C] block mb-2">
+                Usuario
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Ingrese su nombre de usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-[#110814] text-[#F6AA1C] placeholder-[#F6AA1C]/50 border-[#F6AA1C] focus:ring-[#F6AA1C] focus:border-[#F6AA1C]"
+                required
+                disabled={loading}
               />
             </div>
+            
             <div>
-              <Label htmlFor="password" className="text-[#F6AA1C]">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="Enter your password" 
-                value={password} // Vincular el valor
-                onChange={(e) => setPassword(e.target.value)} // Actualizar el estado
-                className="bg-[#110814] text-[#F6AA1C] placeholder-[#F6AA1C] placeholder-opacity-50 border-[#F6AA1C] focus:border-[#F6AA1C] focus:ring-[#F6AA1C]" 
+              <Label htmlFor="password" className="text-[#F6AA1C] block mb-2">
+                Contraseña
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Ingrese su contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#110814] text-[#F6AA1C] placeholder-[#F6AA1C]/50 border-[#F6AA1C] focus:ring-[#F6AA1C] focus:border-[#F6AA1C]"
+                required
+                disabled={loading}
               />
             </div>
-            <Button type="submit" className="w-full bg-[#F6AA1C] text-[#220901] hover:bg-opacity-90 focus:ring-[#F6AA1C]">
-              Log In
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-[#F6AA1C] hover:bg-[#F6AA1C]/90 text-[#220901] font-bold py-3 px-4 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
-          <p className="mt-4 text-center text-[#F6AA1C] text-sm">
-            Don't have an account? <a href="#" className="text-[#F6AA1C] hover:underline">Sign up</a>
+          
+          <p className="mt-6 text-center text-[#F6AA1C] text-sm">
+            ¿No tienes una cuenta?{' '}
+            <a href="#" className="text-[#F6AA1C] hover:underline font-medium">
+              Regístrate
+            </a>
           </p>
         </div>
       </div>

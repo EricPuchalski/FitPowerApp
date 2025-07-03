@@ -1,9 +1,10 @@
-import { Exercise } from "./Exercise";
+// src/model/TrainingPlan.ts
+import { ExerciseRoutine } from "./ExerciseRoutine";
 
-export type  TrainingPlan = {
+export interface TrainingPlan {
   id: number;
   name: string;
-  createdAt: string;
+  createdAt: string;         // o date
   trainerDni: string;
   trainerName: string;
   clientDni: string;
@@ -11,5 +12,5 @@ export type  TrainingPlan = {
   trainerSpecification: string;
   clientGoal: string;
   active: boolean;
-  exercises: Exercise[];
+  exercises: ExerciseRoutine[];
 }

@@ -1,58 +1,191 @@
-import './index.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LogIn from './components/Login'
-import DashboardAdmin from './components/DashboardAdmin';
-import NutritionistCrud from './components/NutritionistCrud';
-import TraineersManager from './components/TraineersManager';
-import TrainerCrud from './components/TrainerCrud';
-import ClientCrud from './components/ClientCrud';
-import TrainingClient from './components/TrainingClient';
-import ClientRoutine from './components/ClientRoutine';
-import TrainerRoutine from './components/TrainerRoutine';
-import TrainerClientList from './components/TrainerClients';
-import TrainerTrainingPlan from './components/TrainerTrainingPlan';
-import ModifyRoutine from './components/ModifyRoutine';
-import ClientTrainingDiaries from './components/ClientTrainingDiaries';
-import TrainingPlansList from './components/ClientTrainingPlans';
-import ClientPhysicalStatusChart from './components/ClientPhysicalStatusChart';
-import ProgressChart from './components/ProgressChart';
-import ReportChart from './components/ReportChart';
-import Report from './components/Report';
-import TrainingPlanPage from './pages/TrainingPlan';
-import ClientDashboard from './pages/DashboardClient';
-import TrainingRecordsPage from './pages/TrainingRecords';
+import LogIn from "./components/Login";
+import "./index.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ClientDashboard from "./pages/Client/DashboardClient";
+import TrainingPlanPage from "./pages/Client/TrainingPlan";
+import TrainingRecordsPage from "./pages/Client/TrainingRecords";
+import NutritionPlanPage from "./pages/Client/NutritionPlan";
+import NutritionRecordsPage from "./pages/Client/NutritionRecords";
+import ClientHistory from "./pages/Client/ClientHistory";
+import ProgressPage from "./pages/Client/ProgressPage";
+import DashboardAdmin from "./pages/Admin/DashboardAdmin";
+import ClientCrud from "./pages/Admin/ClientCrud";
+import TrainerCrud from "./pages/Admin/TrainerCrud";
+import NutritionistCrud from "./pages/Admin/NutritionistCrud";
+import DashboardNutritionist from "./pages/Nutritionist/DashboardNutritionist";
+import DashboardTrainer from "./pages/Trainer/DashboardTrainer";
+import ExerciseCrud from "./pages/Admin/ExerciseCrud";
+import TrainingPlanEdit from "./pages/Trainer/TrainingPlanEdit";
+import TrainingPlans from "./pages/Trainer/TrainingPlans";
 
+// Importar componentes de rutas protegidas
+import {
+  ClientRoute,
+  TrainerRoute,
+  NutritionistRoute,
+  AdminRoute,
+  TrainerAdminRoute
+} from "./auth/ProtectedRoute";
+import ReportClient from "./pages/Trainer/ReportClient";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Ruta de login - Sin protección */}
         <Route path="/" element={<LogIn />} />
-        <Route path="/client" element={<ClientDashboard />} />
-        <Route path="/client/training-plan" element={<TrainingPlanPage />} />
-        <Route path="/client/training-plan/:trainingPlanId/records" element={<TrainingRecordsPage />} />
 
-        <Route path="/admin" element={<DashboardAdmin />} />
-        <Route path="/trainer/client/:clientDni/training-plans/:trainingPlanId/routine" element={<TrainerRoutine />} />
-        <Route path="/trainer/clients" element={<TrainerClientList />} />
-        <Route path="/trainer/client/:clientDni/training-plan" element={<TrainerTrainingPlan />} />
-        <Route path="/trainer/client/:clientDni/training-logs" element={<ClientTrainingDiaries />} />
-        <Route path="/trainer/client/:clientDni/training-plan/history" element={<TrainingPlansList />} />
-        {/* <Route path="/trainer/client/:clientDni/charts" element={<ClientPhysicalStatusChart />} /> */}
-                 <Route path="/trainer/client/:clientDni/charts" element={<ProgressChart clientDni={''} />} /> 
-                 <Route path="/trainer/client/:clientDni/report" element={<Report clientDni={''} />} /> 
+        {/* ==================== RUTAS DEL CLIENTE ==================== */}
+        <Route 
+          path="/client" 
+          element={
+            <ClientRoute>
+              <ClientDashboard />
+            </ClientRoute>
+          } 
+        />
+        <Route 
+          path="/client/history/:dni" 
+          element={
+            <ClientRoute>
+              <ClientHistory />
+            </ClientRoute>
+          } 
+        />
+        <Route 
+          path="/client/training-plan" 
+          element={
+            <ClientRoute>
+              <TrainingPlanPage />
+            </ClientRoute>
+          } 
+        />
+        <Route 
+          path="/client/training-plan/:trainingPlanId/records" 
+          element={
+            <ClientRoute>
+              <TrainingRecordsPage />
+            </ClientRoute>
+          } 
+        />
+        <Route 
+          path="/client/:dni/progress" 
+          element={
+            <ClientRoute>
+              <ProgressPage />
+            </ClientRoute>
+          } 
+        />
+        <Route 
+          path="/client/nutrition-plan" 
+          element={
+            <ClientRoute>
+              <NutritionPlanPage />
+            </ClientRoute>
+          } 
+        />
+        <Route 
+          path="/client/nutrition-plans/:nutritionPlanId/records" 
+          element={
+            <ClientRoute>
+              <NutritionRecordsPage />
+            </ClientRoute>
+          } 
+        />
 
-        <Route path="/modificar-rutina/:routineId" element={<ModifyRoutine />} />
-        <Route path="/trainerCrud" element={<TrainerCrud />} />
-        <Route path="/nutritionistCrud" element={<NutritionistCrud />} />
-        <Route path="/traineers" element={<TraineersManager />} />
-        <Route path="/admin/clients" element={<ClientCrud />} />
-        <Route path="/client/training" element={<TrainingClient />} />
-        <Route path="/client/training/routine" element={<ClientRoutine />} />
-        
+        {/* ==================== RUTAS DEL ADMINISTRADOR ==================== */}
+        <Route 
+          path="/admin" 
+          element={
+            <AdminRoute>
+              <DashboardAdmin />
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/clients" 
+          element={
+            <AdminRoute>
+              <ClientCrud />
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/trainers" 
+          element={
+            <AdminRoute>
+              <TrainerCrud />
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/nutritionists" 
+          element={
+            <AdminRoute>
+              <NutritionistCrud />
+            </AdminRoute>
+          } 
+        />
+
+        {/* ==================== RUTAS DEL ENTRENADOR ==================== */}
+        <Route 
+          path="/trainer/dashboard" 
+          element={
+            <TrainerRoute>
+              <DashboardTrainer />
+            </TrainerRoute>
+          } 
+        />
+        <Route 
+          path="/trainer/client/:clientDni/training-plans" 
+          element={
+            <TrainerRoute>
+              <TrainingPlans />
+            </TrainerRoute>
+          } 
+        />
+        <Route 
+          path="/trainer/client/:clientDni/training-plans/:planId/edit" 
+          element={
+            <TrainerRoute>
+              <TrainingPlanEdit />
+            </TrainerRoute>
+          } 
+        />
+             <Route 
+          path="/trainer/client/:clientDni/training-plans/report" 
+          element={
+            <TrainerRoute>
+              <ReportClient />
+            </TrainerRoute>
+          } 
+        />
+
+
+        {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
+        <Route 
+          path="/nutritionist/dashboard" 
+          element={
+            <NutritionistRoute>
+              <DashboardNutritionist />
+            </NutritionistRoute>
+          } 
+        />
+
+        {/* ==================== RUTAS COMPARTIDAS ==================== */}
+        {/* Ejercicios - Solo Trainer y Admin pueden acceder */}
+        <Route 
+          path="/exercises" 
+          element={
+            <TrainerAdminRoute>
+              <ExerciseCrud />
+            </TrainerAdminRoute>
+          } 
+        />
+
       </Routes>
     </Router>
-  )
+  );
 }
 
 export default App;
