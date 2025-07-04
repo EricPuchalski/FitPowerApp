@@ -48,7 +48,7 @@ export default function NutritionPlanEdit() {
     const token = localStorage.getItem("token")
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/nutrition-plans/${planId}/client/${clientDni}`,
+        `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/${plan.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +102,7 @@ export default function NutritionPlanEdit() {
 
       if (isNewPlan) {
         const res = await fetch(
-          `http://localhost:8080/api/v1/nutrition-plans/client/${clientDni}`,
+          `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans`,
           {
             method: "POST",
             headers: {
@@ -128,7 +128,7 @@ export default function NutritionPlanEdit() {
         toast.success("Plan nutricional creado con éxito")
       } else {
         const res = await fetch(
-          `http://localhost:8080/api/v1/nutrition-plans/${plan.id}/client/${clientDni}`,
+          `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/${plan.id}`,
           {
             method: "PUT",
             headers: {
@@ -170,8 +170,8 @@ export default function NutritionPlanEdit() {
 
     const token = localStorage.getItem("token")
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/nutrition-plans/${plan.id}/client/${clientDni}`,
+      const res = await fetch(//nutrition-plans //${clientDni} //${plan.id}
+        `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/${plan.id}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

@@ -63,8 +63,8 @@ export default function DashboardNutritionistPlans() {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(
-        `http://localhost:8080/api/v1/nutrition-plans/${planId}/client/${clientDni}`,
+      const response = await fetch(//nutrition-plans //${planId}
+        `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/${planId}`,
         {
           method: 'DELETE',
           headers: {
