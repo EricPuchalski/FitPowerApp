@@ -13,6 +13,8 @@ import ClientCrud from "./pages/Admin/ClientCrud";
 import TrainerCrud from "./pages/Admin/TrainerCrud";
 import NutritionistCrud from "./pages/Admin/NutritionistCrud";
 import DashboardNutritionist from "./pages/Nutritionist/DashboardNutritionist";
+import DashboardNutritionistPlans from "./pages/Nutritionist/DashboardNutritionistPlans";
+import NutritionPlanEdit from "./pages/Nutritionist/NutritionPlanEdit";
 import DashboardTrainer from "./pages/Trainer/DashboardTrainer";
 import ExerciseCrud from "./pages/Admin/ExerciseCrud";
 import TrainingPlanEdit from "./pages/Trainer/TrainingPlanEdit";
@@ -93,6 +95,14 @@ function App() {
             </ClientRoute>
           }
         />
+        <Route 
+          path="/trainer/client/:dni/history" 
+          element={
+            <TrainerRoute>
+              <ClientHistory />
+            </TrainerRoute>
+          } 
+        />
 
         {/* ==================== RUTAS DEL ADMINISTRADOR ==================== */}
         <Route
@@ -153,13 +163,23 @@ function App() {
             </TrainerRoute>
           }
         />
-        <Route
-          path="/trainer/client/:clientDni/training-plans/report"
+
+        <Route 
+          path="/trainer/client/:clientDni/training-plans/report" 
           element={
             <TrainerRoute>
               <ReportClient />
             </TrainerRoute>
           }
+        />
+
+        <Route 
+          path="/trainer/client/:dni/progress" 
+          element={
+            <TrainerRoute>
+              <ProgressPage />
+            </TrainerRoute>
+          } 
         />
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
@@ -168,6 +188,23 @@ function App() {
           element={
             <NutritionistRoute>
               <DashboardNutritionist />
+            </NutritionistRoute>
+          }
+        />
+        {/* Aquí agregamos las rutas para planes nutricionales */}
+        <Route
+          path="/nutritionist/client/:clientDni/nutrition-plans"
+          element={
+            <NutritionistRoute>
+              <DashboardNutritionistPlans />
+            </NutritionistRoute>
+          }
+        />
+        <Route
+          path="/nutritionist/client/:clientDni/nutrition-plans/:planId/edit"
+          element={
+            <NutritionistRoute>
+              <NutritionPlanEdit />
             </NutritionistRoute>
           }
         />
@@ -185,6 +222,7 @@ function App() {
 
         {/* Ruta para manejar rutas no encontradas */}
         <Route path="*" element={<NotFound />} />
+
       </Routes>
     </Router>
   );
