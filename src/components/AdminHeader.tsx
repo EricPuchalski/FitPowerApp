@@ -57,6 +57,34 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onLogout }) => {
           </div>
         </div>
       </div>
+
+      {isMenuOpen && (
+        <div className="md:hidden bg-indigo-800 text-white">
+          <nav className="container mx-auto px-4 py-2 flex flex-col space-y-2">
+            <a
+              href="/admin/nutritionists"
+              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
+            >
+              <Apple size={18} />
+              <span>Nutricionistas</span>
+            </a>
+            <a
+              href="/admin/clients"
+              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
+            >
+              <Users size={18} />
+              <span>Clientes</span>
+            </a>
+            <a
+              href="/admin/trainers"
+              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
+            >
+              <Dumbbell size={18} />
+              <span>Entrenadores</span>
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
