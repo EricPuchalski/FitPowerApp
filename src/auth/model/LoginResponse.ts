@@ -1,4 +1,5 @@
 export interface LoginResponse {
+  message: string;
   token: string;
   roles: string[];
   id: number;

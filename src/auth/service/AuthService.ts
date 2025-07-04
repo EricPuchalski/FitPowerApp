@@ -6,6 +6,7 @@ import { Trainer } from '../../model/Trainer';
 import { Nutritionist } from '../../model/Nutritionist';
 import { Client } from '../../model/Client';
 import { LoginCredentials } from '../model/LoginRequest';
+import { UserRole } from '../model/UserRole';
 
 const API_URL = 'http://localhost:8080/api/v1/auth';
 
@@ -20,12 +21,6 @@ interface UserData extends LoginResponse {
 }
 
 // Enum para los roles
-enum UserRole {
-  TRAINER = "ROLE_TRAINER",
-  NUTRITIONIST = "ROLE_NUTRITIONIST", 
-  CLIENT = "ROLE_CLIENT",
-  ADMIN = "ROLE_ADMIN"
-}
 
 const authService = {
 async login(credentials: LoginCredentials): Promise<UserData> {
@@ -34,7 +29,7 @@ async login(credentials: LoginCredentials): Promise<UserData> {
     const data: LoginResponse = response.data;
 
     if (data.token) {
-      // Limpiar localStorage primero
+      // Limpiar localStorage
       localStorage.clear();
       
       // Almacenar datos básicos de autenticación

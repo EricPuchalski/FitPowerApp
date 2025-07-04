@@ -24,9 +24,10 @@ import {
   TrainerRoute,
   NutritionistRoute,
   AdminRoute,
-  TrainerAdminRoute
+  TrainerAdminRoute,
 } from "./auth/ProtectedRoute";
 import ReportClient from "./pages/Trainer/ReportClient";
+import NotFound from "./components/NotFound";
 
 function App() {
   return (
@@ -36,153 +37,154 @@ function App() {
         <Route path="/" element={<LogIn />} />
 
         {/* ==================== RUTAS DEL CLIENTE ==================== */}
-        <Route 
-          path="/client" 
+        <Route
+          path="/client"
           element={
             <ClientRoute>
               <ClientDashboard />
             </ClientRoute>
-          } 
+          }
         />
-        <Route 
-          path="/client/history/:dni" 
+        <Route
+          path="/client/history/:dni"
           element={
             <ClientRoute>
               <ClientHistory />
             </ClientRoute>
-          } 
+          }
         />
-        <Route 
-          path="/client/training-plan" 
+        <Route
+          path="/client/training-plan"
           element={
             <ClientRoute>
               <TrainingPlanPage />
             </ClientRoute>
-          } 
+          }
         />
-        <Route 
-          path="/client/training-plan/:trainingPlanId/records" 
+        <Route
+          path="/client/training-plan/:trainingPlanId/records"
           element={
             <ClientRoute>
               <TrainingRecordsPage />
             </ClientRoute>
-          } 
+          }
         />
-        <Route 
-          path="/client/:dni/progress" 
+        <Route
+          path="/client/:dni/progress"
           element={
             <ClientRoute>
               <ProgressPage />
             </ClientRoute>
-          } 
+          }
         />
-        <Route 
-          path="/client/nutrition-plan" 
+        <Route
+          path="/client/nutrition-plan"
           element={
             <ClientRoute>
               <NutritionPlanPage />
             </ClientRoute>
-          } 
+          }
         />
-        <Route 
-          path="/client/nutrition-plans/:nutritionPlanId/records" 
+        <Route
+          path="/client/nutrition-plans/:nutritionPlanId/records"
           element={
             <ClientRoute>
               <NutritionRecordsPage />
             </ClientRoute>
-          } 
+          }
         />
 
         {/* ==================== RUTAS DEL ADMINISTRADOR ==================== */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <AdminRoute>
               <DashboardAdmin />
             </AdminRoute>
-          } 
+          }
         />
-        <Route 
-          path="/admin/clients" 
+        <Route
+          path="/admin/clients"
           element={
             <AdminRoute>
               <ClientCrud />
             </AdminRoute>
-          } 
+          }
         />
-        <Route 
-          path="/admin/trainers" 
+        <Route
+          path="/admin/trainers"
           element={
             <AdminRoute>
               <TrainerCrud />
             </AdminRoute>
-          } 
+          }
         />
-        <Route 
-          path="/admin/nutritionists" 
+        <Route
+          path="/admin/nutritionists"
           element={
             <AdminRoute>
               <NutritionistCrud />
             </AdminRoute>
-          } 
+          }
         />
 
         {/* ==================== RUTAS DEL ENTRENADOR ==================== */}
-        <Route 
-          path="/trainer/dashboard" 
+        <Route
+          path="/trainer/dashboard"
           element={
             <TrainerRoute>
               <DashboardTrainer />
             </TrainerRoute>
-          } 
+          }
         />
-        <Route 
-          path="/trainer/client/:clientDni/training-plans" 
+        <Route
+          path="/trainer/client/:clientDni/training-plans"
           element={
             <TrainerRoute>
               <TrainingPlans />
             </TrainerRoute>
-          } 
+          }
         />
-        <Route 
-          path="/trainer/client/:clientDni/training-plans/:planId/edit" 
+        <Route
+          path="/trainer/client/:clientDni/training-plans/:planId/edit"
           element={
             <TrainerRoute>
               <TrainingPlanEdit />
             </TrainerRoute>
-          } 
+          }
         />
-             <Route 
-          path="/trainer/client/:clientDni/training-plans/report" 
+        <Route
+          path="/trainer/client/:clientDni/training-plans/report"
           element={
             <TrainerRoute>
               <ReportClient />
             </TrainerRoute>
-          } 
+          }
         />
 
-
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
-        <Route 
-          path="/nutritionist/dashboard" 
+        <Route
+          path="/nutritionist/dashboard"
           element={
             <NutritionistRoute>
               <DashboardNutritionist />
             </NutritionistRoute>
-          } 
+          }
         />
 
         {/* ==================== RUTAS COMPARTIDAS ==================== */}
         {/* Ejercicios - Solo Trainer y Admin pueden acceder */}
-        <Route 
-          path="/exercises" 
+        <Route
+          path="/exercises"
           element={
             <TrainerAdminRoute>
               <ExerciseCrud />
             </TrainerAdminRoute>
-          } 
+          }
         />
 
+        {/* Ruta para manejar rutas no encontradas */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
