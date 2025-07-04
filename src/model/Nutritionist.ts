@@ -1,14 +1,10 @@
-export type Nutritionist = {
-    id: string
-    nombre: string
-    apellido: string
-    dni: string
-    email: string
-    telefono: string
-    direccion: string
-    especialidad: string
-    experiencia: string
-    gimnasioAsignado: string
-    certificaciones: string
-    clientesAsignados: number
-  }
+export interface Nutritionist {
+  id: number;
+  name: string;
+  lastName: string;
+  dni: string;
+  email: string;
+  specialization: string;
+  gymName: string;
+  active: boolean;
+}

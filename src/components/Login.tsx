@@ -96,12 +96,12 @@ export default function LogIn() {
             </Button>
           </form>
           
-          <p className="mt-6 text-center text-[#F6AA1C] text-sm">
+          {/* <p className="mt-6 text-center text-[#F6AA1C] text-sm">
             ¿No tienes una cuenta?{' '}
             <a href="#" className="text-[#F6AA1C] hover:underline font-medium">
               Regístrate
             </a>
-          </p>
+          </p> */}
         </div>
       </div>
       <FooterPag />

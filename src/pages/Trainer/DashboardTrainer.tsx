@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Users,
   Plus,
@@ -13,6 +13,8 @@ import {
   Home
 } from 'lucide-react'
 import { FooterPag } from '../../components/Footer'
+import { TrainerHeader } from "../../components/TrainerHeader"
+import { useAuth } from "../../auth/hook/useAuth"
 
 interface User {
   dni: string
@@ -43,6 +45,8 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
   const [activePlansCount, setActivePlansCount] = useState<number>(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showAll, setShowAll] = useState(false)
+      const navigate = useNavigate();
+      const { logout } = useAuth();
 
   // Carga inicial del entrenador y luego de los clientes/plans
   useEffect(() => {
@@ -166,6 +170,11 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
     }
   }
 
+    const handleLogout = () => {
+  logout();
+  navigate("/"); // o "/login" si tenés una ruta específica
+};
+
   // Loading skeleton
   if (loading) {
     return (
@@ -179,44 +188,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header y menú */}
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Dumbbell className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Trainer</h1>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <a href="/trainer" className="hover:text-blue-200 flex items-center space-x-1">
-              <Home size={18} /><span>Inicio</span>
-            </a>
-            <a href="/trainer/clients" className="hover:text-blue-200 flex items-center space-x-1">
-              <Users size={18} /><span>Clientes</span>
-            </a>
-            <a href="/exercises" className="hover:text-blue-200 flex items-center space-x-1">
-              <Dumbbell size={18} /><span>Ejercicios</span>
-            </a>
-          </nav>
-          <button className="md:hidden bg-blue-800 p-2 rounded" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-          </button>
-        </div>
-      </header>
-      {isMenuOpen && (
-        <div className="md:hidden bg-indigo-800 text-white">
-          <nav className="p-4 flex flex-col space-y-2">
-            <a href="/trainer" className="hover:bg-indigo-700 p-2 rounded flex items-center space-x-2">
-              <Home size={18}/><span>Inicio</span>
-            </a>
-            <a href="/trainer/clients" className="hover:bg-indigo-700 p-2 rounded flex items-center space-x-2">
-              <Users size={18}/><span>Clientes</span>
-            </a>
-            <a href="/exercises" className="hover:bg-indigo-700 p-2 rounded flex items-center space-x-2">
-              <Dumbbell size={18}/><span>Ejercicios</span>
-            </a>
-          </nav>
-        </div>
-      )}
-
+      <TrainerHeader onLogout={handleLogout}></TrainerHeader>
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Bienvenida */}
         <div className="mb-8">

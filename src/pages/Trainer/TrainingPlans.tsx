@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import {
   Calendar,
   Plus,
@@ -13,6 +13,9 @@ import {
 } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { FooterPag } from "../../components/Footer"
+import { TrainerHeader } from "../../components/TrainerHeader"
+import { useAuth } from "../../auth/hook/useAuth"
 
 // Definición de tipos
 interface Exercise {
@@ -40,6 +43,8 @@ export default function TrainingPlans() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [noPlans, setNoPlans] = useState(false)
+        const navigate = useNavigate();
+        const { logout } = useAuth();
   const [clientInfo, setClientInfo] = useState<{
     name: string
     email: string
@@ -172,9 +177,19 @@ export default function TrainingPlans() {
     )
   }
 
+
+      const handleLogout = () => {
+  logout();
+  navigate("/"); // o "/login" si tenés una ruta específica
+};
+
+
   // ✅ Listado de planes existente
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <>
+    <TrainerHeader onLogout={handleLogout}></TrainerHeader>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ToastContainer />
       {/* ↩️ Volver + nueva creación */}
       <div className="flex justify-between items-center mb-8">
@@ -299,5 +314,8 @@ export default function TrainingPlans() {
         ))}
       </div>
     </div>
+          <FooterPag></FooterPag>
+
+    </>
   )
 }
