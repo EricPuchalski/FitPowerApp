@@ -1,4 +1,4 @@
-//src/pages/Nutritionist/DashboardNutritionist.tsx
+// src/pages/Nutritionist/DashboardNutritionist.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -30,12 +30,15 @@ interface Client {
   createdAt: string
 }
 
+type ViewMode = "ALL" | "MINE"
+
 export default function DashboardNutritionist() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>("ALL")
 
   useEffect(() => {
     const dni = localStorage.getItem("userDni")
@@ -58,25 +61,21 @@ export default function DashboardNutritionist() {
           "Content-Type": "application/json",
         },
       })
-
       if (!res.ok) throw new Error("No se pudo cargar el nutricionista")
 
       const data = await res.json()
-
-      console.log("✅ Datos del nutricionista guardados: ", data)
-
       localStorage.setItem("nutritionistId", data.id.toString())
       localStorage.setItem("userRole", "ROLE_NUTRITIONIST")
 
-      const user: User = {
+      setCurrentUser({
         dni: data.dni,
         name: data.name,
         gymName: data.gymName,
         role: "ROLE_NUTRITIONIST",
-      }
+      })
 
-      setCurrentUser(user)
-      loadClientsByGym(data.gymName)
+      // Carga inicial: todos los clientes
+      await loadClientsByGym(data.gymName)
     } catch (err) {
       setError("Error al cargar información del nutricionista")
       setLoading(false)
@@ -84,9 +83,10 @@ export default function DashboardNutritionist() {
   }
 
   const loadClientsByGym = async (gymName: string) => {
+    setLoading(true)
+    setError(null)
     try {
       const token = localStorage.getItem("token")
-
       const res = await fetch(
         `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients`,
         {
@@ -96,15 +96,48 @@ export default function DashboardNutritionist() {
           },
         }
       )
-
-      if (!res.ok) throw new Error("Error al cargar los clientes")
-
+      if (!res.ok) throw new Error("Error al cargar los clientes del gimnasio")
       const data: Client[] = await res.json()
       setClients(data)
     } catch (err) {
       setError("Error al obtener los clientes del gimnasio")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadMyClients = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("token")
+      const nutritionistId = localStorage.getItem("nutritionistId")
+      if (!nutritionistId) throw new Error("ID de nutricionista no encontrado")
+      const res = await fetch(
+        `http://localhost:8080/api/v1/nutritionists/${nutritionistId}/clients/active`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      if (!res.ok) throw new Error("Error al cargar mis clientes")
+      const data: Client[] = await res.json()
+      setClients(data)
+    } catch (err) {
+      setError("Error al obtener mis clientes")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleViewChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    if (mode === "ALL" && currentUser) {
+      loadClientsByGym(currentUser.gymName)
+    } else if (mode === "MINE") {
+      loadMyClients()
     }
   }
 
@@ -162,6 +195,22 @@ export default function DashboardNutritionist() {
           <p className="text-gray-600">{`Gimnasio: ${currentUser?.gymName}`}</p>
         </div>
 
+        {/* Botones de filtro */}
+        <div className="flex space-x-4 mb-6">
+          <button
+            onClick={() => handleViewChange("ALL")}
+            className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Todos los clientes
+          </button>
+          <button
+            onClick={() => handleViewChange("MINE")}
+            className={`px-4 py-2 rounded ${viewMode === "MINE" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Mis clientes
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="p-6 bg-green-50 rounded-lg border flex items-center justify-between">
             <div>
@@ -173,7 +222,9 @@ export default function DashboardNutritionist() {
         </div>
 
         <div className="mb-4">
-          <h2 className="text-xl font-semibold">Clientes del Gimnasio</h2>
+          <h2 className="text-xl font-semibold">
+            {viewMode === "ALL" ? "Clientes del Gimnasio" : "Mis Clientes"}
+          </h2>
           <p className="text-sm text-gray-600">Gestiona sus planes nutricionales</p>
         </div>
 
@@ -190,13 +241,11 @@ export default function DashboardNutritionist() {
                 {client.name} {client.lastName}
               </h3>
               <p className="text-gray-600 text-sm mb-4">DNI: {client.dni}</p>
-
               <div className="space-y-2 mb-4 text-gray-700">
                 <div>Email: {client.email}</div>
                 <div>Teléfono: {client.phoneNumber}</div>
                 <div>Desde: {new Date(client.createdAt).toLocaleDateString("es-ES")}</div>
               </div>
-
               <div className="flex flex-col space-y-2">
                 <Link to={`/nutritionist/client/${client.dni}/nutrition-plans`}>
                   <button className="w-full bg-green-800 text-white py-2 rounded">
@@ -218,10 +267,12 @@ export default function DashboardNutritionist() {
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hay clientes en el gimnasio
+              No hay clientes para mostrar
             </h3>
             <p className="text-gray-600">
-              Los clientes aparecerán aquí cuando estén registrados en tu gimnasio.
+              {viewMode === "ALL"
+                ? "Los clientes aparecerán aquí cuando estén registrados en tu gimnasio."
+                : "No tienes clientes asignados en este momento."}
             </p>
           </div>
         )}
