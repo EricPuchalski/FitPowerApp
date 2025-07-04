@@ -10,7 +10,6 @@ import "react-toastify/dist/ReactToastify.css"
 interface NutritionPlan {
   id?: number
   name: string
-  description: string
   caloricTarget: number
   dailyCarbs: number
   dailyProteins: number
@@ -26,7 +25,6 @@ export default function NutritionPlanEdit() {
 
   const [plan, setPlan] = useState<NutritionPlan>({
     name: "",
-    description: "",
     caloricTarget: 0,
     dailyCarbs: 0,
     dailyProteins: 0,
@@ -67,7 +65,6 @@ export default function NutritionPlanEdit() {
       setPlan({
         id: data.id,
         name: data.name,
-        description: data.description,
         caloricTarget: data.caloricTarget,
         dailyCarbs: data.dailyCarbs,
         dailyProteins: data.dailyProteins,
@@ -114,7 +111,6 @@ export default function NutritionPlanEdit() {
             },
             body: JSON.stringify({
               name: plan.name,
-              description: plan.description,
               caloricTarget: plan.caloricTarget,
               dailyCarbs: plan.dailyCarbs,
               dailyProteins: plan.dailyProteins,
@@ -141,7 +137,6 @@ export default function NutritionPlanEdit() {
             },
             body: JSON.stringify({
               name: plan.name,
-              description: plan.description,
               caloricTarget: plan.caloricTarget,
               dailyCarbs: plan.dailyCarbs,
               dailyProteins: plan.dailyProteins,
@@ -276,16 +271,9 @@ export default function NutritionPlanEdit() {
             />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-          <textarea
-            value={plan.description}
-            onChange={e => setPlan({ ...plan, description: e.target.value })}
-            className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={3}
-            placeholder="Detalles o pautas nutricionales..."
-          />
-        </div>
+
+       
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Recomendaciones</label>
           <textarea
