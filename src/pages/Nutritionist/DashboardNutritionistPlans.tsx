@@ -106,8 +106,6 @@ export default function DashboardNutritionistPlans() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inicio</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fin</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
                   </tr>
                 </thead>
