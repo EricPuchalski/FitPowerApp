@@ -1,9 +1,17 @@
-// src/components/ExerciseCrud.tsx
-
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Check, X, Edit2, Dumbbell, Home, Users, Menu as MenuIcon } from "lucide-react"
+import {
+  Plus,
+  Check,
+  X,
+  Edit2,
+  Dumbbell,
+  Home,
+  Users,
+  Menu as MenuIcon,
+  Apple
+} from "lucide-react"
 import { FooterPag } from "../../components/Footer"
 
 interface Exercise {
@@ -32,7 +40,7 @@ export default function ExerciseCrud() {
     setLoading(true)
     try {
       const res = await fetch("http://localhost:8080/api/v1/exercises", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error()
       const data: Exercise[] = await res.json()
@@ -100,23 +108,29 @@ export default function ExerciseCrud() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-green-900 to-lime-800 text-white shadow-lg">
+      {/* Header estilo Admin */}
+      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Dumbbell className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Ejercicios</h1>
+            <h1 className="text-2xl font-bold">FitPower Admin</h1>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <a href="/nutritionist/dashboard" className="hover:text-green-200 flex items-center space-x-1">
-              <Home size={18} /><span>Inicio</span>
+            <a href="/admin" className="hover:text-blue-200 transition flex items-center space-x-1">
+              <Home size={18} /> <span>Inicio</span>
             </a>
-            <a href="/exercises" className="hover:text-green-200 flex items-center space-x-1">
-              <Users size={18} /><span>Ejercicios</span>
+            <a href="/admin/nutritionists" className="hover:text-blue-200 transition flex items-center space-x-1">
+              <Apple size={18} /> <span>Nutricionistas</span>
+            </a>
+            <a href="/admin/clients" className="hover:text-blue-200 transition flex items-center space-x-1">
+              <Users size={18} /> <span>Clientes</span>
+            </a>
+            <a href="/admin/trainers" className="hover:text-blue-200 transition flex items-center space-x-1">
+              <Dumbbell size={18} /> <span>Entrenadores</span>
             </a>
           </nav>
           <button
-            className="md:hidden bg-green-800 p-2 rounded"
+            className="md:hidden bg-blue-800 p-2 rounded-md hover:bg-indigo-700 transition"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
@@ -124,15 +138,18 @@ export default function ExerciseCrud() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu estilo Admin */}
       {isMenuOpen && (
-        <div className="md:hidden bg-lime-800 text-white">
-          <nav className="p-4 flex flex-col space-y-2">
-            <a href="/nutritionist/dashboard" className="hover:bg-lime-700 p-2 rounded flex items-center space-x-2">
-              <Home size={18} /><span>Inicio</span>
+        <div className="md:hidden bg-indigo-800 text-white">
+          <nav className="container mx-auto px-4 py-2 flex flex-col space-y-2">
+            <a href="/admin/nutritionists" className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2">
+              <Apple size={18} /> <span>Nutricionistas</span>
             </a>
-            <a href="/exercises" className="hover:bg-lime-700 p-2 rounded flex items-center space-x-2">
-              <Users size={18} /><span>Ejercicios</span>
+            <a href="/admin/clients" className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2">
+              <Users size={18} /> <span>Clientes</span>
+            </a>
+            <a href="/admin/trainers" className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2">
+              <Dumbbell size={18} /> <span>Entrenadores</span>
             </a>
           </nav>
         </div>
@@ -140,7 +157,7 @@ export default function ExerciseCrud() {
 
       {/* Main */}
       <main className="flex-grow container mx-auto px-4 py-8">
-        {/* Crear */}
+        {/* Crear nuevo */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Crear nuevo ejercicio</h2>
           <div className="flex flex-col md:flex-row items-center gap-4">
@@ -153,7 +170,7 @@ export default function ExerciseCrud() {
             />
             <button
               onClick={createExercise}
-              className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded-md flex items-center shadow"
+              className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-md flex items-center shadow"
             >
               <Plus className="w-4 h-4 mr-2" />Crear
             </button>
