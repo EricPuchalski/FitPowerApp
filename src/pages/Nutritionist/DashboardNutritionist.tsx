@@ -1,17 +1,17 @@
-// src/components/DashboardNutritionist.tsx
+// src/pages/Nutritionist/DashboardNutritionist.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import {
   Users,
-  Plus,
   Menu,
   X,
-  HeartPulse,
-  Home
-} from 'lucide-react'
-import { FooterPag } from '../../components/Footer'
+  Utensils,
+  Home,
+  PlusCircle
+} from "lucide-react"
+import { FooterPag } from "../../components/Footer"
 
 interface User {
   dni: string
@@ -30,127 +30,114 @@ interface Client {
   createdAt: string
 }
 
-interface DashboardNutritionistProps {
-  user?: User
-}
+type ViewMode = "ALL" | "MINE"
 
-export default function DashboardNutritionist({ user }: DashboardNutritionistProps) {
+export default function DashboardNutritionist() {
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [currentUser, setCurrentUser] = useState<User | null>(user || null)
-  const [activePlansCount, setActivePlansCount] = useState<number>(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [showAll, setShowAll] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>("ALL")
 
   useEffect(() => {
-    if (!currentUser) {
-      const token = localStorage.getItem("token")
-      const userDni = localStorage.getItem("userDni")
-      if (token && userDni) {
-        fetchNutritionistInfo(userDni)
-      }
-    } else {
-      loadData()
+    const dni = localStorage.getItem("userDni")
+    const token = localStorage.getItem("token")
+
+    if (!dni || !token) {
+      setError("No hay sesión activa.")
+      setLoading(false)
+      return
     }
-  }, [currentUser, showAll])
 
-  const loadData = () => {
-    setLoading(true)
-    setError(null)
+    loadNutritionistInfo(dni, token)
+  }, [])
 
-    const loader = showAll ? fetchAllClients : fetchMyClients
-    loader()
-      .then(() => fetchNutritionPlans())
-      .catch(() => setError("Error al cargar los clientes"))
-      .finally(() => setLoading(false))
-  }
-
-  const fetchNutritionistInfo = async (dni: string) => {
+  const loadNutritionistInfo = async (dni: string, token: string) => {
     try {
-      const token = localStorage.getItem("token")
       const res = await fetch(`http://localhost:8080/api/v1/nutritionists/${dni}`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error("No se pudo cargar el nutricionista")
+
       const data = await res.json()
       localStorage.setItem("nutritionistId", data.id.toString())
       localStorage.setItem("userRole", "ROLE_NUTRITIONIST")
+
       setCurrentUser({
         dni: data.dni,
         name: data.name,
         gymName: data.gymName,
-        role: "ROLE_NUTRITIONIST"
+        role: "ROLE_NUTRITIONIST",
       })
-    } catch {
+
+      // Carga inicial: todos los clientes
+      await loadClientsByGym(data.gymName)
+    } catch (err) {
       setError("Error al cargar información del nutricionista")
       setLoading(false)
     }
   }
 
-  const fetchMyClients = async () => {
-    const nutritionistId = localStorage.getItem("nutritionistId")
-    const token = localStorage.getItem("token")
-    if (!nutritionistId || !token) throw new Error()
-
-    const res = await fetch(
-      `http://localhost:8080/api/v1/nutritionists/${nutritionistId}/clients/active`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (!res.ok) {
-      if (res.status === 404) {
-        setClients([])
-        return
-      }
-      throw new Error()
-    }
-    const data: Client[] = await res.json()
-    setClients(data)
-  }
-
-  const fetchAllClients = async () => {
-    const token = localStorage.getItem("token")
-    const gymName = currentUser?.gymName
-    if (!gymName || !token) throw new Error()
-
-    const res = await fetch(
-      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (!res.ok) throw new Error()
-    const data: Client[] = await res.json()
-    setClients(data)
-  }
-
-  const fetchNutritionPlans = async () => {
-    const nutritionistId = localStorage.getItem("nutritionistId")
-    const token = localStorage.getItem("token")
-    if (!nutritionistId || !token) return
-
+  const loadClientsByGym = async (gymName: string) => {
+    setLoading(true)
+    setError(null)
     try {
+      const token = localStorage.getItem("token")
       const res = await fetch(
-        `http://localhost:8080/api/v1/nutrition-plans/nutritionist/${nutritionistId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       )
-      if (!res.ok) throw new Error()
-      const data: any[] = await res.json()
-      const activos = data.filter(plan => plan.active)
-      setActivePlansCount(activos.length)
-    } catch {
-      setActivePlansCount(0)
+      if (!res.ok) throw new Error("Error al cargar los clientes del gimnasio")
+      const data: Client[] = await res.json()
+      setClients(data)
+    } catch (err) {
+      setError("Error al obtener los clientes del gimnasio")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadMyClients = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("token")
+      const nutritionistId = localStorage.getItem("nutritionistId")
+      if (!nutritionistId) throw new Error("ID de nutricionista no encontrado")
+      const res = await fetch(
+        `http://localhost:8080/api/v1/nutritionists/${nutritionistId}/clients/active`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      if (!res.ok) throw new Error("Error al cargar mis clientes")
+      const data: Client[] = await res.json()
+      setClients(data)
+    } catch (err) {
+      setError("Error al obtener mis clientes")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleViewChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    if (mode === "ALL" && currentUser) {
+      loadClientsByGym(currentUser.gymName)
+    } else if (mode === "MINE") {
+      loadMyClients()
     }
   }
 
@@ -164,33 +151,39 @@ export default function DashboardNutritionist({ user }: DashboardNutritionistPro
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <header className="bg-gradient-to-r from-green-900 to-emerald-900 text-white shadow-lg">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-green-900 to-lime-800 text-white shadow-lg">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <HeartPulse className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Nutritionist</h1>
+            <Utensils className="w-8 h-8" />
+            <h1 className="text-2xl font-bold">FitPower Nutricionista</h1>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <a href="/nutritionist" className="hover:text-green-200 flex items-center space-x-1">
+            <a href="/nutritionist/dashboard" className="hover:text-green-200 flex items-center space-x-1">
               <Home size={18} /><span>Inicio</span>
             </a>
-            <a href="/nutritionist/clients" className="hover:text-green-200 flex items-center space-x-1">
-              <Users size={18} /><span>Clientes</span>
+            <a href="/exercises" className="hover:text-green-200 flex items-center space-x-1">
+              <Users size={18} /><span>Ejercicios</span>
             </a>
           </nav>
-          <button className="md:hidden bg-green-800 p-2 rounded" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+          <button
+            className="md:hidden bg-green-800 p-2 rounded"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </header>
+
+      {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-emerald-800 text-white">
+        <div className="md:hidden bg-lime-800 text-white">
           <nav className="p-4 flex flex-col space-y-2">
-            <a href="/nutritionist" className="hover:bg-emerald-700 p-2 rounded flex items-center space-x-2">
-              <Home size={18}/><span>Inicio</span>
+            <a href="/nutritionist/dashboard" className="hover:bg-lime-700 p-2 rounded flex items-center space-x-2">
+              <Home size={18} /><span>Inicio</span>
             </a>
-            <a href="/nutritionist/clients" className="hover:bg-emerald-700 p-2 rounded flex items-center space-x-2">
-              <Users size={18}/><span>Clientes</span>
+            <a href="/exercises" className="hover:bg-lime-700 p-2 rounded flex items-center space-x-2">
+              <Users size={18} /><span>Ejercicios</span>
             </a>
           </nav>
         </div>
@@ -198,39 +191,41 @@ export default function DashboardNutritionist({ user }: DashboardNutritionistPro
 
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">{`Bienvenido, ${currentUser?.name}`}</h1>
+          <h1 className="text-3xl font-bold">{`Bienvenido/a, ${currentUser?.name}`}</h1>
           <p className="text-gray-600">{`Gimnasio: ${currentUser?.gymName}`}</p>
         </div>
 
+        {/* Botones de filtro */}
+        <div className="flex space-x-4 mb-6">
+          <button
+            onClick={() => handleViewChange("ALL")}
+            className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Todos los clientes
+          </button>
+          <button
+            onClick={() => handleViewChange("MINE")}
+            className={`px-4 py-2 rounded ${viewMode === "MINE" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Mis clientes
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="p-6 bg-emerald-50 rounded-lg border flex items-center justify-between">
+          <div className="p-6 bg-green-50 rounded-lg border flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-700">Total Clientes</p>
               <p className="text-2xl font-bold">{clients.length}</p>
             </div>
-            <Users className="h-8 w-8 text-emerald-600"/>
+            <Users className="h-8 w-8 text-green-600" />
           </div>
-        </div>
-
-        <div className="flex space-x-4 mb-6">
-          <button
-            onClick={() => setShowAll(false)}
-            className={`px-4 py-2 rounded ${!showAll ? 'bg-green-900 text-white' : 'bg-gray-200'}`}
-          >
-            Mis Clientes
-          </button>
-          <button
-            onClick={() => setShowAll(true)}
-            className={`px-4 py-2 rounded ${showAll ? 'bg-green-900 text-white' : 'bg-gray-200'}`}
-          >
-            Todos los Clientes
-          </button>
         </div>
 
         <div className="mb-4">
           <h2 className="text-xl font-semibold">
-            {showAll ? 'Todos los Clientes del Gimnasio' : 'Mis Clientes con Planes Nutricionales'}
+            {viewMode === "ALL" ? "Clientes del Gimnasio" : "Mis Clientes"}
           </h2>
+          <p className="text-sm text-gray-600">Gestiona sus planes nutricionales</p>
         </div>
 
         {error && (
@@ -240,33 +235,29 @@ export default function DashboardNutritionist({ user }: DashboardNutritionistPro
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clients.map(client => (
+          {clients.map((client) => (
             <div key={client.id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition p-6">
               <h3 className="font-semibold text-gray-900 text-lg">
                 {client.name} {client.lastName}
               </h3>
               <p className="text-gray-600 text-sm mb-4">DNI: {client.dni}</p>
-
               <div className="space-y-2 mb-4 text-gray-700">
                 <div>Email: {client.email}</div>
                 <div>Teléfono: {client.phoneNumber}</div>
                 <div>Desde: {new Date(client.createdAt).toLocaleDateString("es-ES")}</div>
               </div>
-
               <div className="flex flex-col space-y-2">
                 <Link to={`/nutritionist/client/${client.dni}/nutrition-plans`}>
                   <button className="w-full bg-green-800 text-white py-2 rounded">
                     Ver Planes Nutricionales
                   </button>
                 </Link>
-
-                {!showAll && localStorage.getItem("userRole") === "ROLE_NUTRITIONIST" && (
-                  <Link to={`/nutritionist/client/${client.dni}/nutrition-plans/new/edit`}>
-                    <button className="w-full bg-pink-400 text-white py-2 rounded flex items-center justify-center">
-                      <Plus className="h-4 w-4 mr-2"/> Crear Plan
-                    </button>
-                  </Link>
-                )}
+                <Link to={`/nutritionist/client/${client.dni}/nutrition-plans/new/edit`}>
+                  <button className="w-full bg-lime-500 text-white py-2 rounded flex items-center justify-center">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Crear Plan Nutricional
+                  </button>
+                </Link>
               </div>
             </div>
           ))}
@@ -274,14 +265,14 @@ export default function DashboardNutritionist({ user }: DashboardNutritionistPro
 
         {clients.length === 0 && !loading && (
           <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4"/>
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {showAll ? 'No hay clientes en el gimnasio' : 'No tienes clientes activos'}
+              No hay clientes para mostrar
             </h3>
             <p className="text-gray-600">
-              {showAll
-                ? 'Los clientes aparecerán aquí cuando se registren en el gimnasio.'
-                : 'Los clientes aparecerán aquí cuando tengan planes nutricionales contigo.'}
+              {viewMode === "ALL"
+                ? "Los clientes aparecerán aquí cuando estén registrados en tu gimnasio."
+                : "No tienes clientes asignados en este momento."}
             </p>
           </div>
         )}

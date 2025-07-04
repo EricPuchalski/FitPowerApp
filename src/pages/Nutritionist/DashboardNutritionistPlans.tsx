@@ -1,10 +1,9 @@
-//src/pages/Nutritionist/DashboardNutritionistPlans.tsx
-// src/components/DashboardNutritionistPlans.tsx
+// src/pages/Nutritionist/DashboardNutritionistPlans.tsx
 "use client"
 
 import { useEffect, useState } from "react"
 import { useNavigate, useParams, Link } from "react-router-dom"
-import { Plus, Eye, Edit2, Trash2, ArrowLeft } from "lucide-react"
+import { Plus, Edit2, Trash2, ArrowLeft } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -19,33 +18,43 @@ interface NutritionPlan {
 export default function DashboardNutritionistPlans() {
   const { clientDni } = useParams<{ clientDni: string }>()
   const [plans, setPlans] = useState<NutritionPlan[]>([])
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
     const token = localStorage.getItem("token")
 
-    const fetchPlans = async () => {
+    const fetchActivePlan = async () => {
+      setLoading(true)
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/nutritionists/clients/${clientDni}/plans`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await fetch(
+          `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/active`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           }
-        })
+        )
 
-        if (!response.ok) {
-          throw new Error("Error al obtener los planes nutricionales")
+        if (response.status === 404) {
+          // Sin plan activo
+          setPlans([])
+        } else if (!response.ok) {
+          throw new Error("Error al obtener el plan activo")
+        } else {
+          const data: NutritionPlan = await response.json()
+          setPlans([data])  // lo metemos en un array para reutilizar la UI de tabla
         }
-
-        const data = await response.json()
-        setPlans(data)
       } catch (error) {
         console.error(error)
-        toast.error("Error al cargar los planes nutricionales")
+        toast.error("Error al cargar el plan nutricional activo")
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchPlans()
+    fetchActivePlan()
   }, [clientDni])
 
   const deletePlan = async (planId: number) => {
@@ -54,24 +63,35 @@ export default function DashboardNutritionistPlans() {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:8080/api/v1/nutrition-plans/${planId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(//nutrition-plans //${planId}
+        `http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/${planId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      })
+      )
 
       if (!response.ok) {
         throw new Error("Error al eliminar el plan")
       }
 
-      setPlans((prev) => prev.filter(p => p.id !== planId))
+      setPlans(prev => prev.filter(p => p.id !== planId))
       toast.success("Plan eliminado correctamente")
     } catch (error) {
       console.error(error)
       toast.error("Error al eliminar el plan")
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <p className="text-center">Cargando plan activo…</p>
+      </div>
+    )
   }
 
   return (
@@ -81,9 +101,9 @@ export default function DashboardNutritionistPlans() {
           <ArrowLeft className="w-4 h-4" />
           <span>Volver</span>
         </Link>
-        <h1 className="text-2xl font-bold">Planes Nutricionales del Cliente {clientDni}</h1>
+        <h1 className="text-2xl font-bold">Plan Nutricional Activo de {clientDni}</h1>
         <button
-          onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/new`)}
+          onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/new/edit`)}
           className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-md flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
@@ -94,24 +114,24 @@ export default function DashboardNutritionistPlans() {
       <div className="bg-white shadow rounded-lg border">
         <div className="p-4">
           {plans.length === 0 ? (
-            <p className="text-gray-500 text-center py-6">No hay planes nutricionales registrados.</p>
+            <p className="text-gray-500 text-center py-6">
+              No hay plan activo. Crea uno nuevo desde el botón arriba.
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inicio</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fin</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {plans.map((plan) => (
+                  {plans.map(plan => (
                     <tr key={plan.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{plan.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{plan.startDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{plan.endDate}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        {plan.name}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
                           onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/${plan.id}/edit`)}
