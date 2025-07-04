@@ -5,14 +5,12 @@ import {
   Plus,
   Check,
   X,
-  Edit2,
-  Dumbbell,
-  Home,
-  Users,
-  Menu as MenuIcon,
-  Apple
+  Edit2
 } from "lucide-react"
 import { FooterPag } from "../../components/Footer"
+import { AdminHeader } from "../../components/AdminHeader"
+import { useAuth } from "../../auth/hook/useAuth"
+import { useNavigate } from "react-router-dom"
 
 interface Exercise {
   id: number
@@ -24,13 +22,13 @@ export default function ExerciseCrud() {
   const [newExercise, setNewExercise] = useState({ name: "" })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  // Edit state
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editName, setEditName] = useState("")
-
   const token = localStorage.getItem("token")
+
+  const { logout } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchExercises()
@@ -106,56 +104,15 @@ export default function ExerciseCrud() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate("/")
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      {/* Header estilo Admin */}
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Dumbbell className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Admin</h1>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <a href="/admin" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Home size={18} /> <span>Inicio</span>
-            </a>
-            <a href="/admin/nutritionists" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Apple size={18} /> <span>Nutricionistas</span>
-            </a>
-            <a href="/admin/clients" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Users size={18} /> <span>Clientes</span>
-            </a>
-            <a href="/admin/trainers" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Dumbbell size={18} /> <span>Entrenadores</span>
-            </a>
-          </nav>
-          <button
-            className="md:hidden bg-blue-800 p-2 rounded-md hover:bg-indigo-700 transition"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
-          </button>
-        </div>
-      </header>
+      <AdminHeader onLogout={handleLogout} />
 
-      {/* Mobile menu estilo Admin */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-indigo-800 text-white">
-          <nav className="container mx-auto px-4 py-2 flex flex-col space-y-2">
-            <a href="/admin/nutritionists" className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2">
-              <Apple size={18} /> <span>Nutricionistas</span>
-            </a>
-            <a href="/admin/clients" className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2">
-              <Users size={18} /> <span>Clientes</span>
-            </a>
-            <a href="/admin/trainers" className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2">
-              <Dumbbell size={18} /> <span>Entrenadores</span>
-            </a>
-          </nav>
-        </div>
-      )}
-
-      {/* Main */}
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Crear nuevo */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
