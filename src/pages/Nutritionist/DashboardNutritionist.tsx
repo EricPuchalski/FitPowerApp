@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Users,
   Menu,
@@ -12,6 +12,8 @@ import {
   PlusCircle
 } from "lucide-react"
 import { FooterPag } from "../../components/Footer"
+import { NutritionistHeader } from "../../components/NutritionistHeader"
+import { useAuth } from "../../auth/hook/useAuth"
 
 interface User {
   dni: string
@@ -39,6 +41,8 @@ export default function DashboardNutritionist() {
   const [error, setError] = useState<string | null>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>("ALL")
+    const navigate = useNavigate();
+    const { logout } = useAuth();
 
   useEffect(() => {
     const dni = localStorage.getItem("userDni")
@@ -149,45 +153,15 @@ export default function DashboardNutritionist() {
     )
   }
 
+  const handleLogout = () => {
+  logout();
+  navigate("/"); // o "/login" si tenés una ruta específica
+};
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-gradient-to-r from-green-900 to-lime-800 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Utensils className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Nutricionista</h1>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <a href="/nutritionist/dashboard" className="hover:text-green-200 flex items-center space-x-1">
-              <Home size={18} /><span>Inicio</span>
-            </a>
-            <a href="/exercises" className="hover:text-green-200 flex items-center space-x-1">
-              <Users size={18} /><span>Ejercicios</span>
-            </a>
-          </nav>
-          <button
-            className="md:hidden bg-green-800 p-2 rounded"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-lime-800 text-white">
-          <nav className="p-4 flex flex-col space-y-2">
-            <a href="/nutritionist/dashboard" className="hover:bg-lime-700 p-2 rounded flex items-center space-x-2">
-              <Home size={18} /><span>Inicio</span>
-            </a>
-            <a href="/exercises" className="hover:bg-lime-700 p-2 rounded flex items-center space-x-2">
-              <Users size={18} /><span>Ejercicios</span>
-            </a>
-          </nav>
-        </div>
-      )}
+      <NutritionistHeader onLogout={handleLogout}></NutritionistHeader>
 
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="mb-8">

@@ -1,11 +1,11 @@
-import { HeartPulse, Home, Users, Menu, X } from "lucide-react";
+import { Dumbbell, Home, Users, Menu, X } from "lucide-react";
 import React, { useState } from "react";
 
-interface NutritionistHeaderProps {
+interface TrainerHeaderProps {
   onLogout: () => void;
 }
 
-export const NutritionistHeader: React.FC<NutritionistHeaderProps> = ({ onLogout }) => {
+export const TrainerHeader: React.FC<TrainerHeaderProps> = ({ onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -19,16 +19,16 @@ export const NutritionistHeader: React.FC<NutritionistHeaderProps> = ({ onLogout
 
   return (
     <>
-      <header className="bg-gradient-to-r from-green-900 to-emerald-900 text-white shadow-lg">
+      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <HeartPulse className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Nutritionist</h1>
+            <Dumbbell className="w-8 h-8" />
+            <h1 className="text-2xl font-bold">FitPower Trainer</h1>
           </div>
           
           <div className="flex items-center space-x-6">
             <nav className="hidden md:flex space-x-6">
-              <a href="/nutritionist/dashboard" className="hover:text-green-200 flex items-center space-x-1">
+              <a href="/trainer/dashboard" className="hover:text-blue-200 flex items-center space-x-1">
                 <Home size={18} />
                 <span>Inicio</span>
               </a>
@@ -37,7 +37,7 @@ export const NutritionistHeader: React.FC<NutritionistHeaderProps> = ({ onLogout
             <div className="relative hidden md:block">
               <button
                 onClick={toggleDropdown}
-                className="flex items-center justify-center bg-green-800 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                className="flex items-center justify-center bg-blue-800 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
               >
                 {isDropdownOpen ? "▲" : "▼"}
               </button>
@@ -54,7 +54,7 @@ export const NutritionistHeader: React.FC<NutritionistHeaderProps> = ({ onLogout
             </div>
 
             <button 
-              className="md:hidden bg-green-800 p-2 rounded" 
+              className="md:hidden bg-blue-800 p-2 rounded" 
               onClick={toggleMenu}
             >
               {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
@@ -64,15 +64,19 @@ export const NutritionistHeader: React.FC<NutritionistHeaderProps> = ({ onLogout
       </header>
 
       {isMenuOpen && (
-        <div className="md:hidden bg-emerald-800 text-white">
+        <div className="md:hidden bg-indigo-800 text-white">
           <nav className="p-4 flex flex-col space-y-2">
-            <a href="/nutritionist" className="hover:bg-emerald-700 p-2 rounded flex items-center space-x-2">
+            <a href="/trainer" className="hover:bg-indigo-700 p-2 rounded flex items-center space-x-2">
               <Home size={18}/>
               <span>Inicio</span>
             </a>
-            <a href="/nutritionist/clients" className="hover:bg-emerald-700 p-2 rounded flex items-center space-x-2">
+            <a href="/trainer/clients" className="hover:bg-indigo-700 p-2 rounded flex items-center space-x-2">
               <Users size={18}/>
               <span>Clientes</span>
+            </a>
+            <a href="/exercises" className="hover:bg-indigo-700 p-2 rounded flex items-center space-x-2">
+              <Dumbbell size={18}/>
+              <span>Ejercicios</span>
             </a>
             <button
               onClick={onLogout}
