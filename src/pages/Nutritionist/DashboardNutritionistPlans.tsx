@@ -1,10 +1,9 @@
-//src/pages/Nutritionist/DashboardNutritionistPlans.tsx
-// src/components/DashboardNutritionistPlans.tsx
+// src/pages/Nutritionist/DashboardNutritionistPlans.tsx
 "use client"
 
 import { useEffect, useState } from "react"
 import { useNavigate, useParams, Link } from "react-router-dom"
-import { Plus, Eye, Edit2, Trash2, ArrowLeft } from "lucide-react"
+import { Plus, Edit2, Trash2, ArrowLeft } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -26,18 +25,21 @@ export default function DashboardNutritionistPlans() {
 
     const fetchPlans = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/nutritionists/clients/${clientDni}/plans`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await fetch(
+          `http://localhost:8080/api/v1/nutrition-plans/client/${clientDni}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           }
-        })
+        )
 
         if (!response.ok) {
           throw new Error("Error al obtener los planes nutricionales")
         }
 
-        const data = await response.json()
+        const data: NutritionPlan[] = await response.json()
         setPlans(data)
       } catch (error) {
         console.error(error)
@@ -54,19 +56,22 @@ export default function DashboardNutritionistPlans() {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:8080/api/v1/nutrition-plans/${planId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `http://localhost:8080/api/v1/nutrition-plans/${planId}/client/${clientDni}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      })
+      )
 
       if (!response.ok) {
         throw new Error("Error al eliminar el plan")
       }
 
-      setPlans((prev) => prev.filter(p => p.id !== planId))
+      setPlans(prev => prev.filter(p => p.id !== planId))
       toast.success("Plan eliminado correctamente")
     } catch (error) {
       console.error(error)
@@ -83,7 +88,7 @@ export default function DashboardNutritionistPlans() {
         </Link>
         <h1 className="text-2xl font-bold">Planes Nutricionales del Cliente {clientDni}</h1>
         <button
-          onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/new`)}
+          onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/new/edit`)}
           className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-md flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
@@ -107,7 +112,7 @@ export default function DashboardNutritionistPlans() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {plans.map((plan) => (
+                  {plans.map(plan => (
                     <tr key={plan.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{plan.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{plan.startDate}</td>

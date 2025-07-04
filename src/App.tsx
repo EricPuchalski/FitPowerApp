@@ -180,31 +180,32 @@ function App() {
         />
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
-        <Route 
-          path="/nutritionist/dashboard" 
-          element={
-            <NutritionistRoute>
-              <DashboardNutritionist />
-            </NutritionistRoute>
-          } 
-        />
-        {/* Aquí agregamos las rutas para planes nutricionales */}
-        <Route
-          path="/nutritionist/client/:clientDni/nutrition-plans"
-          element={
-            <NutritionistRoute>
-              <DashboardNutritionistPlans />
-            </NutritionistRoute>
-          }
-        />
-        <Route
-          path="/nutritionist/client/:clientDni/nutrition-plans/:planId/edit"
-          element={
-            <NutritionistRoute>
-              <NutritionPlanEdit />
-            </NutritionistRoute>
-          }
-        />
+<Route 
+  path="/nutritionist/dashboard" 
+  element={
+    <NutritionistRoute>
+      <DashboardNutritionist />
+    </NutritionistRoute>
+  } 
+/>
+{/* Listado de planes nutricionales para un cliente */}
+<Route
+  path="/nutritionist/client/:clientDni/nutrition-plans"
+  element={
+    <NutritionistRoute>
+      <DashboardNutritionistPlans />
+    </NutritionistRoute>
+  }
+/>
+{/* Editar o crear plan nutricional (la misma ruta sirve para ambos casos) */}
+<Route
+  path="/nutritionist/client/:clientDni/nutrition-plans/:planId/edit"
+  element={
+    <NutritionistRoute>
+      <NutritionPlanEdit />
+    </NutritionistRoute>
+  }
+/>
 
         {/* ==================== RUTAS COMPARTIDAS ==================== */}
         {/* Ejercicios - Solo Trainer y Admin pueden acceder */}

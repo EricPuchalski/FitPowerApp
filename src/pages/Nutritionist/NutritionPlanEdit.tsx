@@ -1,3 +1,4 @@
+// src/pages/Nutritionist/NutritionPlanEdit.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -10,6 +11,11 @@ interface NutritionPlan {
   id?: number
   name: string
   description: string
+  caloricTarget: number
+  dailyCarbs: number
+  dailyProteins: number
+  dailyFats: number
+  recommendations?: string
   clientDni: string
 }
 
@@ -21,6 +27,11 @@ export default function NutritionPlanEdit() {
   const [plan, setPlan] = useState<NutritionPlan>({
     name: "",
     description: "",
+    caloricTarget: 0,
+    dailyCarbs: 0,
+    dailyProteins: 0,
+    dailyFats: 0,
+    recommendations: "",
     clientDni: clientDni || ""
   })
 
@@ -38,12 +49,15 @@ export default function NutritionPlanEdit() {
   const fetchPlan = async () => {
     const token = localStorage.getItem("token")
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/nutrition-plans/${planId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://localhost:8080/api/v1/nutrition-plans/${planId}/client/${clientDni}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      })
+      )
 
       if (!res.ok) {
         throw new Error("No se pudo cargar el plan nutricional.")
@@ -54,7 +68,12 @@ export default function NutritionPlanEdit() {
         id: data.id,
         name: data.name,
         description: data.description,
-        clientDni: clientDni || ""
+        caloricTarget: data.caloricTarget,
+        dailyCarbs: data.dailyCarbs,
+        dailyProteins: data.dailyProteins,
+        dailyFats: data.dailyFats,
+        recommendations: data.recommendations || "",
+        clientDni: clientDni || "",
       })
     } catch (error) {
       console.error("Error al cargar el plan:", error)
@@ -82,34 +101,29 @@ export default function NutritionPlanEdit() {
     }
 
     try {
-      const clientRes = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      if (!clientRes.ok) {
-        toast.error("Cliente no encontrado")
-        return
-      }
-
-      const clientData = await clientRes.json()
       let planIdResult = plan.id
 
       if (isNewPlan) {
-        const res = await fetch("http://localhost:8080/api/v1/nutrition-plans", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name: plan.name,
-            description: plan.description,
-            nutritionistId: parseInt(nutritionistId),
-            clientId: clientData.id
-          })
-        })
+        const res = await fetch(
+          `http://localhost:8080/api/v1/nutrition-plans/client/${clientDni}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: plan.name,
+              description: plan.description,
+              caloricTarget: plan.caloricTarget,
+              dailyCarbs: plan.dailyCarbs,
+              dailyProteins: plan.dailyProteins,
+              dailyFats: plan.dailyFats,
+              recommendations: plan.recommendations,
+              nutritionistId: parseInt(nutritionistId),
+            }),
+          }
+        )
 
         if (!res.ok) throw new Error("No se pudo crear el plan nutricional")
 
@@ -117,23 +131,34 @@ export default function NutritionPlanEdit() {
         planIdResult = newPlan.id
         toast.success("Plan nutricional creado con éxito")
       } else {
-        const res = await fetch(`http://localhost:8080/api/v1/nutrition-plans/${plan.id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name: plan.name,
-            description: plan.description
-          })
-        })
+        const res = await fetch(
+          `http://localhost:8080/api/v1/nutrition-plans/${plan.id}/client/${clientDni}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: plan.name,
+              description: plan.description,
+              caloricTarget: plan.caloricTarget,
+              dailyCarbs: plan.dailyCarbs,
+              dailyProteins: plan.dailyProteins,
+              dailyFats: plan.dailyFats,
+              recommendations: plan.recommendations,
+            }),
+          }
+        )
 
         if (!res.ok) throw new Error("No se pudo actualizar el plan")
         toast.success("Plan nutricional actualizado")
       }
 
-      navigate(`/nutritionist/client/${clientDni}/nutrition-plans/${planIdResult}/edit`)
+      // Navegar tras crear o actualizar
+      navigate(
+        `/nutritionist/client/${clientDni}/nutrition-plans/${planIdResult}/edit`
+      )
     } catch (err) {
       console.error(err)
       toast.error("Error al guardar el plan nutricional")
@@ -143,17 +168,20 @@ export default function NutritionPlanEdit() {
   }
 
   const deletePlan = async () => {
-    const confirmed = window.confirm("¿Estás seguro que deseas eliminar este plan nutricional?")
+    const confirmed = window.confirm(
+      "¿Estás seguro que deseas eliminar este plan nutricional?"
+    )
     if (!confirmed || !plan.id) return
 
     const token = localStorage.getItem("token")
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/nutrition-plans/${plan.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`
+      const res = await fetch(
+        `http://localhost:8080/api/v1/nutrition-plans/${plan.id}/client/${clientDni}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
         }
-      })
+      )
 
       if (!res.ok) throw new Error("Error al eliminar el plan")
 
@@ -201,27 +229,71 @@ export default function NutritionPlanEdit() {
 
       <div className="bg-white p-6 border rounded-lg shadow-sm space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nombre del Plan *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Plan *</label>
           <input
             type="text"
             value={plan.name}
-            onChange={(e) => setPlan({ ...plan, name: e.target.value })}
+            onChange={e => setPlan({ ...plan, name: e.target.value })}
             className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: Plan Keto Semana 1"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo Calórico *</label>
+          <input
+            type="number"
+            value={plan.caloricTarget}
+            onChange={e => setPlan({ ...plan, caloricTarget: +e.target.value })}
+            className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Carbs diarios *</label>
+            <input
+              type="number"
+              value={plan.dailyCarbs}
+              onChange={e => setPlan({ ...plan, dailyCarbs: +e.target.value })}
+              className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Proteínas diarias *</label>
+            <input
+              type="number"
+              value={plan.dailyProteins}
+              onChange={e => setPlan({ ...plan, dailyProteins: +e.target.value })}
+              className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Grasas diarias *</label>
+            <input
+              type="number"
+              value={plan.dailyFats}
+              onChange={e => setPlan({ ...plan, dailyFats: +e.target.value })}
+              className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
           <textarea
             value={plan.description}
-            onChange={(e) => setPlan({ ...plan, description: e.target.value })}
+            onChange={e => setPlan({ ...plan, description: e.target.value })}
             className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={4}
+            rows={3}
             placeholder="Detalles o pautas nutricionales..."
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Recomendaciones</label>
+          <textarea
+            value={plan.recommendations}
+            onChange={e => setPlan({ ...plan, recommendations: e.target.value })}
+            className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={2}
+            placeholder="Ej: Beber 2L de agua diarios"
           />
         </div>
       </div>
