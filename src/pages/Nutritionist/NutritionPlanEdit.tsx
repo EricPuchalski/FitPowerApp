@@ -238,15 +238,6 @@ export default function NutritionPlanEdit() {
 <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <div className="space-x-2">
-          {!isNewPlan && (
-            <button
-              onClick={deletePlan}
-              className="text-red-600 hover:text-red-800 flex items-center space-x-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Eliminar</span>
-            </button>
-          )}
           <button
             onClick={savePlan}
             disabled={saving}

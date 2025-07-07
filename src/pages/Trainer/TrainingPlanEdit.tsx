@@ -509,7 +509,7 @@ export default function TrainingPlanEdit() {
       toast.info("Guardando plan de entrenamiento...");
 
       const clientCheckRes = await fetch(
-        `http://localhost:8080/api/v1/clients/${clientIdNum}`,
+        `http://localhost:8080/api/v1/clients/${clientDni}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -948,6 +948,9 @@ export default function TrainingPlanEdit() {
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Peso
                       </th>
+                                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Descanso
+                      </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Acciones
                       </th>
@@ -986,6 +989,9 @@ export default function TrainingPlanEdit() {
                             {exercise.weight > 0
                               ? `${exercise.weight} kg`
                               : "-"}
+                          </td>
+                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {exercise.restTime}
                           </td>
                           <td className="px-3 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                             <button

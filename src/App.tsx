@@ -191,6 +191,15 @@ function App() {
             </NutritionistRoute>
           }
         />
+
+                <Route 
+          path="/nutritionist/client/:dni/history" 
+          element={
+            <NutritionistRoute>
+              <ClientHistory />
+            </NutritionistRoute>
+          } 
+        />
         {/* Aquí agregamos las rutas para planes nutricionales */}
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans"
