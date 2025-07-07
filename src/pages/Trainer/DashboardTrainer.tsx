@@ -261,7 +261,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
               <div className="flex flex-col space-y-2">
                 <Link to={`/trainer/client/${client.dni}/training-plans`}>
                   <button className="w-full bg-blue-900 text-white py-2 rounded">
-                    Ver Planes
+                    Ver Cliente
                   </button>
                 </Link>
 

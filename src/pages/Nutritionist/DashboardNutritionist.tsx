@@ -223,13 +223,7 @@ export default function DashboardNutritionist() {
               <div className="flex flex-col space-y-2">
                 <Link to={`/nutritionist/client/${client.dni}/nutrition-plans`}>
                   <button className="w-full bg-green-800 text-white py-2 rounded">
-                    Ver Planes Nutricionales
-                  </button>
-                </Link>
-                <Link to={`/nutritionist/client/${client.dni}/nutrition-plans/new/edit`}>
-                  <button className="w-full bg-lime-500 text-white py-2 rounded flex items-center justify-center">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Crear Plan Nutricional
+                    Ver Cliente
                   </button>
                 </Link>
               </div>

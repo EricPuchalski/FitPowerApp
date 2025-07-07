@@ -298,7 +298,7 @@ export default function TrainingPlans() {
                 onClick={() => toast.info(`Viendo progreso del cliente`)}
               >
                 <button className="w-full border border-gray-300 py-2 rounded-md">
-                  Ver Progreso
+                  Ver Progreso De Entrenamiento
                 </button>
               </Link>
                             <Link

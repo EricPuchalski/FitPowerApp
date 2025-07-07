@@ -9,7 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../auth/hook/useAuth";
 import { NutritionistHeader } from "../../components/NutritionistHeader";
 import { FooterPag } from "../../components/Footer";
-
 interface NutritionPlan {
   id?: number;
   name: string;
@@ -19,6 +18,7 @@ interface NutritionPlan {
   dailyFats: number;
   recommendations?: string;
   clientDni: string;
+  nutritionistId?: number; // 👈 Nuevo campo
 }
 
 export default function NutritionPlanEdit() {
@@ -177,6 +177,9 @@ export default function NutritionPlanEdit() {
               dailyProteins: plan.dailyProteins,
               dailyFats: plan.dailyFats,
               recommendations: plan.recommendations,
+                      nutritionistId: parseInt(nutritionistId),
+                      
+
             }),
           }
         );
@@ -185,12 +188,14 @@ export default function NutritionPlanEdit() {
         toast.success("Plan nutricional actualizado");
         // Para actualizar, mantenemos la navegación actual
         navigate(
-          `/nutritionist/client/${clientDni}/nutrition-plans/${planId}/edit`
+          `/nutritionist/client/${clientDni}/nutrition-plans`
         );
       }
     } catch (err) {
       console.error(err);
       toast.error("Error al guardar el plan nutricional");
+      console.log(plan);
+      
     } finally {
       setSaving(false);
     }
@@ -330,7 +335,7 @@ export default function NutritionPlanEdit() {
             }
             className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={2}
-            placeholder="Ej: Beber 2L de agua diarios"
+            placeholder="Ej: Consumir mucho pollo, huevos, lacteos y tomar agua en cada comida."
           />
         </div>
       </div>
