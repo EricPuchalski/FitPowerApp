@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FooterPag } from "../../components/Footer";
 import {
@@ -16,18 +16,40 @@ import {
 } from "react-icons/fi";
 
 // Utility function to get today's date in YYYY-MM-DD format
-const getTodayDate = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
+// Función utilitaria para obtener la fecha local en formato YYYY-MM-DD
+const getLocalISODate = (date) => {
+  const d = new Date(date);
+  // Ajustamos la fecha según la zona horaria local
+  const offset = d.getTimezoneOffset() * 60000; // offset en milisegundos
+  const localDate = new Date(d.getTime() - offset);
+  return localDate.toISOString().split('T')[0];
 };
 
-// Utility function to check if a date matches the selected date
+// Función utilitaria para verificar coincidencia de fechas
 const isDateMatch = (recordDate, selectedDate) => {
-  const recordDateOnly = new Date(recordDate).toISOString().split('T')[0];
+  const recordDateOnly = getLocalISODate(recordDate);
   return recordDateOnly === selectedDate;
 };
 
+// Función para obtener la fecha actual en formato YYYY-MM-DD (local)
+const getTodayDate = () => {
+  return getLocalISODate(new Date());
+};
 const DateNavigation = ({ selectedDate, onDateChange }) => {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const dateInputRef = useRef(null);
+
+  const formatDisplayDate = (dateString) => {
+    const date = new Date(dateString);
+    const offset = date.getTimezoneOffset() * 60000;
+    const adjustedDate = new Date(date.getTime() + offset);
+    return adjustedDate.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
   const handlePreviousDay = () => {
     const previousDate = new Date(selectedDate);
     previousDate.setDate(previousDate.getDate() - 1);
@@ -37,32 +59,81 @@ const DateNavigation = ({ selectedDate, onDateChange }) => {
   const handleNextDay = () => {
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 1);
-    onDateChange(nextDate.toISOString().split('T')[0]);
+    const nextDateStr = nextDate.toISOString().split('T')[0];
+    const todayStr = getTodayDate();
+    
+    if (nextDateStr <= todayStr) {
+      onDateChange(nextDateStr);
+    }
+  };
+
+  const isNextDisabled = () => {
+    const nextDate = new Date(selectedDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    return nextDate.toISOString().split('T')[0] > getTodayDate();
+  };
+
+  const handleDateChange = (e) => {
+    onDateChange(e.target.value);
+    setShowDatePicker(false);
+  };
+
+  const toggleDatePicker = () => {
+    setShowDatePicker(!showDatePicker);
   };
 
   return (
-    <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
-      <button
-        onClick={handlePreviousDay}
-        className="flex items-center px-3 py-2 rounded-lg transition-colors bg-blue-500 text-white hover:bg-blue-600"
-      >
-        <FiChevronLeft className="mr-1" />
-        Día Anterior
-      </button>
-      <span className="text-sm text-gray-600">
-        Fecha seleccionada: {new Date(selectedDate).toLocaleDateString()}
-      </span>
-      <button
-        onClick={handleNextDay}
-        className="flex items-center px-3 py-2 rounded-lg transition-colors bg-blue-500 text-white hover:bg-blue-600"
-      >
-        Día Siguiente
-        <FiChevronRight className="ml-1" />
-      </button>
+    <div className="mb-4">
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <button
+          onClick={handlePreviousDay}
+          className="flex items-center px-3 py-2 rounded-lg transition-colors bg-blue-500 text-white hover:bg-blue-600"
+        >
+          <FiChevronLeft className="mr-1" />
+          Día Anterior
+        </button>
+
+        <div className="relative">
+          <button
+            onClick={toggleDatePicker}
+            className="flex items-center px-3 py-2 rounded-lg transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            <FiCalendar className="mr-2" />
+            <span className="text-sm font-medium">
+              {formatDisplayDate(selectedDate)}
+            </span>
+          </button>
+          
+          {showDatePicker && (
+            <div className="absolute mt-1 z-10 bg-white p-2 rounded-lg shadow-lg border border-gray-200">
+              <input
+                type="date"
+                ref={dateInputRef}
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                max={getTodayDate()}
+              />
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleNextDay}
+          disabled={isNextDisabled()}
+          className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+            isNextDisabled()
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+        >
+          Día Siguiente
+          <FiChevronRight className="ml-1" />
+        </button>
+      </div>
     </div>
   );
 };
-
 const TrainingPlanCard = ({ plan }) => {
   const groupByDay = (routines) => {
     return routines.reduce((acc, routine) => {

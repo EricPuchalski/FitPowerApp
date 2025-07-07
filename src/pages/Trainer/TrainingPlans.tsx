@@ -301,6 +301,14 @@ export default function TrainingPlans() {
                   Ver Progreso
                 </button>
               </Link>
+                            <Link
+                to={`/trainer/client/${clientDni}/history`}
+                onClick={() => toast.info(`Viendo progreso del cliente`)}
+              >
+                <button className="w-full border border-gray-300 py-2 rounded-md">
+                  Ver Historial
+                </button>
+              </Link>
               <Link
                 to={`/trainer/client/${clientDni}/training-plans/report`}
                 onClick={() => toast.info(`Creando informe de progreso`)}
