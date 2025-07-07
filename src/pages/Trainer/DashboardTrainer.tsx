@@ -272,12 +272,6 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                     </button>
                   </Link>
                 )}
-
-                <Link to={`/trainer/client/${client.id}/progress`}>
-                  <button className="w-full bg-green-700 text-white py-2 rounded">
-                    Ver Historial Físico
-                  </button>
-                </Link>
               </div>
             </div>
           ))}
