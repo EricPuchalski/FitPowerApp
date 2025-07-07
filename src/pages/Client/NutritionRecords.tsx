@@ -5,7 +5,7 @@ import { FooterPag } from '../../components/Footer';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { NutritionRecordResponseDto } from '../../model/NutritionRecordResponseDto';
-import { NutritionRecordCreateRequestDto } from '../../model/NutritionRecordCreateRequestDto';
+import { NutritionRecordRequestDto, validateNutritionRecordRequest } from '../../model/NutritionRecordCreateRequestDto';
 
 const NutritionRecordsPage: React.FC = () => {
   const [records, setRecords] = useState<NutritionRecordResponseDto[]>([]);
@@ -15,8 +15,11 @@ const NutritionRecordsPage: React.FC = () => {
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingRecord, setEditingRecord] = useState<NutritionRecordResponseDto | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [newRecord, setNewRecord] = useState<NutritionRecordCreateRequestDto>({
+  const [newRecord, setNewRecord] = useState<NutritionRecordRequestDto>({
     calories: 0,
+    proteins: 0,
+    carbohydrates: 0,
+    fats: 0,
     food: '',
     mealTime: MealTime.BREAKFAST,
     observations: ''
@@ -73,15 +76,18 @@ const NutritionRecordsPage: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    if (name === 'calories') {
-      const caloriesValue = parseInt(value) || 0;
-      if (caloriesValue < 0) {
-        toast.error('Las calorías deben ser un valor positivo');
+    if (['calories', 'proteins', 'carbohydrates', 'fats'].includes(name)) {
+      const numericValue = parseInt(value) || 0;
+      if (numericValue < 0) {
+        toast.error(`${name === 'calories' ? 'Las calorías' : 
+                      name === 'proteins' ? 'Las proteínas' :
+                      name === 'carbohydrates' ? 'Los carbohidratos' :
+                      'Las grasas'} deben ser un valor positivo`);
         return;
       }
       setNewRecord(prev => ({
         ...prev,
-        [name]: caloriesValue
+        [name]: numericValue
       }));
     } else {
       setNewRecord(prev => ({
@@ -94,8 +100,10 @@ const NutritionRecordsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newRecord.calories <= 0) {
-      toast.error('Las calorías deben ser un valor positivo');
+    // Validar usando la función de validación
+    const validationErrors = validateNutritionRecordRequest(newRecord);
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(error => toast.error(error));
       return;
     }
 
@@ -147,6 +155,9 @@ const NutritionRecordsPage: React.FC = () => {
     setEditingRecord(record);
     setNewRecord({
       calories: record.calories,
+      proteins: record.proteins,
+      carbohydrates: record.carbohydrates,
+      fats: record.fats,
       food: record.food,
       mealTime: record.mealTime,
       observations: record.observations || ''
@@ -220,6 +231,9 @@ const NutritionRecordsPage: React.FC = () => {
   const resetForm = () => {
     setNewRecord({
       calories: 0,
+      proteins: 0,
+      carbohydrates: 0,
+      fats: 0,
       food: '',
       mealTime: MealTime.BREAKFAST,
       observations: ''
@@ -306,6 +320,9 @@ const NutritionRecordsPage: React.FC = () => {
               setEditingRecord(null);
               setNewRecord({
                 calories: 0,
+                proteins: 0,
+                carbohydrates: 0,
+                fats: 0,
                 food: '',
                 mealTime: MealTime.BREAKFAST,
                 observations: ''
@@ -327,7 +344,10 @@ const NutritionRecordsPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comida</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Momento</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calorías</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observacion</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proteínas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carbohidratos</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grasas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
@@ -349,6 +369,15 @@ const NutritionRecordsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {record.calories} kcal
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {record.proteins} g
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {record.carbohydrates} g
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {record.fats} g
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {record.observations}
@@ -380,6 +409,9 @@ const NutritionRecordsPage: React.FC = () => {
                 setEditingRecord(null);
                 setNewRecord({
                   calories: 0,
+                  proteins: 0,
+                  carbohydrates: 0,
+                  fats: 0,
                   food: '',
                   mealTime: MealTime.BREAKFAST,
                   observations: ''
@@ -394,14 +426,14 @@ const NutritionRecordsPage: React.FC = () => {
         )}
 
         {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
                 {editingRecord ? 'Editar Registro' : 'Nuevo Registro de Comida'}
               </h3>
               <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 gap-4 mb-4">
-                  <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Comida*</label>
                     <input
                       type="text"
@@ -412,7 +444,7 @@ const NutritionRecordsPage: React.FC = () => {
                       required
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Momento del día*</label>
                     <select
                       name="mealTime"
@@ -438,6 +470,42 @@ const NutritionRecordsPage: React.FC = () => {
                       type="number"
                       name="calories"
                       value={newRecord.calories}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Proteínas* (g)</label>
+                    <input
+                      type="number"
+                      name="proteins"
+                      value={newRecord.proteins}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Carbohidratos* (g)</label>
+                    <input
+                      type="number"
+                      name="carbohydrates"
+                      value={newRecord.carbohydrates}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Grasas* (g)</label>
+                    <input
+                      type="number"
+                      name="fats"
+                      value={newRecord.fats}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       required

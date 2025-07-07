@@ -13,6 +13,7 @@ const ClientDashboard: React.FC = () => {
   const { logout } = useAuth();
 
 
+
 const handleLogout = () => {
   logout();
   navigate("/"); // o "/login" si tenés una ruta específica

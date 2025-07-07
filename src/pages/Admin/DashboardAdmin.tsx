@@ -16,8 +16,8 @@ import {
 import { FooterPag } from "../../components/Footer";
 import { FaUsers, FaClipboardList, FaAppleAlt } from "react-icons/fa";
 import { useAuth } from "../../auth/hook/useAuth";
-import { AdminHeader } from "../../components/AdminHeader";
 import { useNavigate } from "react-router-dom";
+import { AdminHeader } from "../../components/AdminHeader";
 
 export default function DashboardAdmin() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,33 +60,6 @@ export default function DashboardAdmin() {
     <div className="flex flex-col min-h-screen bg-gray-100">
         <AdminHeader onLogout={handleLogout}></AdminHeader>
 
-      {isMenuOpen && (
-        <div className="md:hidden bg-indigo-800 text-white">
-          <nav className="container mx-auto px-4 py-2 flex flex-col space-y-2">
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
-            >
-              <Apple size={18} />
-              <span>Nutricionistas</span>
-            </a>
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
-            >
-              <Users size={18} />
-              <span>Clientes</span>
-            </a>
-            <a
-              href="#"
-              className="hover:bg-indigo-700 py-2 px-4 rounded transition flex items-center space-x-2"
-            >
-              <Dumbbell size={18} />
-              <span>Entrenadores</span>
-            </a>
-          </nav>
-        </div>
-      )}
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="relative rounded-lg overflow-hidden shadow-2xl">
           <img

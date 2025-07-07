@@ -269,23 +269,20 @@ const TrainingPlanPage: React.FC = () => {
     )
   }
 
-  if (error) {
+  if (!trainingPlan) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-pink-100 p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Activity className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-red-600 mb-4">¡Oops! Algo salió mal</h2>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-          >
-            Intentar nuevamente
-          </button>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center">
+      <div className="max-w-md">
+        <h2 className="text-2xl font-bold text-gray-700 mb-4">No tienes un plan de entrenamiento activo</h2>
+        <p className="text-gray-600 mb-6">Tu entrenador está en proceso de realizar tu plan a medida, por favor espera!</p>
+        <button 
+          onClick={() => navigate('/client')}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          Volver al inicio
+        </button>
       </div>
+    </div>
     )
   }
 
