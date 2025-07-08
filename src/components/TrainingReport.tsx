@@ -22,6 +22,7 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
+  Grid,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -37,8 +38,6 @@ import {
 } from "@mui/icons-material";
 import html2pdf from "html2pdf.js";
 import { ClientReportDTO } from "../model/ClientReportDTO";
-
-
 
 interface TrainingReportProps {
   data: ClientReportDTO;
@@ -550,54 +549,72 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
             </CardContent>
           </Card>
 
-          {/* Progreso de Fuerza Destacado */}
-          {data.strengthProgress && (
-            <Card
-              sx={{
-                mb: 4,
-                "@media print": {
-                  boxShadow: "none",
-                  border: "1px solid #e0e0e0",
-                  mb: 3,
-                },
-              }}
-            >
-              <CardContent>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-                >
-                  <TrendingUp sx={{ color: "#fb8c00" }} />
-                  <Typography variant="h6">Progreso Destacado</Typography>
-                </Box>
- <Box
-  sx={{
-    textAlign: "center",
-    p: 3,
-    background: "linear-gradient(to right, #e8f5e9, #c8e6c9)", // fondo verde suave
-    borderRadius: "8px",
-    "@media print": {
-      background: "none",
-      border: "2px solid #2e7d32", // borde verde oscuro en impresión
-    },
-  }}
->
-  <Typography variant="h5" sx={{ fontWeight: "bold", mb: 1 }}>
-    {data.strengthProgress.exerciseName}
-  </Typography>
-  <Typography
-    variant="h4"
-    sx={{ fontWeight: "bold", color: "#2e7d32", mb: 1 }} // texto verde
-  >
-    {data.strengthProgress.progress}
-  </Typography>
-  <Typography variant="body2" sx={{ color: "#4caf50" }}>
-    Mejor progreso del período
-  </Typography>
-</Box>
-
-              </CardContent>
+{data.strengthProgress && (
+  <Card sx={{ mb: 4, '@media print': { boxShadow: 'none', border: '1px solid #e0e0e0', mb: 3 } }}>
+    <CardContent>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <TrendingUp sx={{ color: '#fb8c00' }} />
+        <Typography variant="h6">Análisis de Progreso</Typography>
+      </Box>
+      <Grid container spacing={3} justifyContent="space-between">
+        {/* Tarjeta de Mejor Progreso */}
+        {data.strengthProgress.maxImprovement && (
+          <Grid item xs={12} md={5}>
+            <Card variant="outlined" sx={{
+              p: 3,
+              borderColor: 'success.main',
+              backgroundColor: 'rgba(76, 175, 80, 0.05)',
+              borderRadius: 2,
+              textAlign: 'center',
+              '@media print': {
+                backgroundColor: 'transparent',
+                border: '2px solid #2e7d32'
+              }
+            }}>
+              <Typography color="success.main" variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+                ▲ Mayor Mejora
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                {data.strengthProgress.maxImprovement}
+              </Typography>
             </Card>
-          )}
+          </Grid>
+        )}
+        {/* Tarjeta de Mayor Decrecimiento */}
+        {data.strengthProgress.maxDecline && (
+          <Grid item xs={12} md={5}>
+            <Card variant="outlined" sx={{
+              p: 3,
+              borderColor: 'error.main',
+              backgroundColor: 'rgba(244, 67, 54, 0.05)',
+              borderRadius: 2,
+              textAlign: 'center',
+              '@media print': {
+                backgroundColor: 'transparent',
+                border: '2px solid #d32f2f'
+              }
+            }}>
+              <Typography color="error.main" variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+                ▼ Mayor Decrecimiento
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                {data.strengthProgress.maxDecline}
+              </Typography>
+            </Card>
+          </Grid>
+        )}
+      </Grid>
+      {/* Mensaje cuando no hay datos significativos */}
+      {!data.strengthProgress.maxImprovement && !data.strengthProgress.maxDecline && (
+        <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 2 }}>
+          No hay suficientes datos para mostrar progresos significativos
+        </Typography>
+      )}
+    </CardContent>
+  </Card>
+)}
+
+
 
           {/* Detalle de Progreso por Ejercicio */}
           <Card
@@ -711,84 +728,84 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
           )}
 
           {/* Comentarios y Próximos Pasos */}
-{/* Comentarios y Próximos Pasos */}
-<Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-    gap: 3,
-    "@media print": {
-      gridTemplateColumns: "1fr 1fr",
-      gap: "10px",
-    },
-  }}
->
-  {data.trainerComment && (
-    <Card
-      sx={{
-        borderRadius: 3,
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-        transition: "transform 0.3s, box-shadow 0.3s",
-        "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
-        },
-        "@media print": {
-          boxShadow: "none",
-          border: "1px solid #e0e0e0",
-        },
-      }}
-    >
-      <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Person sx={{ fontSize: 24, color: "#fb8c00", mr: 1 }} />
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-            Comentarios del Entrenador
-          </Typography>
-        </Box>
-        <Typography variant="body1" sx={{ color: "#555" }}>
-          {data.trainerComment}
-        </Typography>
-      </CardContent>
-    </Card>
-  )}
+          {/* Comentarios y Próximos Pasos */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 3,
+              "@media print": {
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              },
+            }}
+          >
+            {data.trainerComment && (
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
+                  },
+                  "@media print": {
+                    boxShadow: "none",
+                    border: "1px solid #e0e0e0",
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Person sx={{ fontSize: 24, color: "#fb8c00", mr: 1 }} />
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      Comentarios del Entrenador
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" sx={{ color: "#555" }}>
+                    {data.trainerComment}
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
 
-  {data.nextSteps && (
-    <Card
-      sx={{
-        borderRadius: 3,
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-        transition: "transform 0.3s, box-shadow 0.3s",
-        "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
-        },
-        "@media print": {
-          boxShadow: "none",
-          border: "1px solid #e0e0e0",
-        },
-      }}
-    >
-      <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Assignment sx={{ fontSize: 24, color: "#4caf50", mr: 1 }} />
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-            Próximos Pasos
-          </Typography>
-        </Box>
-        <Typography variant="body1" sx={{ color: "#555" }}>
-          {data.nextSteps}
-        </Typography>
-      </CardContent>
-    </Card>
-  )}
-</Box>
-
-
+            {data.nextSteps && (
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
+                  },
+                  "@media print": {
+                    boxShadow: "none",
+                    border: "1px solid #e0e0e0",
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Assignment
+                      sx={{ fontSize: 24, color: "#4caf50", mr: 1 }}
+                    />
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      Próximos Pasos
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" sx={{ color: "#555" }}>
+                    {data.nextSteps}
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
+          </Box>
         </Box>
 
         {/* Footer del reporte */}
-            {/* <Box
+        {/* <Box
             sx={{
                 px: 3,
                 py: 2,

@@ -9,8 +9,8 @@ export interface ClientReportDTO {
   attendanceRate: string;
   trainedDates: string[];
   strengthProgress: {
-    exerciseName: string;
-    progress: string;
+    maxImprovement?: string; 
+    maxDecline?: string;   
   };
   exerciseProgressDetails: Array<{
     exercise: string;
