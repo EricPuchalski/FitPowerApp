@@ -60,7 +60,7 @@ const TrainingRecordsPage: React.FC = () => {
     series: 3,
     repetitions: 10,
     weight: 0,
-    restTime: "00:01:30",
+    restTime: "01:30",
     exerciseId: 0,
   })
   const navigate = useNavigate()
@@ -259,7 +259,7 @@ const TrainingRecordsPage: React.FC = () => {
       series: 3,
       repetitions: 10,
       weight: 0,
-      restTime: "00:01:30",
+      restTime: "01:30",
       exerciseId: exercises.length > 0 ? exercises[0].id : 0,
     })
     setEditingRecord(null)
@@ -267,7 +267,7 @@ const TrainingRecordsPage: React.FC = () => {
   }
 
   const formatRestTime = (timeString: string) => {
-    const [hours, minutes, seconds] = timeString.split(":")
+    const [ minutes, seconds] = timeString.split(":")
     return `${minutes}' ${seconds}''`
   }
 
@@ -395,7 +395,7 @@ const TrainingRecordsPage: React.FC = () => {
                   series: 3,
                   repetitions: 10,
                   weight: 0,
-                  restTime: "00:01:30",
+                  restTime: "01:30",
                   exerciseId: exercises.length > 0 ? exercises[0].id : 0,
                 })
                 setShowForm(true)
@@ -498,7 +498,7 @@ const TrainingRecordsPage: React.FC = () => {
                   series: 3,
                   repetitions: 10,
                   weight: 0,
-                  restTime: "00:01:30",
+                  restTime: "01:30",
                   exerciseId: exercises.length > 0 ? exercises[0].id : 0,
                 })
                 setShowForm(true)
@@ -622,15 +622,15 @@ const TrainingRecordsPage: React.FC = () => {
                       name="restTime"
                       value={formData.restTime}
                       onChange={handleInputChange}
-                      placeholder="00:01:30"
+                      placeholder="01:30"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       required
-                      pattern="\d{2}:\d{2}:\d{2}"
-                      title="Formato HH:mm:ss"
+                      pattern="\d{2}:\d{2}"
+                      title="Formato mm:ss"
                     />
                     <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      Ejemplo: 00:01:30 para 1 minuto y 30 segundos
+                      Ejemplo: 01:30 para 1 minuto y 30 segundos
                     </p>
                   </div>
 

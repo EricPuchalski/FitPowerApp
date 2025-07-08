@@ -72,7 +72,7 @@ export default function TrainingPlanEdit() {
     repetitions: 10,
     weight: 0,
     dayOfWeek: "MONDAY",
-    restTime: "00:00:60", // Formato HH:MM:SS
+    restTime: "01:00", // Formato MM:SS
   });
   const [isEditingExercise, setIsEditingExercise] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -90,11 +90,11 @@ export default function TrainingPlanEdit() {
       repetitions: 10,
       weight: 0,
       dayOfWeek: "MONDAY",
-      restTime: "00:00:60", // Formato HH:MM:SS
+      restTime: "01:00", // Formato MM:SS
     });
     setIsEditingExercise(false);
     setEditingIndex(null);
-  };
+  };  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -259,8 +259,8 @@ export default function TrainingPlanEdit() {
       toast.error("El número de repeticiones debe ser mayor a 0");
       return false;
     }
-    if (!/^\d{2}:\d{2}:\d{2}$/.test(exercise.restTime)) {
-      toast.error("El formato del tiempo de descanso debe ser HH:MM:SS");
+   if (!/^\d{2}:\d{2}$/.test(exercise.restTime)) {
+      toast.error("El formato del tiempo de descanso debe ser MM:SS");
       return false;
     }
     return true;
@@ -873,7 +873,7 @@ export default function TrainingPlanEdit() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descanso (HH:MM:SS) *
+                  Descanso (MM:SS) *
                 </label>
                 <input
                   type="text"
@@ -882,12 +882,12 @@ export default function TrainingPlanEdit() {
                     updateExerciseForm("restTime", e.target.value)
                   }
                   className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ej: 00:01:00"
-                  pattern="^\d{2}:\d{2}:\d{2}$"
+                  placeholder="Ej: 01:00"
+                  pattern="^\d{2}:\d{2}$"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Formato: HH:MM:SS (ej: 00:01:30 para 1 minuto 30 segundos)
+                  Formato: MM:SS (ej: 01:30 para 1 minuto 30 segundos)
                 </p>
               </div>
             </div>
