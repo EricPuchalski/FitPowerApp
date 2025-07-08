@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { FooterPag } from "../../components/Footer";
 import { ClientHeader } from "../../components/ClientHeader";
+import { WorkoutFrequencySection } from "../../components/WorkoutFrecuencySection";
 
 const ProgressPage = () => {
   const { dni } = useParams();
@@ -141,16 +142,20 @@ const ProgressPage = () => {
         </header>
 
         {/* Grid Layout Modificado */}
-        <div className="grid grid-cols-1 gap-6">
-          {/* Sección de Progreso - Ocupa toda la columna */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <ExerciseProgressSection data={trainingData?.exerciseProgress} />
-          </div>
-          {/* Sección RM - Ocupa toda la columna */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <RmProgressSection data={rmData} />
-          </div>
-        </div>
+<div className="grid grid-cols-1 gap-6">
+  <div className="bg-white rounded-xl shadow-md p-6">
+    <ExerciseProgressSection data={trainingData?.exerciseProgress} />
+  </div>
+  
+  {/* NUEVA SECCIÓN */}
+  <div className="bg-white rounded-xl shadow-md p-6">
+    <WorkoutFrequencySection workoutFrequency={trainingData?.workoutFrequency} />
+  </div>
+  
+  <div className="bg-white rounded-xl shadow-md p-6">
+    <RmProgressSection data={rmData} />
+  </div>
+</div>
       </div>
       <FooterPag />
     </>
