@@ -1,16 +1,12 @@
 "use client"
-
 import { useEffect, useState } from "react"
-import {
-  Plus,
-  Check,
-  X,
-  Edit2
-} from "lucide-react"
+import { Plus, Check, X, Edit2 } from "lucide-react"
 import { FooterPag } from "../../components/Footer"
 import { AdminHeader } from "../../components/AdminHeader"
 import { useAuth } from "../../auth/hook/useAuth"
 import { useNavigate } from "react-router-dom"
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Exercise {
   id: number
@@ -22,11 +18,9 @@ export default function ExerciseCrud() {
   const [newExercise, setNewExercise] = useState({ name: "" })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editName, setEditName] = useState("")
   const token = localStorage.getItem("token")
-
   const { logout } = useAuth()
   const navigate = useNavigate()
 
@@ -43,8 +37,11 @@ export default function ExerciseCrud() {
       if (!res.ok) throw new Error()
       const data: Exercise[] = await res.json()
       setExercises(data)
+      setError(null)
     } catch {
-      setError("Error al cargar ejercicios.")
+      const errorMessage = "Error al cargar ejercicios."
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -52,7 +49,7 @@ export default function ExerciseCrud() {
 
   const createExercise = async () => {
     if (!newExercise.name.trim()) {
-      alert("El nombre del ejercicio es obligatorio")
+      toast.error("El nombre del ejercicio es obligatorio")
       return
     }
     try {
@@ -60,15 +57,16 @@ export default function ExerciseCrud() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(newExercise)
+        body: JSON.stringify(newExercise),
       })
       if (!res.ok) throw new Error()
       setNewExercise({ name: "" })
       fetchExercises()
+      toast.success("Ejercicio creado correctamente")
     } catch {
-      alert("No se pudo crear el ejercicio")
+      toast.error("No se pudo crear el ejercicio")
     }
   }
 
@@ -84,7 +82,7 @@ export default function ExerciseCrud() {
 
   const saveEdit = async (id: number) => {
     if (!editName.trim()) {
-      alert("El nombre no puede estar vacío")
+      toast.error("El nombre no puede estar vacío")
       return
     }
     try {
@@ -92,15 +90,16 @@ export default function ExerciseCrud() {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: editName })
+        body: JSON.stringify({ name: editName }),
       })
       if (!res.ok) throw new Error()
       cancelEdit()
       fetchExercises()
+      toast.success("Ejercicio actualizado correctamente")
     } catch {
-      alert("No se pudo actualizar el ejercicio")
+      toast.error("No se pudo actualizar el ejercicio")
     }
   }
 
@@ -112,9 +111,7 @@ export default function ExerciseCrud() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <AdminHeader onLogout={handleLogout} />
-
       <main className="flex-grow container mx-auto px-4 py-8">
-        {/* Crear nuevo */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Crear nuevo ejercicio</h2>
           <div className="flex flex-col md:flex-row items-center gap-4">
@@ -129,12 +126,11 @@ export default function ExerciseCrud() {
               onClick={createExercise}
               className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-md flex items-center shadow"
             >
-              <Plus className="w-4 h-4 mr-2" />Crear
+              <Plus className="w-4 h-4 mr-2" />
+              Crear
             </button>
           </div>
         </div>
-
-        {/* Listado */}
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Listado de Ejercicios</h2>
         {loading ? (
           <p className="text-center text-gray-600">Cargando ejercicios...</p>
@@ -156,7 +152,10 @@ export default function ExerciseCrud() {
                       className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500"
                     />
                     <div className="flex justify-end space-x-2">
-                      <button onClick={() => saveEdit(exercise.id)} className="flex items-center px-3 py-1 rounded bg-green-600 text-white">
+                      <button
+                        onClick={() => saveEdit(exercise.id)}
+                        className="flex items-center px-3 py-1 rounded bg-green-600 text-white"
+                      >
                         <Check className="w-4 h-4 mr-1" /> Guardar
                       </button>
                       <button onClick={cancelEdit} className="flex items-center px-3 py-1 rounded bg-gray-300">
@@ -179,13 +178,12 @@ export default function ExerciseCrud() {
             ))}
           </div>
         )}
-
         {exercises.length === 0 && !loading && (
           <div className="text-center mt-12 text-gray-600">No hay ejercicios disponibles.</div>
         )}
       </main>
-
       <FooterPag />
+      <ToastContainer />
     </div>
   )
 }
