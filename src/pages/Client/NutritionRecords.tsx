@@ -360,13 +360,13 @@ const NutritionRecordsPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {record.food}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.mealTime === MealTime.BREAKFAST ? 'Desayuno' :
-                      record.mealTime === MealTime.MID_MORNING ? 'Media Mañana' :
-                      record.mealTime === MealTime.LUNCH ? 'Almuerzo' :
-                      record.mealTime === MealTime.AFTERNOON_SNACK ? 'Merienda' :
-                      record.mealTime === MealTime.DINNER ? 'Cena' : 'Refrigerio Nocturno'}
-                    </td>
+ <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+  {record.mealTime === MealTime.BREAKFAST ? 'Desayuno' :
+   record.mealTime === MealTime.LUNCH ? 'Almuerzo' :
+   record.mealTime === MealTime.SNACK ? 'Merienda' :
+   record.mealTime === MealTime.DINNER ? 'Cena' : 'Extra'}
+</td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {record.calories} kcal
                     </td>
@@ -453,15 +453,15 @@ const NutritionRecordsPage: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     >
-                      {Object.values(MealTime).map(time => (
-                        <option key={time} value={time}>
-                          {time === MealTime.BREAKFAST ? 'Desayuno' :
-                          time === MealTime.MID_MORNING ? 'Media Mañana' :
-                          time === MealTime.LUNCH ? 'Almuerzo' :
-                          time === MealTime.AFTERNOON_SNACK ? 'Merienda' :
-                          time === MealTime.DINNER ? 'Cena' : 'Refrigerio Nocturno'}
-                        </option>
-                      ))}
+{Object.values(MealTime).map((time) => (
+  <option key={time} value={time}>
+    {time === MealTime.BREAKFAST ? 'Desayuno' :
+     time === MealTime.LUNCH ? 'Almuerzo' :
+     time === MealTime.SNACK ? 'Merienda' :
+     time === MealTime.DINNER ? 'Cena' : 'Extra'}
+  </option>
+))}
+
                     </select>
                   </div>
                   <div>
