@@ -1,3 +1,4 @@
+//src/pages/Client/DashboardClient.tsx
 import React, { useEffect, useState } from "react";
 import { Client } from "../../model/Client";
 import { useNavigate } from "react-router-dom";
@@ -421,6 +422,13 @@ const handleLogout = () => {
                   Ver mi progreso
                 </span>
               </button>
+              <button
+  className="flex flex-col items-center justify-center p-4 bg-white border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all"
+  onClick={() => navigate("/change-password")}
+>
+  <div className="text-3xl mb-2">🔒</div>
+  <span className="text-sm font-medium text-center">Cambiar contraseña</span>
+</button>
             </div>
           </section>
         </div>

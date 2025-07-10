@@ -168,15 +168,23 @@ export default function DashboardNutritionist() {
           <h1 className="text-3xl font-bold">{`Bienvenido/a, ${currentUser?.name}`}</h1>
           <p className="text-gray-600">{`Gimnasio: ${currentUser?.gymName}`}</p>
         </div>
+        <div className="mt-4">
+  <button
+    onClick={() => navigate("/change-password")}
+    className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900 transition"
+  >
+    Cambiar contraseña
+  </button>
+</div>
 
-        {/* Botones de filtro */}
-        <div className="flex space-x-4 mb-6">
-          <button
-            onClick={() => handleViewChange("ALL")}
-            className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
-          >
-            Todos los clientes
-          </button>
+{/* Botones de filtro */}
+<div className="mt-4 flex space-x-4 mb-6">
+  <button
+    onClick={() => handleViewChange("ALL")}
+    className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+  >
+    Todos los clientes
+  </button>
           <button
             onClick={() => handleViewChange("MINE")}
             className={`px-4 py-2 rounded ${viewMode === "MINE" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}

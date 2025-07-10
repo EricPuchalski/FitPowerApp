@@ -193,7 +193,15 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         {/* Bienvenida */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{`Bienvenido, ${currentUser?.name}`}</h1>
-          <p className="text-gray-600">{`Gimnasio: ${currentUser?.gymName}`}</p>
+          <div className="mt-4">
+  <button
+    onClick={() => navigate("/change-password")}
+    className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900 transition"
+  >
+    Cambiar contraseña
+  </button>
+</div>
+          <p className="text-gray-600 mt-4">{`Gimnasio: ${currentUser?.gymName}`}</p>
         </div>
 
         {/* Estadísticas */}

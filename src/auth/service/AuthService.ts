@@ -1,4 +1,4 @@
-// src/services/authService.ts
+// src/auth/service/AuthService.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LoginResponse } from '../model/LoginResponse';
@@ -239,7 +239,32 @@ async login(credentials: LoginCredentials): Promise<UserData> {
   getClientData(): Client | null {
     const user = this.getCurrentUser();
     return user?.clientData || null;
-  }
+  },
+
+
+  // Cambiar contraseña del usuario logueado
+async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
+  await axios.put(
+    `${API_URL}/change-password`,
+    { currentPassword, newPassword },
+    { headers }
+  );
+},
+
+// Resetear contraseña de otro usuario (solo ADMIN)
+async resetPassword(username: string, newPassword: string): Promise<void> {
+  const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
+  await axios.put(
+    `${API_URL}/admin/reset-password`,
+    { username, newPassword },
+    { headers }
+  );
+},
+
+
 };
+
+
 
 export default authService;
