@@ -20,11 +20,11 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-grow container mx-auto p-4 max-w-md">
-        <h2 className="text-2xl mb-4">Resetear Contraseña (Admin)</h2>
+        <h2 className="text-2xl mb-4">Resetear Contraseña de los Usuarios</h2>
         {message && <p className="mb-4 text-red-600">{message}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block">Username</label>
+            <label className="block">Username del usuario</label>
             <input
               type="text"
               value={username}
@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
             />
           </div>
           <div>
-            <label className="block">Nueva Contraseña</label>
+            <label className="block">Nueva Contraseña para el usuario</label>
             <input
               type="password"
               value={newPassword}
