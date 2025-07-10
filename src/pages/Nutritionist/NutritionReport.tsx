@@ -331,9 +331,9 @@ const fetchReport = async () => {
     doc.text("Estadísticas de Cumplimiento", 20, (doc as any).lastAutoTable.finalY + 15)
 
     const complianceData = [
-      ["Días perfectos", report.analysis.compliance.perfectDays],
-      ["Solo calorías en rango", report.analysis.compliance.onlyCaloriesInRange],
-      ["Solo macros en rango", report.analysis.compliance.onlyMacrosInRange]
+      ["Días perfectos (Calorías y macros al 80/120%)", report.analysis.compliance.perfectDays],
+      ["Días calorías en rango 80/120%", report.analysis.compliance.onlyCaloriesInRange],
+      ["Días macros en rango 80/120%", report.analysis.compliance.onlyMacrosInRange]
     ]
 
     autoTable(doc, {
@@ -837,14 +837,14 @@ const fetchReport = async () => {
               )}
 
               {/* Estadísticas de cumplimiento */}
-              {/* <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                   <Activity className="w-5 h-5 text-green-600" />
-                  Estadísticas de Cumplimiento
+                  Estadísticas de Cumplimiento (80/120%) del plan.
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-medium text-green-800">Días Perfectos</h4>
+                    <h4 className="font-medium text-green-800">Días Perfectos (Calorías y macros)</h4>
                     <p className="text-2xl font-bold text-green-600">{report.analysis.compliance.perfectDays}</p>
                   </div>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -856,7 +856,7 @@ const fetchReport = async () => {
                     <p className="text-2xl font-bold text-yellow-600">{report.analysis.compliance.onlyMacrosInRange}</p>
                   </div>
                 </div>
-              </div> */}
+              </div>
 
               {/* Consistencia de Macronutrientes */}
               <div className="bg-white rounded-lg shadow-sm p-6">
