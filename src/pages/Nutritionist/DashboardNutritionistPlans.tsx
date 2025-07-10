@@ -67,6 +67,8 @@ export default function DashboardNutritionistPlans() {
           }
         )
 
+        console.log(response);
+        
         if (response.status === 404) {
           setClient(null)
         } else if (!response.ok) {
@@ -395,23 +397,33 @@ export default function DashboardNutritionistPlans() {
               <hr className="my-4" />
 
               {/* Acciones Rápidas */}
-              <div className="d-flex flex-wrap gap-3">
-                <Button
-                  onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/${activePlan.id}/edit`)}
-                  variant="primary"
-                >
-                  <Edit2 className="me-2" size={16} />
-                  Editar Plan
-                </Button>
+<div className="d-flex flex-wrap gap-3">
+  <Button
+    onClick={() => navigate(`/nutritionist/client/${clientDni}/nutrition-plans/${activePlan.id}/edit`)}
+    variant="primary"
+  >
+    <Edit2 className="me-2" size={16} />
+    Editar Plan
+  </Button>
 
-                <Button
-                  variant="outline-danger"
-                  onClick={() => deletePlan(activePlan.id)}
-                >
-                  <Trash2 className="me-2" size={16} />
-                  Eliminar Plan
-                </Button>
-              </div>
+  <Button
+    variant="outline-danger"
+    onClick={() => deletePlan(activePlan.id)}
+  >
+    <Trash2 className="me-2" size={16} />
+    Eliminar Plan
+  </Button>
+
+  <Button
+    variant="outline-secondary"
+    onClick={() => navigate(`/nutritionist/client/${activePlan.clientDni}/nutrition-plans/report`)}
+  >
+    <FileText className="me-2" size={16} />
+    Generar Informe
+  </Button>
+</div>
+
+
             </Card.Body>
           </Card>
         )}

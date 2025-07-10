@@ -30,6 +30,7 @@ import {
 } from "./auth/ProtectedRoute";
 import ReportClient from "./pages/Trainer/ReportClient";
 import NotFound from "./components/NotFound";
+import NutritionReportPage from "./pages/Nutritionist/NutritionReport";
 
 function App() {
   return (
@@ -200,7 +201,7 @@ function App() {
             </NutritionistRoute>
           } 
         />
-        {/* Aquí agregamos las rutas para planes nutricionales */}
+      
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans"
           element={
@@ -214,6 +215,15 @@ function App() {
           element={
             <NutritionistRoute>
               <NutritionPlanEdit />
+            </NutritionistRoute>
+          }
+        />
+
+               <Route
+          path="/nutritionist/client/:clientDni/nutrition-plans/report"
+          element={
+            <NutritionistRoute>
+              <NutritionReportPage />
             </NutritionistRoute>
           }
         />

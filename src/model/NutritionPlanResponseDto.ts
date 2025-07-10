@@ -13,4 +13,5 @@ export interface NutritionPlanResponseDto {
   nutritionistName: string;
   clientDni: string;
   clientName: string;
+  clientGoal: string;
 }
