@@ -550,61 +550,78 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
           </Card>
 
 {data.strengthProgress && (
-  <Card sx={{ mb: 4, '@media print': { boxShadow: 'none', border: '1px solid #e0e0e0', mb: 3 } }}>
+  <Card sx={{ 
+    mb: 4, 
+    '@media print': { 
+      boxShadow: 'none', 
+      border: '1px solid #e0e0e0', 
+      mb: 3,
+      pageBreakInside: 'avoid'
+    } 
+  }}>
     <CardContent>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <TrendingUp sx={{ color: '#fb8c00' }} />
         <Typography variant="h6">Análisis de Progreso</Typography>
       </Box>
-      <Grid container spacing={3} justifyContent="space-between">
-        {/* Tarjeta de Mejor Progreso */}
+      
+      {/* Layout vertical en PDF para evitar división */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: 2,
+        '@media print': {
+          flexDirection: 'column', // Siempre vertical en PDF
+          gap: '10px'
+        }
+      }}>
+        {/* Mejor Progreso */}
         {data.strengthProgress.maxImprovement && (
-          <Grid item xs={12} md={5}>
-            <Card variant="outlined" sx={{
-              p: 3,
-              borderColor: 'success.main',
-              backgroundColor: 'rgba(76, 175, 80, 0.05)',
-              borderRadius: 2,
-              textAlign: 'center',
-              '@media print': {
-                backgroundColor: 'transparent',
-                border: '2px solid #2e7d32'
-              }
-            }}>
-              <Typography color="success.main" variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                ▲ Mayor Mejora
-              </Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                {data.strengthProgress.maxImprovement}
-              </Typography>
-            </Card>
-          </Grid>
+          <Card variant="outlined" sx={{
+            flex: 1,
+            p: 2,
+            borderColor: 'success.main',
+            backgroundColor: 'rgba(76, 175, 80, 0.05)',
+            textAlign: 'center',
+            '@media print': {
+              backgroundColor: 'transparent',
+              border: '2px solid #2e7d32',
+              mb: 1
+            }
+          }}>
+            <Typography color="success.main" variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+              ▲ Mayor Progreso
+            </Typography>
+            <Typography variant="body2">
+              {data.strengthProgress.maxImprovement}
+            </Typography>
+          </Card>
         )}
-        {/* Tarjeta de Mayor Decrecimiento */}
+        
+        {/* Mayor Decrecimiento */}
         {data.strengthProgress.maxDecline && (
-          <Grid item xs={12} md={5}>
-            <Card variant="outlined" sx={{
-              p: 3,
-              borderColor: 'error.main',
-              backgroundColor: 'rgba(244, 67, 54, 0.05)',
-              borderRadius: 2,
-              textAlign: 'center',
-              '@media print': {
-                backgroundColor: 'transparent',
-                border: '2px solid #d32f2f'
-              }
-            }}>
-              <Typography color="error.main" variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                ▼ Mayor Decrecimiento
-              </Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                {data.strengthProgress.maxDecline}
-              </Typography>
-            </Card>
-          </Grid>
+          <Card variant="outlined" sx={{
+            flex: 1,
+            p: 2,
+            borderColor: 'error.main',
+            backgroundColor: 'rgba(244, 67, 54, 0.05)',
+            textAlign: 'center',
+            '@media print': {
+              backgroundColor: 'transparent',
+              border: '2px solid #d32f2f'
+            }
+          }}>
+            <Typography color="error.main" variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+              ▼ Menor Progreso
+            </Typography>
+            <Typography variant="body2">
+              {data.strengthProgress.maxDecline}
+            </Typography>
+          </Card>
         )}
-      </Grid>
-      {/* Mensaje cuando no hay datos significativos */}
+      </Box>
+      
+      {/* Mensaje cuando no hay datos */}
       {!data.strengthProgress.maxImprovement && !data.strengthProgress.maxDecline && (
         <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 2 }}>
           No hay suficientes datos para mostrar progresos significativos
@@ -613,7 +630,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
     </CardContent>
   </Card>
 )}
-
 
 
           {/* Detalle de Progreso por Ejercicio */}
