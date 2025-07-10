@@ -1,4 +1,6 @@
+// src/components/ClientHeader.tsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ClientHeaderProps {
   fullName: string;
@@ -7,6 +9,7 @@ interface ClientHeaderProps {
 
 export const ClientHeader: React.FC<ClientHeaderProps> = ({ fullName, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -19,6 +22,10 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({ fullName, onLogout }
     const firstNameInitial = names[0][0] || "";
     const lastNameInitial = names.length > 1 ? names[names.length - 1][0] : "";
     return `${firstNameInitial}${lastNameInitial}`.toUpperCase();
+  };
+
+  const handleChangePassword = () => {
+    navigate("/change-password");
   };
 
   return (
@@ -38,6 +45,12 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({ fullName, onLogout }
           </button>
           {isMenuOpen && (
             <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+              <button
+                onClick={handleChangePassword}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+              >
+                Cambiar contraseña
+              </button>
               <button
                 onClick={onLogout}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-300"

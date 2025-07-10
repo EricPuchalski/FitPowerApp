@@ -169,12 +169,7 @@ export default function DashboardNutritionist() {
           <p className="text-gray-600">{`Gimnasio: ${currentUser?.gymName}`}</p>
         </div>
         <div className="mt-4">
-  <button
-    onClick={() => navigate("/change-password")}
-    className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900 transition"
-  >
-    Cambiar contraseña
-  </button>
+ 
 </div>
 
 {/* Botones de filtro */}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import authService from '../../auth/service/AuthService';
 import { FooterPag } from '../../components/Footer';
+import { AdminHeader } from '../../components/AdminHeader'; // o TrainerHeader si querés usar ese
 
 export default function ResetPasswordPage() {
   const [username, setUsername] = useState('');
@@ -13,12 +14,31 @@ export default function ResetPasswordPage() {
       await authService.resetPassword(username, newPassword);
       setMessage(`Contraseña de ${username} reseteada con éxito`);
     } catch (err: any) {
-      setMessage(err.response?.data?.message || err.message);
+      if (err.response?.data) {
+        const data = err.response.data;
+
+        if (typeof data === 'object' && !Array.isArray(data)) {
+          const validationMessages = Object.values(data).join(', ');
+          setMessage(validationMessages);
+        } else if (typeof data === 'string') {
+          setMessage(data);
+        } else if (data.message) {
+          setMessage(data.message);
+        } else {
+          setMessage("Error desconocido");
+        }
+      } else {
+        setMessage("Error desconocido");
+      }
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen">
+      <AdminHeader onLogout={function (): void {
+        throw new Error('Function not implemented.');
+      } } /> {/* */}
+
       <main className="flex-grow container mx-auto p-4 max-w-md">
         <h2 className="text-2xl mb-4">Resetear Contraseña de los Usuarios</h2>
         {message && <p className="mb-4 text-red-600">{message}</p>}
