@@ -98,7 +98,7 @@ const NutritionReportGenerator: React.FC = () => {
   const [error, setError] = useState<string>("")
   const [planError, setPlanError] = useState<string>("")
   const navigate = useNavigate()
-
+const today = new Date().toISOString().split('T')[0];
   const fetchActivePlan = async (dni: string) => {
     if (!dni) return
 
@@ -134,59 +134,68 @@ const NutritionReportGenerator: React.FC = () => {
     }
   }
 
-  const fetchReport = async () => {
-    if (!clientDni || !startDate || !endDate) {
-      setError("Por favor complete todos los campos")
-      return
-    }
-
-    if (!activePlan) {
-      setError("No hay un plan nutricional activo. No se puede generar el informe.")
-      return
-    }
-
-    // Validar que las fechas sean posteriores a la creación del plan
-    const planCreatedDate = new Date(activePlan.createdAt)
-    const reportStartDate = new Date(startDate)
-
-    if (reportStartDate < planCreatedDate) {
-      setError(
-        `La fecha de inicio del informe no puede ser anterior a la creación del plan (${new Date(activePlan.createdAt).toLocaleDateString()})`
-      )
-      return
-    }
-
-    setLoading(true)
-    setError("")
-
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Token de autenticación no encontrado")
-      }
-
-      const response = await fetch(
-        `http://localhost:8080/api/v1/clients/${clientDni}/reports/nutrition-plan?startDate=${startDate}&endDate=${endDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error("Error al obtener el informe")
-      }
-
-      const data: NutritionReport = await response.json()
-      setReport(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido")
-    } finally {
-      setLoading(false)
-    }
+const fetchReport = async () => {
+  if (!clientDni || !startDate || !endDate) {
+    setError("Por favor complete todos los campos");
+    return;
   }
+
+  if (!activePlan) {
+    setError("No hay un plan nutricional activo. No se puede generar el informe.");
+    return;
+  }
+
+  // Validar que las fechas sean posteriores a la creación del plan
+  const planCreatedDate = new Date(activePlan.createdAt);
+  const reportStartDate = new Date(startDate);
+  const reportEndDate = new Date(endDate);
+  const currentDate = new Date(today);
+
+  if (reportStartDate < planCreatedDate) {
+    setError(
+      `La fecha de inicio del informe no puede ser anterior a la creación del plan (${new Date(
+        activePlan.createdAt
+      ).toLocaleDateString()})`
+    );
+    return;
+  }
+
+  if (reportEndDate > currentDate) {
+    setError("La fecha de fin no puede ser posterior al día actual.");
+    return;
+  }
+
+  setLoading(true);
+  setError("");
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Token de autenticación no encontrado");
+    }
+
+    const response = await fetch(
+      `http://localhost:8080/api/v1/clients/${clientDni}/reports/nutrition-plan?startDate=${startDate}&endDate=${endDate}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Error al obtener el informe");
+    }
+
+    const data: NutritionReport = await response.json();
+    setReport(data);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Error desconocido");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (clientDni) {
@@ -678,27 +687,29 @@ const NutritionReportGenerator: React.FC = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={activePlan ? activePlan.createdAt.split("T")[0] : undefined}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || (activePlan ? activePlan.createdAt.split("T")[0] : undefined)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          min={activePlan ? activePlan.createdAt.split("T")[0] : undefined}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
+  <input
+    type="date"
+    value={endDate}
+    onChange={(e) => setEndDate(e.target.value)}
+    min={startDate || (activePlan ? activePlan.createdAt.split("T")[0] : undefined)}
+    max={today} // Validación para que no se pueda seleccionar una fecha posterior a hoy
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+</div>
+
               <button
                 onClick={fetchReport}
                 disabled={loading || !activePlan}
