@@ -1,3 +1,4 @@
+//src/pages/Admin/DashboardAdmin.tsx
 "use client";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -80,6 +81,20 @@ export default function DashboardAdmin() {
         </div>
 
         <div className="mt-12 grid md:grid-cols-4 gap-8">
+        <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-600 hover:shadow-xl transition duration-300">
+  <Settings className="w-12 h-12 text-gray-600 mb-4" />
+  <h2 className="text-xl font-semibold mb-2">Seguridad</h2>
+  <p className="text-gray-600 mb-4">
+    Resetear contraseñas de usuarios
+  </p>
+  <a
+    href="/admin/reset-password"
+    className="inline-flex items-center text-gray-600 hover:text-gray-800"
+  >
+    Ir a seguridad <ChevronRight size={20} />
+  </a>
+</div>
+
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-800 hover:shadow-xl transition duration-300">
             <Dumbbell className="w-12 h-12 text-blue-800 mb-4" />
             <h2 className="text-xl font-semibold mb-2">

@@ -19,6 +19,8 @@ import DashboardTrainer from "./pages/Trainer/DashboardTrainer";
 import ExerciseCrud from "./pages/Admin/ExerciseCrud";
 import TrainingPlanEdit from "./pages/Trainer/TrainingPlanEdit";
 import TrainingPlans from "./pages/Trainer/TrainingPlans";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+import ResetPasswordPage from "./pages/Admin/AdminResetPasswordPage";
 
 // Importar componentes de rutas protegidas
 import {
@@ -27,6 +29,7 @@ import {
   NutritionistRoute,
   AdminRoute,
   TrainerAdminRoute,
+  AllRolesRoute
 } from "./auth/ProtectedRoute";
 import ReportClient from "./pages/Trainer/ReportClient";
 import NotFound from "./components/NotFound";
@@ -138,6 +141,14 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/reset-password"
+          element={
+            <AdminRoute>
+              <ResetPasswordPage />
+            </AdminRoute>
+          }
+        />
 
         {/* ==================== RUTAS DEL ENTRENADOR ==================== */}
         <Route
@@ -164,7 +175,6 @@ function App() {
             </TrainerRoute>
           }
         />
-
         <Route 
           path="/trainer/client/:clientDni/training-plans/report" 
           element={
@@ -173,7 +183,6 @@ function App() {
             </TrainerRoute>
           }
         />
-
         <Route 
           path="/trainer/client/:dni/progress" 
           element={
@@ -192,8 +201,7 @@ function App() {
             </NutritionistRoute>
           }
         />
-
-                <Route 
+        <Route 
           path="/nutritionist/client/:dni/history" 
           element={
             <NutritionistRoute>
@@ -201,7 +209,6 @@ function App() {
             </NutritionistRoute>
           } 
         />
-      
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans"
           element={
@@ -239,9 +246,18 @@ function App() {
           }
         />
 
+        {/* Cambio de contraseña - Accesible para todos los roles autenticados */}
+        <Route
+          path="/change-password"
+          element={
+            <AllRolesRoute>
+              <ChangePasswordPage />
+            </AllRolesRoute>
+          }
+        />
+
         {/* Ruta para manejar rutas no encontradas */}
         <Route path="*" element={<NotFound />} />
-
       </Routes>
     </Router>
   );

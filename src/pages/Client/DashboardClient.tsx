@@ -1,3 +1,4 @@
+//src/pages/Client/DashboardClient.tsx
 import React, { useEffect, useState } from "react";
 import { Client } from "../../model/Client";
 import { useNavigate } from "react-router-dom";
@@ -421,6 +422,7 @@ const handleLogout = () => {
                   Ver mi progreso
                 </span>
               </button>
+                
             </div>
           </section>
         </div>
