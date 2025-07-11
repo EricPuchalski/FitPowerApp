@@ -1,3 +1,4 @@
+//src/auth/model/LoginRequest.ts
 export interface LoginResponse {
   message: string;
   token: string;

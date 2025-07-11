@@ -8,6 +8,8 @@ import NutritionPlanPage from "./pages/Client/NutritionPlan";
 import NutritionRecordsPage from "./pages/Client/NutritionRecords";
 import ClientHistory from "./pages/Client/ClientHistory";
 import ProgressPage from "./pages/Client/ProgressPage";
+import NutritionProgressPage from "./pages/Client/NutritionProgressPage";
+
 import DashboardAdmin from "./pages/Admin/DashboardAdmin";
 import ClientCrud from "./pages/Admin/ClientCrud";
 import TrainerCrud from "./pages/Admin/TrainerCrud";
@@ -21,6 +23,7 @@ import TrainingPlanEdit from "./pages/Trainer/TrainingPlanEdit";
 import TrainingPlans from "./pages/Trainer/TrainingPlans";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ResetPasswordPage from "./pages/Admin/AdminResetPasswordPage";
+
 
 // Importar componentes de rutas protegidas
 import {
@@ -83,6 +86,14 @@ function App() {
             </ClientRoute>
           }
         />
+        <Route
+  path="/client/:dni/nutrition-progress"
+  element={
+    <ClientRoute>
+      <NutritionProgressPage />
+    </ClientRoute>
+  }
+/>
         <Route
           path="/client/nutrition-plan"
           element={
@@ -183,6 +194,7 @@ function App() {
             </TrainerRoute>
           }
         />
+        
         <Route 
           path="/trainer/client/:dni/progress" 
           element={
@@ -191,6 +203,16 @@ function App() {
             </TrainerRoute>
           } 
         />
+        <Route
+  path="/trainer/client/:dni/nutrition-progress"
+  element={
+    <TrainerRoute>
+      <NutritionProgressPage />
+    </TrainerRoute>
+  }
+/>
+        
+        
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
         <Route
@@ -234,6 +256,14 @@ function App() {
             </NutritionistRoute>
           }
         />
+        <Route
+  path="/nutritionist/client/:dni/nutrition-progress"
+  element={
+    <NutritionistRoute>
+      <NutritionProgressPage />
+    </NutritionistRoute>
+  }
+/>
 
         {/* ==================== RUTAS COMPARTIDAS ==================== */}
         {/* Ejercicios - Solo Trainer y Admin pueden acceder */}
