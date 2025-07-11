@@ -1,0 +1,8 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-deploy-config"
+  [plugins.inputs]
+    functions = null
