@@ -1,8 +1,8 @@
 [build]
-  publish = "dist"
   command = "npm run build"
+  publish = "dist"
 
-[[plugins]]
-  package = "@netlify/plugin-deploy-config"
-  [plugins.inputs]
-    functions = null
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
