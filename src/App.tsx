@@ -202,6 +202,15 @@ function App() {
             </TrainerRoute>
           } 
         />
+        <Route
+  path="/trainer/client/:dni/progress/nutrition"
+  element={
+    <TrainerRoute>
+      <NutritionProgress />
+    </TrainerRoute>
+  }
+/>
+
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
         <Route
@@ -220,6 +229,14 @@ function App() {
             </NutritionistRoute>
           } 
         />
+        <Route
+  path="/nutritionist/client/:dni/progress/nutrition"
+  element={
+    <NutritionistRoute>
+      <NutritionProgress />
+    </NutritionistRoute>
+  }
+/>
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans"
           element={

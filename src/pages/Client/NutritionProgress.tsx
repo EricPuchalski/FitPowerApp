@@ -1,8 +1,8 @@
- // src/pages/Client/NutritionProgress.tsx
+// src/pages/Client/NutritionProgress.tsx
 "use client"
 
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom"; // Agregar useParams
 import { FooterPag } from "../../components/Footer";
 import { ClientHeader } from "../../components/ClientHeader";
 import { Progress } from "antd"; // usar Ant Design para barras
@@ -22,7 +22,9 @@ export default function NutritionProgress() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const clientDni = localStorage.getItem("userDni");
+  // Obtener DNI desde parámetros de URL o localStorage
+  const { dni: dniParam } = useParams();
+  const clientDni = dniParam || localStorage.getItem("userDni");
   const token = localStorage.getItem("token");
 
   useEffect(() => {

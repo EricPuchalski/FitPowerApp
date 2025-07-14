@@ -229,7 +229,13 @@ export default function DashboardNutritionist() {
                     Ver Cliente
                   </button>
                 </Link>
+                <Link to={`/nutritionist/client/${client.dni}/progress/nutrition`}>
+  <button className="w-full bg-green-100 text-green-800 py-2 rounded border border-green-800 hover:bg-green-800 hover:text-white transition">
+    Ver Progreso Nutricional
+  </button>
+</Link>
               </div>
+
             </div>
           ))}
         </div>
