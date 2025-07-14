@@ -275,11 +275,6 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                     </button>
                   </Link>
                 )}
-                <Link to={`/trainer/client/${client.dni}/nutrition-progress`}>
-    <button className="w-full bg-green-500 text-white py-2 rounded">
-      Progreso Nutricional
-    </button>
-  </Link>
               </div>
             </div>
           ))}

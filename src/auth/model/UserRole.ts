@@ -1,4 +1,3 @@
-//src/auth/model/UserRole.ts
 export enum UserRole {
   TRAINER = "ROLE_TRAINER",
   NUTRITIONIST = "ROLE_NUTRITIONIST", 
