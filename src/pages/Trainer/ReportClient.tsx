@@ -104,7 +104,7 @@ export default function ReportClient() {
 
       try {
         const response = await fetch(
-          `http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`,
+          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -367,6 +367,6 @@ export default function ReportClient() {
         </Box>
       </Box>
       <FooterPag></FooterPag>
-    </>
+     </>
   );
 }

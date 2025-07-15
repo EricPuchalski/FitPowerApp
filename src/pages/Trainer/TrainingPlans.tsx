@@ -95,7 +95,7 @@ export default function TrainingPlanDetail() {
         })
 
         // 2️⃣ Obtener plan de entrenamiento activo
-        const plansRes = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`, {
+        const plansRes = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`, {
           headers: { Authorization: `Bearer ${token}` },
         })
 
