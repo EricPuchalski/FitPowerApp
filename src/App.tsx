@@ -1,3 +1,4 @@
+//App.tsx
 import LogIn from "./components/Login";
 import "./index.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -8,6 +9,7 @@ import NutritionPlanPage from "./pages/Client/NutritionPlan";
 import NutritionRecordsPage from "./pages/Client/NutritionRecords";
 import ClientHistory from "./pages/Client/ClientHistory";
 import ProgressPage from "./pages/Client/ProgressPage";
+import NutritionProgress from "./pages/Client/NutritionProgress"; // Importa tu componente
 import DashboardAdmin from "./pages/Admin/DashboardAdmin";
 import ClientCrud from "./pages/Admin/ClientCrud";
 import TrainerCrud from "./pages/Admin/TrainerCrud";
@@ -80,6 +82,15 @@ function App() {
           element={
             <ClientRoute>
               <ProgressPage />
+            </ClientRoute>
+          }
+        />
+        {/* NUEVA RUTA PARA PROGRESO NUTRICIONAL */}
+        <Route
+          path="/client/:dni/progress/nutrition"
+          element={
+            <ClientRoute>
+              <NutritionProgress />
             </ClientRoute>
           }
         />
@@ -191,6 +202,15 @@ function App() {
             </TrainerRoute>
           } 
         />
+        <Route
+  path="/trainer/client/:dni/progress/nutrition"
+  element={
+    <TrainerRoute>
+      <NutritionProgress />
+    </TrainerRoute>
+  }
+/>
+
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
         <Route
@@ -210,6 +230,14 @@ function App() {
           } 
         />
         <Route
+  path="/nutritionist/client/:dni/progress/nutrition"
+  element={
+    <NutritionistRoute>
+      <NutritionProgress />
+    </NutritionistRoute>
+  }
+/>
+        <Route
           path="/nutritionist/client/:clientDni/nutrition-plans"
           element={
             <NutritionistRoute>
@@ -226,7 +254,7 @@ function App() {
           }
         />
 
-               <Route
+        <Route
           path="/nutritionist/client/:clientDni/nutrition-plans/report"
           element={
             <NutritionistRoute>
