@@ -1,3 +1,4 @@
+//src/pages/Client/TrainingRecords.tsx
 "use client"
 
 import type React from "react"
@@ -57,9 +58,9 @@ const TrainingRecordsPage: React.FC = () => {
   const token = localStorage.getItem("token")
   const [formData, setFormData] = useState({
     observation: "",
-    series: 3,
-    repetitions: 10,
-    weight: 0,
+    series: "",
+    repetitions: "",
+    weight: "",
     restTime: "01:30",
     exerciseId: 0,
   })
@@ -117,10 +118,7 @@ const TrainingRecordsPage: React.FC = () => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === "series" || name === "repetitions" || name === "weight" || name === "exerciseId"
-          ? Number(value)
-          : value,
+      [name]: value,
     }))
   }
 
@@ -142,9 +140,9 @@ const TrainingRecordsPage: React.FC = () => {
         },
         body: JSON.stringify({
           observation: formData.observation,
-          series: formData.series,
-          repetitions: formData.repetitions,
-          weight: formData.weight,
+          series: Number(formData.series),
+          repetitions: Number(formData.repetitions),
+          weight: Number(formData.weight),
           restTime: formData.restTime,
           exerciseId: formData.exerciseId,
         }),
@@ -243,9 +241,9 @@ const TrainingRecordsPage: React.FC = () => {
     setEditingRecord(record)
     setFormData({
       observation: record.observation || "",
-      series: record.series,
-      repetitions: record.repetitions,
-      weight: record.weight,
+      series: record.series.toString(),
+      repetitions: record.repetitions.toString(),
+      weight: record.weight.toString(),
       restTime: record.restTime,
       exerciseId: record.exerciseId,
     })
@@ -256,9 +254,9 @@ const TrainingRecordsPage: React.FC = () => {
   const resetForm = () => {
     setFormData({
       observation: "",
-      series: 3,
-      repetitions: 10,
-      weight: 0,
+      series: "",
+      repetitions: "",
+      weight: "",
       restTime: "01:30",
       exerciseId: exercises.length > 0 ? exercises[0].id : 0,
     })
@@ -392,9 +390,9 @@ const TrainingRecordsPage: React.FC = () => {
                 setEditingRecord(null)
                 setFormData({
                   observation: "",
-                  series: 3,
-                  repetitions: 10,
-                  weight: 0,
+                  series: "",
+                  repetitions: "",
+                  weight: "",
                   restTime: "01:30",
                   exerciseId: exercises.length > 0 ? exercises[0].id : 0,
                 })
@@ -495,9 +493,9 @@ const TrainingRecordsPage: React.FC = () => {
                 setEditingRecord(null)
                 setFormData({
                   observation: "",
-                  series: 3,
-                  repetitions: 10,
-                  weight: 0,
+                  series: "",
+                  repetitions: "",
+                  weight: "",
                   restTime: "01:30",
                   exerciseId: exercises.length > 0 ? exercises[0].id : 0,
                 })
@@ -572,8 +570,9 @@ const TrainingRecordsPage: React.FC = () => {
                         min="1"
                         value={formData.series}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         required
+                        placeholder="Ej: 3"
                       />
                     </div>
 
@@ -588,8 +587,9 @@ const TrainingRecordsPage: React.FC = () => {
                         min="1"
                         value={formData.repetitions}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         required
+                        placeholder="Ej: 10"
                       />
                     </div>
 
@@ -605,8 +605,9 @@ const TrainingRecordsPage: React.FC = () => {
                         min="0"
                         value={formData.weight}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         required
+                        placeholder="Ej: 20.5"
                       />
                     </div>
                   </div>

@@ -1,3 +1,4 @@
+//src/pages/Client/NutritionRecords.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MealTime } from '../../model/MealTime';
@@ -77,6 +78,15 @@ const NutritionRecordsPage: React.FC = () => {
     const { name, value } = e.target;
 
     if (['calories', 'proteins', 'carbohydrates', 'fats'].includes(name)) {
+      // Permitir string vacío para que no aparezca 0
+      if (value === '') {
+        setNewRecord(prev => ({
+          ...prev,
+          [name]: 0
+        }));
+        return;
+      }
+
       const numericValue = parseInt(value) || 0;
       if (numericValue < 0) {
         toast.error(`${name === 'calories' ? 'Las calorías' : 
@@ -467,49 +477,53 @@ const NutritionRecordsPage: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Calorías*</label>
                     <input
-                      type="number"
+                      type="text"
                       name="calories"
-                      value={newRecord.calories}
+                      value={newRecord.calories === 0 ? '' : newRecord.calories.toString()}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Ingrese las calorías"
+                      pattern="[0-9]*"
                       required
-                      min="0"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Proteínas* (g)</label>
                     <input
-                      type="number"
+                      type="text"
                       name="proteins"
-                      value={newRecord.proteins}
+                      value={newRecord.proteins === 0 ? '' : newRecord.proteins.toString()}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Ingrese las proteínas"
+                      pattern="[0-9]*"
                       required
-                      min="0"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Carbohidratos* (g)</label>
                     <input
-                      type="number"
+                      type="text"
                       name="carbohydrates"
-                      value={newRecord.carbohydrates}
+                      value={newRecord.carbohydrates === 0 ? '' : newRecord.carbohydrates.toString()}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Ingrese los carbohidratos"
+                      pattern="[0-9]*"
                       required
-                      min="0"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Grasas* (g)</label>
                     <input
-                      type="number"
+                      type="text"
                       name="fats"
-                      value={newRecord.fats}
+                      value={newRecord.fats === 0 ? '' : newRecord.fats.toString()}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Ingrese las grasas"
+                      pattern="[0-9]*"
                       required
-                      min="0"
                     />
                   </div>
                 </div>
