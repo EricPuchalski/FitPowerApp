@@ -1,92 +1,98 @@
 // src/auth/service/AuthService.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { LoginResponse } from '../model/LoginResponse';
 import { Trainer } from '../../model/Trainer';
 import { Nutritionist } from '../../model/Nutritionist';
 import { Client } from '../../model/Client';
 import { LoginCredentials } from '../model/LoginRequest';
 import { UserRole } from '../model/UserRole';
+import { LoginResponse } from '../model/LoginResponse';
+import { DecodedToken } from '../model/DecodedToken';
 
 const API_URL = 'http://localhost:8080/api/v1/auth';
 
 
-
-
-
-interface UserData extends LoginResponse {
+// Interfaz para los datos del usuario completos
+interface UserData {
+  token: string;
+  username: string;
+  dni: string;
+  email: string;
+  roles: string[];
   trainerData?: Trainer;
   nutritionistData?: Nutritionist;
   clientData?: Client;
 }
 
-// Enum para los roles
-
 const authService = {
-async login(credentials: LoginCredentials): Promise<UserData> {
-  try {
-    const response = await axios.post(`${API_URL}/signin`, credentials);
-    const data: LoginResponse = response.data;
+  async login(credentials: LoginCredentials): Promise<UserData> {
+    try {
+      const response = await axios.post(`${API_URL}/signin`, credentials);
+      const data: LoginResponse = response.data;
 
-    if (data.token) {
-      // Limpiar localStorage
+      if (data.token) {
+        // Decodificar el token para obtener los datos
+        const decodedToken: DecodedToken = jwtDecode(data.token);
+        
+        // Limpiar localStorage
+        localStorage.clear();
+        
+        // Almacenar solo el token y el dni (extraído del token)
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userDni", decodedToken.dni);
+
+        // Crear objeto userData con los datos del token
+        let userData: UserData = {
+          token: data.token,
+          username: decodedToken.sub,
+          dni: decodedToken.dni,
+          email: decodedToken.email,
+          roles: decodedToken.roles
+        };
+
+        // Obtener datos específicos según el rol del usuario
+        await this.fetchUserRoleData(userData, data.token);
+
+        // Verificar si la cuenta está activa
+        if (userData.roles.includes(UserRole.TRAINER)) {
+          if (userData.trainerData && !userData.trainerData.active) {
+            localStorage.clear();
+            throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+          }
+        } else if (userData.roles.includes(UserRole.NUTRITIONIST)) {
+          if (userData.nutritionistData && !userData.nutritionistData.active) {
+            localStorage.clear();
+            throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+          }
+        } else if (userData.roles.includes(UserRole.CLIENT)) {
+          if (userData.clientData && !userData.clientData.active) {
+            localStorage.clear();
+            throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+          }
+        }
+
+        // Almacenar todos los datos del usuario
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        return userData;
+      }
+      
+      throw new Error("Credenciales incorrectas");
+    } catch (error: any) {
+      console.error("Error al iniciar sesión:", error);
       localStorage.clear();
       
-      // Almacenar datos básicos de autenticación
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.roles[0]);
-      localStorage.setItem("userId", data.id.toString());
-      localStorage.setItem("username", data.username);
-      localStorage.setItem("userEmail", data.email);
-      localStorage.setItem("userDni", data.dni);
-      localStorage.setItem("userRole", data.roles[0]);
-      localStorage.setItem("gymName", data.gymName);
-
-      let userData: UserData = { ...data };
-
-      // Manejo específico según el rol del usuario
-      await this.fetchUserRoleData(userData, data.token);
-
-      // Verificar si la cuenta está activa
-      if (userData.roles.includes(UserRole.TRAINER)) {
-        if (userData.trainerData && !userData.trainerData.active) {
-          localStorage.clear();
-          throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
-        }
-      } else if (userData.roles.includes(UserRole.NUTRITIONIST)) {
-        if (userData.nutritionistData && !userData.nutritionistData.active) {
-          localStorage.clear();
-          throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
-        }
-      } else if (userData.roles.includes(UserRole.CLIENT)) {
-        if (userData.clientData && !userData.clientData.active) {
-          localStorage.clear();
-          throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
-        }
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
       }
-
-      // Almacenar todos los datos del usuario
-      localStorage.setItem('user', JSON.stringify(userData));
       
-      return userData;
+      if (error.message) {
+        throw error;
+      }
+      
+      throw new Error("Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.");
     }
-    
-    throw new Error(data.message || "Credenciales incorrectas");
-  } catch (error: any) {
-    console.error("Error al iniciar sesión:", error);
-    localStorage.clear();
-    
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    
-    if (error.message) {
-      throw error;
-    }
-    
-    throw new Error("Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.");
-  }
-},
+  },
 
   logout(): void {
     localStorage.clear();
@@ -103,6 +109,19 @@ async login(credentials: LoginCredentials): Promise<UserData> {
     }
   },
 
+  // Método para obtener datos del token directamente
+  getTokenData(): DecodedToken | null {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      
+      return jwtDecode<DecodedToken>(token);
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  },
+
   getAuthHeader(): { Authorization?: string } {
     const token = localStorage.getItem('token');
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -113,7 +132,7 @@ async login(credentials: LoginCredentials): Promise<UserData> {
     if (!token) return false;
 
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken: DecodedToken = jwtDecode(token);
       const currentTime = Date.now() / 1000;
       return decodedToken.exp > currentTime;
     } catch (error) {
@@ -123,7 +142,25 @@ async login(credentials: LoginCredentials): Promise<UserData> {
   },
 
   getUserRole(): string | null {
-    return localStorage.getItem('userRole');
+    const tokenData = this.getTokenData();
+    return tokenData?.roles?.[0] || null;
+  },
+
+  // Método para obtener el DNI desde el token
+  getUserDni(): string | null {
+    return localStorage.getItem('userDni');
+  },
+
+  // Método para obtener el email desde el token
+  getUserEmail(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.email || null;
+  },
+
+  // Método para obtener el username desde el token
+  getUsername(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.sub || null;
   },
 
   getRedirectPath(roles: string[]): string {
@@ -204,8 +241,8 @@ async login(credentials: LoginCredentials): Promise<UserData> {
 
   // Método para verificar si el usuario tiene un rol específico
   hasRole(role: UserRole): boolean {
-    const currentUser = this.getCurrentUser();
-    return currentUser?.roles?.includes(role) || false;
+    const tokenData = this.getTokenData();
+    return tokenData?.roles?.includes(role) || false;
   },
 
   // Métodos específicos para cada rol
@@ -241,30 +278,25 @@ async login(credentials: LoginCredentials): Promise<UserData> {
     return user?.clientData || null;
   },
 
-
   // Cambiar contraseña del usuario logueado
-async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-  const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
-  await axios.put(
-    `${API_URL}/change-password`,
-    { currentPassword, newPassword },
-    { headers }
-  );
-},
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
+    await axios.put(
+      `${API_URL}/change-password`,
+      { currentPassword, newPassword },
+      { headers }
+    );
+  },
 
-// Resetear contraseña de otro usuario (solo ADMIN)
-async resetPassword(username: string, newPassword: string): Promise<void> {
-  const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
-  await axios.put(
-    `${API_URL}/admin/reset-password`,
-    { username, newPassword },
-    { headers }
-  );
-},
-
-
+  // Resetear contraseña de otro usuario (solo ADMIN)
+  async resetPassword(username: string, newPassword: string): Promise<void> {
+    const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
+    await axios.put(
+      `${API_URL}/admin/reset-password`,
+      { username, newPassword },
+      { headers }
+    );
+  },
 };
-
-
 
 export default authService;

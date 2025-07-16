@@ -158,7 +158,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
 
     try {
       const res  = await fetch(
-        `http://localhost:8080/api/v1/training-plans/trainer/${trainerId}`,
+        `http://localhost:8080/api/v1/trainers/${trainerId}/training-plans`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       if (!res.ok) throw new Error()
@@ -258,7 +258,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
               <div className="space-y-2 mb-4 text-gray-700">
                 <div>Email: {client.email}</div>
                 <div>Teléfono: {client.phoneNumber}</div>
-                <div>Desde: {new Date(client.createdAt).toLocaleDateString("es-ES")}</div>
+                <div>Creado: {new Date(client.createdAt).toLocaleDateString("es-ES")}</div>
               </div>
 
               <div className="flex flex-col space-y-2">
@@ -268,18 +268,6 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
                   </button>
                 </Link>
 
-                {!showAll && localStorage.getItem("userRole") === "ROLE_TRAINER" && (
-                  <Link to={`/trainer/client/${client.dni}/training-plans/new/edit`}>
-                    <button className="w-full bg-pink-400 text-white py-2 rounded flex items-center justify-center">
-                      <Plus className="h-4 w-4 mr-2"/> Crear Plan
-                    </button>
-                  </Link>
-                )}
-                <Link to={`/trainer/client/${client.dni}/progress/nutrition`}>
-  <button className="w-full bg-cyan-100 text-cyan-800 py-2 rounded border border-cyan-800 hover:bg-cyan-800 hover:text-white transition">
-    Ver Progreso Nutricional
-  </button>
-</Link>
               </div>
             </div>
           ))}

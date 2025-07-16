@@ -61,6 +61,7 @@ export default function TrainingPlanEdit() {
     clientDni: clientDni || "",
     exercises: [],
   });
+
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Estados para el formulario de ejercicio
@@ -124,8 +125,12 @@ export default function TrainingPlanEdit() {
         }
       } catch (error) {
         console.error("Error al cargar ejercicios:", error);
-        toast.error("Error al cargar ejercicios. Por favor intenta nuevamente.");
-        setAuthError("Error al cargar ejercicios. Por favor intenta nuevamente.");
+        toast.error(
+          "Error al cargar ejercicios. Por favor intenta nuevamente."
+        );
+        setAuthError(
+          "Error al cargar ejercicios. Por favor intenta nuevamente."
+        );
       }
     };
 
@@ -143,17 +148,22 @@ export default function TrainingPlanEdit() {
       const token = localStorage.getItem("token");
       if (!token) {
         toast.error("No se encontró token de autenticación");
-        setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.");
+        setAuthError(
+          "No se encontró token de autenticación. Por favor inicie sesión nuevamente."
+        );
         return;
       }
 
       const [planResponse, exercisesResponse] = await Promise.all([
-        fetch(`http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
+        fetch(
+          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        ),
         fetch(
           `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}/exercises`,
           {
@@ -168,7 +178,9 @@ export default function TrainingPlanEdit() {
       if (!planResponse.ok) {
         if (planResponse.status === 401 || planResponse.status === 403) {
           toast.error("No tienes permisos para acceder a este plan");
-          setAuthError("No tienes permisos para acceder a este plan. Por favor verifica tus credenciales.");
+          setAuthError(
+            "No tienes permisos para acceder a este plan. Por favor verifica tus credenciales."
+          );
         }
         throw new Error(`Error al obtener el plan: ${planResponse.statusText}`);
       }
@@ -210,7 +222,9 @@ export default function TrainingPlanEdit() {
     } catch (error) {
       console.error("Error fetching training plan:", error);
       toast.error("Error al cargar el plan de entrenamiento");
-      setAuthError("Ocurrió un error al cargar el plan. Por favor intenta nuevamente.");
+      setAuthError(
+        "Ocurrió un error al cargar el plan. Por favor intenta nuevamente."
+      );
     } finally {
       setLoading(false);
     }
@@ -276,7 +290,7 @@ export default function TrainingPlanEdit() {
         ...exerciseForm,
         series: Number(exerciseForm.series),
         repetitions: Number(exerciseForm.repetitions),
-        weight: Number(exerciseForm.weight)
+        weight: Number(exerciseForm.weight),
       };
 
       if (isEditingExercise && editingIndex !== null) {
@@ -301,7 +315,9 @@ export default function TrainingPlanEdit() {
           );
 
           if (!response.ok) {
-            throw new Error(`Error al actualizar ejercicio: ${response.statusText}`);
+            throw new Error(
+              `Error al actualizar ejercicio: ${response.statusText}`
+            );
           }
 
           const updatedExercise = await response.json();
@@ -347,7 +363,9 @@ export default function TrainingPlanEdit() {
           );
 
           if (!response.ok) {
-            throw new Error(`Error al agregar ejercicio: ${response.statusText}`);
+            throw new Error(
+              `Error al agregar ejercicio: ${response.statusText}`
+            );
           }
 
           const createdExercise = await response.json();
@@ -364,17 +382,19 @@ export default function TrainingPlanEdit() {
       clearExerciseForm();
     } catch (error) {
       console.error("Error al guardar ejercicio:", error);
-      toast.error("Error al guardar el ejercicio. Por favor intenta nuevamente.");
+      toast.error(
+        "Error al guardar el ejercicio. Por favor intenta nuevamente."
+      );
     }
   };
 
   const editExercise = (index: number) => {
     const exercise = plan.exercises[index];
-    setExerciseForm({ 
+    setExerciseForm({
       ...exercise,
       series: exercise.series.toString(),
       repetitions: exercise.repetitions.toString(),
-      weight: exercise.weight.toString()
+      weight: exercise.weight.toString(),
     });
     setIsEditingExercise(true);
     setEditingIndex(index);
@@ -435,7 +455,9 @@ export default function TrainingPlanEdit() {
         );
 
         if (!response.ok) {
-          throw new Error(`Error al eliminar ejercicio: ${response.statusText}`);
+          throw new Error(
+            `Error al eliminar ejercicio: ${response.statusText}`
+          );
         }
       }
 
@@ -451,7 +473,9 @@ export default function TrainingPlanEdit() {
       toast.success("Ejercicio eliminado correctamente");
     } catch (error) {
       console.error("Error al eliminar ejercicio:", error);
-      toast.error("Error al eliminar el ejercicio. Por favor intenta nuevamente.");
+      toast.error(
+        "Error al eliminar el ejercicio. Por favor intenta nuevamente."
+      );
     }
   };
 
@@ -483,7 +507,9 @@ export default function TrainingPlanEdit() {
 
     if (!token) {
       toast.error("No se encontró token de autenticación");
-      setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.");
+      setAuthError(
+        "No se encontró token de autenticación. Por favor inicie sesión nuevamente."
+      );
       setSaving(false);
       return;
     }
@@ -497,13 +523,6 @@ export default function TrainingPlanEdit() {
     const trainerId = Number(trainerIdStr);
     if (isNaN(trainerId)) {
       toast.error("El ID del entrenador no es válido");
-      setSaving(false);
-      return;
-    }
-
-    const clientIdNum = Number(clientDni);
-    if (isNaN(clientIdNum)) {
-      toast.error("El DNI del cliente no es válido");
       setSaving(false);
       return;
     }
@@ -524,7 +543,9 @@ export default function TrainingPlanEdit() {
       if (!clientCheckRes.ok) {
         if (clientCheckRes.status === 401 || clientCheckRes.status === 403) {
           toast.error("No tienes permisos para acceder a este cliente");
-          setAuthError("No tienes permisos para acceder a este cliente. Por favor verifica tus credenciales.");
+          setAuthError(
+            "No tienes permisos para acceder a este cliente. Por favor verifica tus credenciales."
+          );
           return;
         }
         const errorText = await clientCheckRes.text();
@@ -532,13 +553,17 @@ export default function TrainingPlanEdit() {
         toast.error("El cliente no existe o no tienes permisos para acceder");
         return;
       }
-      const clientData = await clientCheckRes.json();
 
+      const clientData = await clientCheckRes.json();
       let planIdToUse = plan.id;
 
       if (isNewPlan) {
         const planPayload = {
           name: plan.name.trim(),
+          description: plan.description,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          clientDni: clientDni, // clientDni se obtiene del localStorage
           trainerId: trainerId,
           clientId: clientData.id,
         };
@@ -561,8 +586,6 @@ export default function TrainingPlanEdit() {
 
         const createdPlan = await createRes.json();
         planIdToUse = createdPlan.id;
-  
-
       }
 
       for (const ex of plan.exercises) {
@@ -596,7 +619,9 @@ export default function TrainingPlanEdit() {
     } catch (err) {
       console.error("Error completo:", err);
       toast.error("Error al guardar el plan. Por favor intenta nuevamente.");
-      setAuthError("Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente.");
+      setAuthError(
+        "Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente."
+      );
     } finally {
       setSaving(false);
     }
@@ -623,14 +648,26 @@ export default function TrainingPlanEdit() {
         <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="h-5 w-5 text-red-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
               <p className="text-sm text-red-700">{authError}</p>
               <div className="mt-4">
-                <Link to="/login" className="text-sm font-medium text-red-700 hover:text-red-600">
+                <Link
+                  to="/"
+                  className="text-sm font-medium text-red-700 hover:text-red-600"
+                >
                   Volver a iniciar sesión <span aria-hidden="true">→</span>
                 </Link>
               </div>
@@ -655,7 +692,9 @@ export default function TrainingPlanEdit() {
               </button>
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">
-              {isNewPlan ? "Crear Plan de Entrenamiento" : "Editar Plan de Entrenamiento"}
+              {isNewPlan
+                ? "Crear Plan de Entrenamiento"
+                : "Editar Plan de Entrenamiento"}
             </h1>
           </div>
 
@@ -673,8 +712,17 @@ export default function TrainingPlanEdit() {
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -686,19 +734,26 @@ export default function TrainingPlanEdit() {
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">
           <div className="bg-cyan-50 rounded-t-lg p-4">
-            <h2 className="text-lg font-semibold text-gray-900">Detalles del Plan</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Detalles del Plan
+            </h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Nombre del Plan *
                 </label>
                 <input
                   id="name"
                   type="text"
                   value={plan.name}
-                  onChange={(e) => setPlan((prev) => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setPlan((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   placeholder="Ej: Plan de Fuerza - Principiante"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -721,13 +776,19 @@ export default function TrainingPlanEdit() {
                 </label>
                 <select
                   value={exerciseForm.exerciseId || ""}
-                  onChange={(e) => updateExerciseForm("exerciseId", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateExerciseForm("exerciseId", Number(e.target.value))
+                  }
                   className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
-                  <option value="" disabled>— Selecciona ejercicio —</option>
+                  <option value="" disabled>
+                    — Selecciona ejercicio —
+                  </option>
                   {allExercises.map((ex) => (
-                    <option key={ex.id} value={ex.id}>{ex.name}</option>
+                    <option key={ex.id} value={ex.id}>
+                      {ex.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -738,12 +799,16 @@ export default function TrainingPlanEdit() {
                 </label>
                 <select
                   value={exerciseForm.dayOfWeek}
-                  onChange={(e) => updateExerciseForm("dayOfWeek", e.target.value)}
+                  onChange={(e) =>
+                    updateExerciseForm("dayOfWeek", e.target.value)
+                  }
                   className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
                   {DAYS_OF_WEEK.map((day) => (
-                    <option key={day.value} value={day.value}>{day.label}</option>
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -811,7 +876,9 @@ export default function TrainingPlanEdit() {
                   <input
                     type="text"
                     value={exerciseForm.restTime}
-                    onChange={(e) => updateExerciseForm("restTime", e.target.value)}
+                    onChange={(e) =>
+                      updateExerciseForm("restTime", e.target.value)
+                    }
                     className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Ej: 01:00"
                     pattern="^\d{2}:\d{2}$"
@@ -854,41 +921,76 @@ export default function TrainingPlanEdit() {
               {plan.exercises.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>No hay ejercicios agregados aún.</p>
-                  <p className="text-sm">Usa el formulario de la izquierda para agregar ejercicios.</p>
+                  <p className="text-sm">
+                    Usa el formulario de la izquierda para agregar ejercicios.
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ejercicio</th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Series</th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reps</th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peso</th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descanso</th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ejercicio
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Día
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Series
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Reps
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Peso
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Descanso
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {plan.exercises.map((exercise, index) => {
-                        const dayLabel = DAYS_OF_WEEK.find((d) => d.value === exercise.dayOfWeek)?.label || exercise.dayOfWeek;
+                        const dayLabel =
+                          DAYS_OF_WEEK.find(
+                            (d) => d.value === exercise.dayOfWeek
+                          )?.label || exercise.dayOfWeek;
 
                         return (
                           <tr
                             key={index}
-                            className={`${index === editingIndex && isEditingExercise ? "bg-yellow-50" : ""} hover:bg-gray-50`}
+                            className={`${
+                              index === editingIndex && isEditingExercise
+                                ? "bg-yellow-50"
+                                : ""
+                            } hover:bg-gray-50`}
                           >
                             <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <div className="font-medium">{exercise.exerciseName}</div>
+                              <div className="font-medium">
+                                {exercise.exerciseName}
+                              </div>
                             </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{dayLabel}</td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{exercise.series}</td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{exercise.repetitions}</td>
                             <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {Number(exercise.weight) > 0 ? `${exercise.weight} kg` : "-"}
+                              {dayLabel}
                             </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{exercise.restTime}</td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {exercise.series}
+                            </td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {exercise.repetitions}
+                            </td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {Number(exercise.weight) > 0
+                                ? `${exercise.weight} kg`
+                                : "-"}
+                            </td>
+                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {exercise.restTime}
+                            </td>
                             <td className="px-3 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                               <button
                                 onClick={() => editExercise(index)}

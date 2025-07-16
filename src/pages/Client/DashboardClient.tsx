@@ -101,7 +101,7 @@ const handleLogout = () => {
 
         // Obtener plan de entrenamiento activo
         const trainingResponse = await fetch(
-          `http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`,
+          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

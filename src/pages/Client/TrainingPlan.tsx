@@ -37,7 +37,7 @@ const TrainingPlanPage: React.FC = () => {
         if (!clientDni) {
           throw new Error("No se encontró el DNI del cliente en el almacenamiento local")
         }
-        const response = await fetch(`http://localhost:8080/api/v1/training-plans/clients/${clientDni}/active`, {
+        const response = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
