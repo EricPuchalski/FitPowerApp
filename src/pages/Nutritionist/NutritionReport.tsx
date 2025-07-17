@@ -1,3 +1,4 @@
+//src/pages/Nutritionist/NutritionReport.tsx
 "use client"
 
 import type React from "react"
@@ -134,68 +135,60 @@ const today = new Date().toISOString().split('T')[0];
     }
   }
 
-const fetchReport = async () => {
-  if (!clientDni || !startDate || !endDate) {
-    setError("Por favor complete todos los campos");
-    return;
-  }
-
-  if (!activePlan) {
-    setError("No hay un plan nutricional activo. No se puede generar el informe.");
-    return;
-  }
-
-  // Validar que las fechas sean posteriores a la creación del plan
-  const planCreatedDate = new Date(activePlan.createdAt);
-  const reportStartDate = new Date(startDate);
-  const reportEndDate = new Date(endDate);
-  const currentDate = new Date(today);
-
-  if (reportStartDate < planCreatedDate) {
-    setError(
-      `La fecha de inicio del informe no puede ser anterior a la creación del plan (${new Date(
-        activePlan.createdAt
-      ).toLocaleDateString()})`
-    );
-    return;
-  }
-
-  if (reportEndDate > currentDate) {
-    setError("La fecha de fin no puede ser posterior al día actual.");
-    return;
-  }
-
-  setLoading(true);
-  setError("");
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("Token de autenticación no encontrado");
+  const fetchReport = async () => {
+    if (!clientDni || !startDate || !endDate) {
+      setError("Por favor complete todos los campos");
+      return;
     }
-
-    const response = await fetch(
-      `http://localhost:8080/api/v1/clients/${clientDni}/reports/nutrition-plan?startDate=${startDate}&endDate=${endDate}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+    if (!activePlan) {
+      setError("No hay un plan nutricional activo. No se puede generar el informe.");
+      return;
+    }
+    // Crear fechas solo con la parte de fecha (sin hora)
+    const planCreatedDate = new Date(activePlan.createdAt.split('T')[0]);
+    const reportStartDate = new Date(startDate);
+    const reportEndDate = new Date(endDate);
+    const currentDate = new Date(today);
+    // Validar que la fecha de inicio no sea anterior a la creación del plan
+    if (reportStartDate < planCreatedDate) {
+      setError(
+        `La fecha de inicio del informe no puede ser anterior a la creación del plan (${planCreatedDate.toLocaleDateString()})`
+      );
+      return;
+    }
+    if (reportEndDate > currentDate) {
+      setError("La fecha de fin no puede ser posterior al día actual.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token de autenticación no encontrado");
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("Error al obtener el informe");
+      const response = await fetch(
+        `http://localhost:8080/api/v1/clients/${clientDni}/reports/nutrition-plan?startDate=${startDate}&endDate=${endDate}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Error al obtener el informe");
+      }
+      const data: NutritionReport = await response.json();
+      setReport(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const data: NutritionReport = await response.json();
-    setReport(data);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Error desconocido");
-  } finally {
-    setLoading(false);
-  }
-};
+//xdxdlol
 
   useEffect(() => {
     if (clientDni) {
