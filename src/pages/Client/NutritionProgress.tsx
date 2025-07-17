@@ -7,13 +7,20 @@ import { FooterPag } from "../../components/Footer";
 import { ClientHeader } from "../../components/ClientHeader";
 import { Progress } from "antd"; // usar Ant Design para barras
 
+interface MetricDTO { 
+  target: number;              // valor objetivo del plan
+  realConsumption: number;     // consumo real promedio
+  compliancePercentage: number; // porcentaje de cumplimiento
+  delta: number;               // cambio entre inicio y fin (para stagnation)
+  daysCounted: number;         // días con registros
+} 
+
 interface ProgressDTO {
   adherenceRate: number;    // 0.0 - 1.0
-  overallCompliance: number;
-  calories: { average: number; delta: number; daysCounted: number };
-  proteins: { average: number; delta: number; daysCounted: number };
-  carbs: { average: number; delta: number; daysCounted: number };
-  fats: { average: number; delta: number; daysCounted: number };
+  calories: MetricDTO;
+  proteins: MetricDTO;
+  carbs: MetricDTO;
+  fats: MetricDTO;
 }
 
 export default function NutritionProgress() {
@@ -51,36 +58,96 @@ export default function NutritionProgress() {
     navigate("/");
   };
 
+  // Función para obtener el nombre legible del macronutriente
+  const getMacroName = (key: string): string => {
+    const names: Record<string, string> = {
+      calories: "Calorías",
+      proteins: "Proteínas", 
+      carbs: "Carbohidratos",
+      fats: "Grasas"
+    };
+    return names[key] || key;
+  };
+
+  // Función para obtener la unidad del macronutriente
+  const getMacroUnit = (key: string): string => {
+    return key === "calories" ? "kcal" : "g";
+  };
+
+  // Función para obtener el color de la barra de progreso
+  const getProgressColor = (key: string, percentage: number): string => {
+    if (percentage > 100) {
+      return "#ff4d4f"; // Rojo para excedido
+    }
+    // Colores originales para normal
+    return key === "calories" || key === "carbs" ? "#faad14" : "#f5222d";
+  };
+
+  // Función para renderizar el estado de cumplimiento
+  const renderComplianceStatus = (metric: MetricDTO) => {
+    const isExceeded = metric.compliancePercentage > 100;
+    
+    return (
+      <div className="mt-2 text-sm">
+        {isExceeded ? (
+          <span className="text-red-600 font-medium">
+            Excedido: {metric.compliancePercentage.toFixed(1)}%
+          </span>
+        ) : (
+          <span className="text-gray-600">
+            Porcentaje de cumplimiento: {metric.compliancePercentage.toFixed(1)}%
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <ClientHeader fullName={clientDni || ""} onLogout={handleLogout} />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-4">Progreso Nutricional</h2>
+        <h2 className="text-2xl font-bold mb-6">Progreso Nutricional</h2>
         {loading && <p>Cargando…</p>}
         {error && <p className="text-red-500">{error}</p>}
         {data && (
           <div className="space-y-6">
-            <div>
-              <p className="font-medium">Adherencia al plan:</p>
-              <Progress percent={Math.round(data.adherenceRate * 100)} />
+            {/* Adherencia al plan */}
+            <div className="bg-white p-4 rounded-lg shadow">
+              <p className="font-medium mb-2">Adherencia al plan:</p>
+              <Progress 
+                percent={Math.round(data.adherenceRate * 100)} 
+                strokeColor="#1890ff"
+                showInfo
+              />
             </div>
-            <div>
-              <p className="font-medium">Cumplimiento global:</p>
-              <Progress percent={Math.round(data.overallCompliance * 100)} status="active" />
-            </div>
+
+            {/* Macronutrientes - Con indicador de excedido */}
             {(["calories", "proteins", "carbs", "fats"] as const).map(key => {
-              const m = data[key];
+              const metric = data[key];
+              const macroName = getMacroName(key);
+              const unit = getMacroUnit(key);
+              const isExceeded = metric.compliancePercentage > 100;
+              
               return (
-                <div key={key}>
-                  <p className="font-medium capitalize">{key}</p>
+                <div key={key} className="bg-white p-4 rounded-lg shadow">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-lg">{macroName}</h3>
+                    <div className="flex justify-between items-center text-sm text-gray-600 mt-1">
+                      <span>Objetivo: {metric.target.toFixed(1)} {unit}</span>
+                      <span className={isExceeded ? "text-red-600 font-medium" : ""}>
+                        Real: {metric.realConsumption.toFixed(1)} {unit}
+                      </span>
+                    </div>
+                  </div>
+                  
                   <Progress
-                    percent={Math.round(m.average * 100)}
-                    strokeColor={m.average >= 0.8 ? undefined : m.average >= 0.5 ? "orange" : "red"}
-                    showInfo
+                    percent={Math.min(Math.round(metric.compliancePercentage), 100)} // Limitar a 100% visualmente
+                    strokeColor={getProgressColor(key, metric.compliancePercentage)}
+                    showInfo={!isExceeded} // No mostrar porcentaje en la barra si está excedido
                   />
-                  <p className="text-sm text-gray-600 mt-1">
-                    Cambio: {m.delta >= 0 ? "+" : ""}{(m.delta * 100).toFixed(1)}% desde mitad del periodo
-                  </p>
+                  
+                  {/* Mostrar estado de cumplimiento */}
+                  {renderComplianceStatus(metric)}
                 </div>
               );
             })}
