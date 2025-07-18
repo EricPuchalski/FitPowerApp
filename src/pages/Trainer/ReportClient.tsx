@@ -172,7 +172,7 @@ export default function ReportClient() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/clients/${clientDni}/reports/training?startDate=${startDate}&endDate=${endDate}`,
+        `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/reports?startDate=${startDate}&endDate=${endDate}`,
         {
           method: "POST",
           headers: {

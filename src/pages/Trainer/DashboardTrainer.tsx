@@ -10,7 +10,12 @@ import {
   Menu,
   X,
   Dumbbell,
-  Home
+  Home,
+  Calendar,
+  Mail,
+  Phone,
+  Target,
+  User
 } from 'lucide-react'
 import { FooterPag } from '../../components/Footer'
 import { TrainerHeader } from "../../components/TrainerHeader"
@@ -31,6 +36,7 @@ interface Client {
   email: string
   phoneNumber: string
   createdAt: string
+  goal: string
 }
 
 interface DashboardTrainerProps {
@@ -137,7 +143,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
     if (!gymName || !token) throw new Error()
 
     const res = await fetch(
-      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients`,
+      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients/without-training-plan`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -223,14 +229,14 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
             onClick={() => setShowAll(true)}
             className={`px-4 py-2 rounded ${ showAll ? 'bg-blue-900 text-white' : 'bg-gray-200'}`}
           >
-            Todos los Clientes
+            Clientes libres
           </button>
         </div>
 
         {/* Título y descripción */}
         <div className="mb-4">
           <h2 className="text-xl font-semibold">
-            {showAll ? 'Todos los Clientes del Gimnasio' : 'Mis Clientes Activos'}
+            {showAll ? `Clientes de ${currentUser?.gymName} sin un plan activo` : 'Mis Clientes Activos'} 
           </h2>
           {!showAll && (
             <p className="text-sm text-gray-600">
@@ -247,31 +253,55 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         )}
 
         {/* Grilla de clientes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clients.map(client => (
-            <div key={client.id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition p-6">
-              <h3 className="font-semibold text-gray-900 text-lg">
-                {client.name} {client.lastName}
-              </h3>
-              <p className="text-gray-600 text-sm mb-4">DNI: {client.dni}</p>
-
-              <div className="space-y-2 mb-4 text-gray-700">
-                <div>Email: {client.email}</div>
-                <div>Teléfono: {client.phoneNumber}</div>
-                <div>Creado: {new Date(client.createdAt).toLocaleDateString("es-ES")}</div>
-              </div>
-
-              <div className="flex flex-col space-y-2">
-                <Link to={`/trainer/client/${client.dni}/training-plans`}>
-                  <button className="w-full bg-blue-900 text-white py-2 rounded">
-                    Ver Cliente
-                  </button>
-                </Link>
-
-              </div>
-            </div>
-          ))}
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {clients.map(client => (
+    <div key={client.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 border-l-4 border-blue-500">
+      <div className="flex items-center mb-3">
+        <div className="bg-blue-500 rounded-full p-2 mr-3">
+          <User className="w-4 h-4 text-white" />
         </div>
+        <div>
+          <h3 className="font-semibold text-gray-900 text-lg">
+            {client.name} {client.lastName}
+          </h3>
+          <p className="text-gray-500 text-xs">DNI: {client.dni}</p>
+        </div>
+      </div>
+      
+      {/* Goal destacado */}
+      <div className="bg-blue-50 rounded-md p-3 mb-3 border border-blue-200">
+        <div className="flex items-center mb-1">
+          <Target className="w-4 h-4 text-blue-600 mr-2" />
+          <span className="font-medium text-blue-800 text-xs uppercase">Objetivo</span>
+        </div>
+        <p className="text-blue-900 font-medium text-sm">{client.goal}</p>
+      </div>
+      
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center text-gray-600">
+          <Mail className="w-3 h-3 mr-2 text-gray-500" />
+          <span className="text-xs">{client.email}</span>
+        </div>
+        <div className="flex items-center text-gray-600">
+          <Phone className="w-3 h-3 mr-2 text-gray-500" />
+          <span className="text-xs">{client.phoneNumber}</span>
+        </div>
+        <div className="flex items-center text-gray-600">
+          <Calendar className="w-3 h-3 mr-2 text-gray-500" />
+          <span className="text-xs">Creado: {new Date(client.createdAt).toLocaleDateString("es-ES")}</span>
+        </div>
+      </div>
+      
+      <div className="flex flex-col">
+        <Link to={`/trainer/client/${client.dni}/training-plans`}>
+          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-medium transition-colors">
+            Ver Cliente
+          </button>
+        </Link>
+      </div>
+    </div>
+  ))}
+</div>
 
         {/* Estado “sin clientes” */}
         {clients.length === 0 && !loading && (
