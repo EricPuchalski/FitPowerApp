@@ -419,7 +419,7 @@ const handleLogout = () => {
               >
                 <div className="text-3xl mb-2">📊</div>
                 <span className="text-sm font-medium text-center">
-                  Ver mi progreso
+                  Ver progreso de entrenamiento
                 </span>
               </button>
               <button

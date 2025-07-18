@@ -311,10 +311,25 @@ export default function TrainingPlanDetail() {
 
           {/* Navigation y botones de acción */}
           <div className="flex justify-between items-center mb-8">
-            <Link to="/trainer/dashboard" className="flex items-center text-blue-600 hover:underline">
-              <ArrowLeft className="h-5 w-5 mr-1" />
-              Volver al dashboard
-            </Link>
+        <Link
+  to="/trainer/dashboard"
+  className="group relative inline-flex items-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 px-6 py-3 text-white font-semibold shadow-lg transition-all duration-300 ease-out hover:shadow-xl hover:shadow-blue-500/25 active:scale-95 mb-6"
+>
+  {/* Efecto de brillo animado */}
+  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
+  
+  {/* Resplandor de fondo */}
+  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-300/20 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+  
+  {/* Contenido del botón */}
+  <div className="relative flex items-center">
+    <ArrowLeft className="h-5 w-5 mr-3 group-hover:-translate-x-2 transition-all duration-300 ease-out drop-shadow-sm" />
+    <span className="font-medium tracking-wide">Volver al dashboard</span>
+  </div>
+  
+  {/* Indicador de interacción */}
+  <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-blue-300 group-hover:w-full transition-all duration-300 ease-out" />
+</Link>
             <div className="flex space-x-4">
               <Link
                 to={`/trainer/client/${clientDni}/training-plans/new/edit`}
@@ -468,10 +483,10 @@ export default function TrainingPlanDetail() {
               {sortedDays.map((day) => (
                 <div key={day} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
-                    <h3 className="text-xl font-bold text-black flex items-center">
+                    <h3 className="text-xl font-bold text-white flex items-center">
                       <CalendarDays className="h-5 w-5 mr-2" />
                       {day}
-                      <span className="ml-auto bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                      <span className="ml-auto bg-black bg-opacity-20 px-3 py-1 rounded-full text-sm">
                         {exercisesByDay[day].length} ejercicios
                       </span>
                     </h3>
