@@ -40,8 +40,8 @@ export default function DashboardNutritionist() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>("ALL")
-    const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<ViewMode>("MINE")
+  const navigate = useNavigate();
     const { logout } = useAuth();
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function DashboardNutritionist() {
       })
 
       // Carga inicial: todos los clientes
-      await loadClientsByGym(data.gymName)
+      await loadMyClients()
     } catch (err) {
       setError("Error al cargar información del nutricionista")
       setLoading(false)
@@ -87,27 +87,27 @@ export default function DashboardNutritionist() {
   }
 
   const loadClientsByGym = async (gymName: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const token = localStorage.getItem("token")
-      const res = await fetch(
-        `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      if (!res.ok) throw new Error("Error al cargar los clientes del gimnasio")
-      const data: Client[] = await res.json()
-      setClients(data)
-    } catch (err) {
-      setError("Error al obtener los clientes del gimnasio")
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true);
+  setError(null);
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients/without-nutrition-plan`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!res.ok) throw new Error("Error al cargar clientes sin plan nutricional");
+    const data: Client[] = await res.json();
+    setClients(data);
+  } catch (err) {
+    setError("Error al obtener clientes sin plan nutricional");
+  } finally {
+    setLoading(false);
+  }
   }
 
   const loadMyClients = async () => {
@@ -174,18 +174,19 @@ export default function DashboardNutritionist() {
 
 {/* Botones de filtro */}
 <div className="mt-4 flex space-x-4 mb-6">
-  <button
-    onClick={() => handleViewChange("ALL")}
-    className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
-  >
-    Todos los clientes
-  </button>
+  
           <button
             onClick={() => handleViewChange("MINE")}
             className={`px-4 py-2 rounded ${viewMode === "MINE" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
           >
-            Mis clientes
+            Mis clientes Activos
           </button>
+          <button
+    onClick={() => handleViewChange("ALL")}
+    className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+  >
+    Clientes libres
+  </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

@@ -267,11 +267,17 @@ export default function NutritionPlanEdit() {
             Objetivo Calórico *
           </label>
           <input
-            type="number"
-            value={plan.caloricTarget}
-            onChange={(e) =>
-              setPlan({ ...plan, caloricTarget: +e.target.value })
-            }
+            type="text"
+            value={plan.caloricTarget === 0 ? '' : plan.caloricTarget.toString()}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '' || /^\d+$/.test(value)) {
+                setPlan({ 
+                  ...plan, 
+                  caloricTarget: value === '' ? 0 : parseInt(value, 10) 
+                });
+              }
+            }}
             className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -281,11 +287,17 @@ export default function NutritionPlanEdit() {
               Carbs diarios *
             </label>
             <input
-              type="number"
-              value={plan.dailyCarbs}
-              onChange={(e) =>
-                setPlan({ ...plan, dailyCarbs: +e.target.value })
-              }
+              type="text"
+              value={plan.dailyCarbs === 0 ? '' : plan.dailyCarbs.toString()}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d+$/.test(value)) {
+                  setPlan({ 
+                    ...plan, 
+                    dailyCarbs: value === '' ? 0 : parseInt(value, 10) 
+                  });
+                }
+              }}
               className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -294,12 +306,19 @@ export default function NutritionPlanEdit() {
               Proteínas diarias *
             </label>
             <input
-              type="number"
-              value={plan.dailyProteins}
-              onChange={(e) =>
-                setPlan({ ...plan, dailyProteins: +e.target.value })
-              }
-              className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+             type="text"
+             value={plan.dailyProteins === 0 ? '' : plan.dailyProteins.toString()}
+             onChange={(e) => {
+               const value = e.target.value;
+               if (value === '' || /^\d+$/.test(value)) {
+                 setPlan({ 
+                   ...plan, 
+                   dailyProteins: value === '' ? 0 : parseInt(value, 10) 
+                 });
+               }
+             }}
+             className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+           
             />
           </div>
           <div>
@@ -307,9 +326,17 @@ export default function NutritionPlanEdit() {
               Grasas diarias *
             </label>
             <input
-              type="number"
-              value={plan.dailyFats}
-              onChange={(e) => setPlan({ ...plan, dailyFats: +e.target.value })}
+              type="text"
+              value={plan.dailyFats === 0 ? '' : plan.dailyFats.toString()}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d+$/.test(value)) {
+                  setPlan({ 
+                    ...plan, 
+                    dailyFats: value === '' ? 0 : parseInt(value, 10) 
+                  });
+                }
+              }}
               className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
