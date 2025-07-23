@@ -4,11 +4,3 @@ export interface LoginResponse {
 }
 
 // Interfaz para los datos decodificados del token JWT
-export interface DecodedToken {
-  sub: string;    // username
-  dni: string;
-  email: string;
-  roles: string[];
-  iat: number;    // issued at
-  exp: number;    // expiration time
-}

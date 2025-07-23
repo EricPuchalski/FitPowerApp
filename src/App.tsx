@@ -36,6 +36,7 @@ import {
 import ReportClient from "./pages/Trainer/ReportClient";
 import NotFound from "./components/NotFound";
 import NutritionReportPage from "./pages/Nutritionist/NutritionReport";
+import TrainingPlanRecords from "./pages/Trainer/TrainingPlanRecords";
 
 function App() {
   return (
@@ -175,6 +176,14 @@ function App() {
           element={
             <TrainerRoute>
               <TrainingPlans />
+            </TrainerRoute>
+          }
+        />
+                <Route
+          path="/trainer/client/:clientDni/training-plans/:idPlan/records"
+          element={
+            <TrainerRoute>
+              <TrainingPlanRecords />
             </TrainerRoute>
           }
         />

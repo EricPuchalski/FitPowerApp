@@ -442,33 +442,41 @@ export default function TrainingPlanDetail() {
                 </div>
               </div>
 
-              {/* Botones de acción del plan */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link
-                  to={`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`}
-                  onClick={() => toast.info(`Editando plan: ${plan.name}`)}
-                >
-                  <button className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition-colors">
-                    Editar Ejercicios
-                  </button>
-                </Link>
-                <Link
-                  to={`/trainer/client/${clientDni}/progress`}
-                  onClick={() => toast.info(`Viendo progreso del cliente`)}
-                >
-                  <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors">
-                    Ver Progreso De Entrenamiento
-                  </button>
-                </Link>
-                <Link
-                  to={`/trainer/client/${clientDni}/training-plans/report`}
-                  onClick={() => toast.info(`Creando informe de progreso`)}
-                >
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-colors">
-                    Crear Informe
-                  </button>
-                </Link>
-              </div>
+ {/* Botones de acción del plan */}
+<div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+  <Link
+    to={`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`}
+    onClick={() => toast.info(`Editando plan: ${plan.name}`)}
+  >
+    <button className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition-colors">
+      Editar Ejercicios
+    </button>
+  </Link>
+  <Link
+    to={`/trainer/client/${clientDni}/training-plans/${plan.id}/records`}
+    onClick={() => toast.info(`Viendo registros del plan`)}
+  >
+    <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-colors">
+      Ver Registros del Plan
+    </button>
+  </Link>
+  <Link
+    to={`/trainer/client/${clientDni}/progress`}
+    onClick={() => toast.info(`Viendo progreso del cliente`)}
+  >
+    <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors">
+      Ver Progreso De Entrenamiento
+    </button>
+  </Link>
+  <Link
+    to={`/trainer/client/${clientDni}/training-plans/report`}
+    onClick={() => toast.info(`Creando informe de progreso`)}
+  >
+    <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-colors">
+      Crear Informe
+    </button>
+  </Link>
+</div>
             </div>
           )}
 

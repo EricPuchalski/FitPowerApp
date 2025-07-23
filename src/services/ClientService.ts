@@ -94,31 +94,6 @@ const ClientService = (p0: string) => {
   };
 
 
-const fetchClientByDni = async (dni: string): Promise<Client | null> => {
-  const token = localStorage.getItem("token")
-  try {
-    const response = await fetch(`http://localhost:8080/api/v1/clients/${dni}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (response.status === 404) {
-      return null
-    }
-
-    if (!response.ok) {
-      throw new Error("Error al obtener el cliente")
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error("Error fetching client:", error)
-    throw error
-  }
-}
- 
 
   return {
     clients,
@@ -129,7 +104,6 @@ const fetchClientByDni = async (dni: string): Promise<Client | null> => {
     fetchTrainers,
     fetchNutritionists,
     fetchGyms,
-    fetchClientByDni,
     createClient
   };
 };
