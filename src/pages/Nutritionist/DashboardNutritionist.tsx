@@ -30,6 +30,7 @@ interface Client {
   email: string
   phoneNumber: string
   createdAt: string
+  activePlanId?: number // ← NUEVO: para almacenar el ID del plan activo
 }
 
 type ViewMode = "ALL" | "MINE"
@@ -42,7 +43,33 @@ export default function DashboardNutritionist() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>("MINE")
   const navigate = useNavigate();
-    const { logout } = useAuth();
+  const { logout } = useAuth();
+
+  // ← NUEVA FUNCIÓN: Obtener plan activo
+  const getActivePlan = async (clientDni: string) => {
+    const token = localStorage.getItem("token")
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/active`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) return null
+      const plan = await res.json()
+      return plan.id
+    } catch {
+      return null
+    }
+  }
+
+  // ← NUEVA FUNCIÓN: Cargar planes activos para todos los clientes
+  const loadActivePlansForClients = async (clientList: Client[]) => {
+    const updatedClients = await Promise.all(
+      clientList.map(async (client) => {
+        const activePlanId = await getActivePlan(client.dni)
+        return { ...client, activePlanId }
+      })
+    )
+    setClients(updatedClients)
+  }
 
   useEffect(() => {
     const dni = localStorage.getItem("userDni")
@@ -88,26 +115,28 @@ export default function DashboardNutritionist() {
 
   const loadClientsByGym = async (gymName: string) => {
     setLoading(true);
-  setError(null);
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(
-      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients/without-nutrition-plan`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    if (!res.ok) throw new Error("Error al cargar clientes sin plan nutricional");
-    const data: Client[] = await res.json();
-    setClients(data);
-  } catch (err) {
-    setError("Error al obtener clientes sin plan nutricional");
-  } finally {
-    setLoading(false);
-  }
+    setError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients/without-nutrition-plan`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Error al cargar clientes sin plan nutricional");
+      const data: Client[] = await res.json();
+      
+      // ← MODIFICADO: Cargar planes activos después de obtener clientes
+      await loadActivePlansForClients(data);
+    } catch (err) {
+      setError("Error al obtener clientes sin plan nutricional");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const loadMyClients = async () => {
@@ -128,7 +157,9 @@ export default function DashboardNutritionist() {
       )
       if (!res.ok) throw new Error("Error al cargar mis clientes")
       const data: Client[] = await res.json()
-      setClients(data)
+      
+      // ← MODIFICADO: Cargar planes activos después de obtener clientes
+      await loadActivePlansForClients(data);
     } catch (err) {
       setError("Error al obtener mis clientes")
     } finally {
@@ -154,9 +185,9 @@ export default function DashboardNutritionist() {
   }
 
   const handleLogout = () => {
-  logout();
-  navigate("/"); // o "/login" si tenés una ruta específica
-};
+    logout();
+    navigate("/"); // o "/login" si tenés una ruta específica
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -170,11 +201,10 @@ export default function DashboardNutritionist() {
         </div>
         <div className="mt-4">
  
-</div>
+        </div>
 
-{/* Botones de filtro */}
-<div className="mt-4 flex space-x-4 mb-6">
-  
+        {/* Botones de filtro */}
+        <div className="mt-4 flex space-x-4 mb-6">
           <button
             onClick={() => handleViewChange("MINE")}
             className={`px-4 py-2 rounded ${viewMode === "MINE" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
@@ -182,11 +212,11 @@ export default function DashboardNutritionist() {
             Mis clientes Activos
           </button>
           <button
-    onClick={() => handleViewChange("ALL")}
-    className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
-  >
-    Clientes libres
-  </button>
+            onClick={() => handleViewChange("ALL")}
+            className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Clientes libres
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -231,12 +261,23 @@ export default function DashboardNutritionist() {
                   </button>
                 </Link>
                 <Link to={`/nutritionist/client/${client.dni}/progress/nutrition`}>
-  <button className="w-full bg-green-100 text-green-800 py-2 rounded border border-green-800 hover:bg-green-800 hover:text-white transition">
-    Ver Progreso Nutricional
-  </button>
-</Link>
+                  <button className="w-full bg-green-100 text-green-800 py-2 rounded border border-green-800 hover:bg-green-800 hover:text-white transition">
+                    Ver Progreso Nutricional
+                  </button>
+                </Link>
+                {/* ← MODIFICADO: Usar activePlanId en lugar de client.id */}
+                {client.activePlanId ? (
+                  <Link to={`/nutritionist/client/${client.dni}/nutrition-plans/${client.activePlanId}/records`}>
+                    <button className="w-full bg-blue-600 text-white py-2 rounded">
+                      Ver Registros
+                    </button>
+                  </Link>
+                ) : (
+                  <button className="w-full bg-gray-400 text-white py-2 rounded cursor-not-allowed" disabled>
+                    Sin Plan Activo
+                  </button>
+                )}
               </div>
-
             </div>
           ))}
         </div>

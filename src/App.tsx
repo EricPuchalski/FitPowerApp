@@ -23,6 +23,8 @@ import TrainingPlanEdit from "./pages/Trainer/TrainingPlanEdit";
 import TrainingPlans from "./pages/Trainer/TrainingPlans";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ResetPasswordPage from "./pages/Admin/AdminResetPasswordPage";
+import { ClientNutritionRecords } from './pages/Nutritionist/ClientNutritionRecords'
+
 
 // Importar componentes de rutas protegidas
 import {
@@ -262,7 +264,16 @@ function App() {
             </NutritionistRoute>
           }
         />
-
+        <Route
+  path="/nutritionist/client/:dni/nutrition-plans/:planId/records"
+  element={
+     <NutritionistRoute>
+       <ClientNutritionRecords />
+     </NutritionistRoute>
+   }
+ />
+        
+        
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans/report"
           element={
@@ -271,6 +282,8 @@ function App() {
             </NutritionistRoute>
           }
         />
+      
+
 
         {/* ==================== RUTAS COMPARTIDAS ==================== */}
         {/* Ejercicios - Solo Trainer y Admin pueden acceder */}
