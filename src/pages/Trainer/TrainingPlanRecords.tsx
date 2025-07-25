@@ -1,3 +1,5 @@
+//src/pages/Trainer/TrainingPlanRecords.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
