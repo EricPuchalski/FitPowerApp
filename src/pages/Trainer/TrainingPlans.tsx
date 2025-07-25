@@ -23,34 +23,10 @@ import "react-toastify/dist/ReactToastify.css"
 import { FooterPag } from "../../components/Footer"
 import { TrainerHeader } from "../../components/TrainerHeader"
 import { useAuth } from "../../auth/hook/useAuth"
+import { TrainingPlan } from "../../model/TrainingPlan"
+import { ExerciseRoutine } from "../../model/ExerciseRoutine"
 
 // Definición de tipos basados en tus modelos
-interface ExerciseRoutine {
-  id?: number
-  routineId: number
-  exerciseId: number
-  exerciseName: string
-  series: number
-  repetitions: number
-  weight: number | null
-  restTime: string
-  day: string
-  trainingPlanId?: number
-}
-
-interface TrainingPlan {
-  id: number
-  name: string
-  createdAt: string
-  trainerDni: string
-  trainerName: string
-  clientDni: string
-  clientName: string
-  trainerSpecification: string
-  clientGoal: string
-  active: boolean
-  exercises: ExerciseRoutine[]
-}
 
 interface ClientInfo {
   name: string

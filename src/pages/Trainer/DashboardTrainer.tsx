@@ -20,23 +20,13 @@ import {
 import { FooterPag } from '../../components/Footer'
 import { TrainerHeader } from "../../components/TrainerHeader"
 import { useAuth } from "../../auth/hook/useAuth"
+import { Client } from "../../model/Client"
 
 interface User {
   dni: string
   name: string
   gymName: string
   role: string
-}
-
-interface Client {
-  id: number
-  dni: string
-  name: string
-  lastName: string
-  email: string
-  phoneNumber: string
-  createdAt: string
-  goal: string
 }
 
 interface DashboardTrainerProps {

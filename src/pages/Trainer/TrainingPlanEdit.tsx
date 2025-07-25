@@ -8,22 +8,14 @@ import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../auth/hook/useAuth";
 import { FooterPag } from "../../components/Footer";
 import { TrainerHeader } from "../../components/TrainerHeader";
+import { ExerciseRoutine } from "../../model/ExerciseRoutine";
 
 interface SimpleExercise {
   id: number;
   name: string;
 }
 
-interface Exercise {
-  id?: number;
-  exerciseId: number;
-  exerciseName: string;
-  series: string | number;
-  repetitions: string | number;
-  weight: string | number;
-  dayOfWeek: string;
-  restTime: string;
-}
+
 
 interface TrainingPlan {
   id?: number;
@@ -65,7 +57,7 @@ export default function TrainingPlanEdit() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Estados para el formulario de ejercicio
-  const [exerciseForm, setExerciseForm] = useState<Exercise>({
+  const [exerciseForm, setExerciseForm] = useState<ExerciseRoutine>({
     exerciseId: 0,
     exerciseName: "",
     series: "3",

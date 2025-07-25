@@ -11,4 +11,5 @@ export type Client = {
     initialPhysicalCondition: string;
     gymName: string;
     active: boolean;
+    createdAt: Date;
   };
