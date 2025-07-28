@@ -25,8 +25,8 @@ import { TrainerHeader } from "../../components/TrainerHeader";
 import { useAuth } from "../../auth/hook/useAuth";
 import { TrainingPlan } from "../../model/TrainingPlan";
 import { ExerciseRoutine } from "../../model/ExerciseRoutine";
-
-// Definición de tipos basados en tus modelos
+import { fetchClientData } from "../../services/ClientService";
+import { fetchActiveTrainingPlan } from "../../services/TrainingPlanService";
 
 interface ClientInfo {
   name: string;
@@ -50,22 +50,10 @@ export default function TrainingPlanDetail() {
       setLoading(true);
       setError(null);
       setNoPlans(false);
-      const token = localStorage.getItem("token");
-
+      
       try {
-        // 1️⃣ Obtener información del cliente
-        const clientRes = await fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (!clientRes.ok) {
-          throw new Error("Error al cargar la información del cliente");a
-        }
-
-        const clientData = await clientRes.json();
+        // 1️⃣ Obtener información del cliente usando el servicio
+        const clientData = await fetchClientData(clientDni!);
         setClientInfo({
           name: clientData.name,
           email: clientData.email,
@@ -73,36 +61,27 @@ export default function TrainingPlanDetail() {
           goal: clientData.goal,
         });
 
-        // 2️⃣ Obtener plan de entrenamiento activo
-        const plansRes = await fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        // 2️⃣ Obtener plan de entrenamiento activo usando el servicio
+        const trainingPlanData = await fetchActiveTrainingPlan(clientDni!);
+        
+        const trainingPlan: TrainingPlan = {
+          ...trainingPlanData,
+          exercises: trainingPlanData.exercises ?? trainingPlanData.exerciseRoutines ?? [],
+        };
 
-        if (plansRes.status === 404) {
+        if (!trainingPlan.exercises.length && !trainingPlan.active) {
           setNoPlans(true);
-        } else if (!plansRes.ok) {
-          throw new Error(`Error al cargar el plan (${plansRes.status})`);
         } else {
-          const raw = await plansRes.json();
-          console.log("Plan de entrenamiento activo:", raw);
-          const trainingPlan: TrainingPlan = {
-            ...raw,
-            exercises: raw.exercises ?? raw.exerciseRoutines ?? [],
-          };
-
-          if (!trainingPlan.exercises.length && !trainingPlan.active) {
-            setNoPlans(true);
-          } else {
-            setPlan(trainingPlan);
-          }
+          setPlan(trainingPlan);
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Error desconocido";
-        setError(msg);
-        toast.error(msg);
+        if ((err as Error).message.includes("404")) {
+          setNoPlans(true);
+        } else {
+          const msg = err instanceof Error ? err.message : "Error desconocido";
+          setError(msg);
+          toast.error(msg);
+        }
       } finally {
         setLoading(false);
       }
@@ -127,7 +106,7 @@ export default function TrainingPlanDetail() {
       SUNDAY: "Domingo",
     };
 
-    return dias[day.toUpperCase()] || day; // en caso de que venga ya traducido o no exista
+    return dias[day.toUpperCase()] || day;
   };
 
   // Agrupar ejercicios por día
@@ -159,7 +138,6 @@ export default function TrainingPlanDetail() {
     return indexA - indexB;
   });
 
-  // 🌀 Skeleton de carga
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -176,7 +154,6 @@ export default function TrainingPlanDetail() {
     );
   }
 
-  // ⚠️ Error inesperado
   if (error && !noPlans) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -188,7 +165,6 @@ export default function TrainingPlanDetail() {
     );
   }
 
-  // 📭 Sin planes de entrenamiento
   if (noPlans) {
     return (
       <>
@@ -197,7 +173,6 @@ export default function TrainingPlanDetail() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <ToastContainer />
 
-            {/* Navigation */}
             <Link
               to="/trainer/dashboard"
               className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-200 mb-6 group"
@@ -206,13 +181,11 @@ export default function TrainingPlanDetail() {
               <span className="font-medium">Volver al dashboard</span>
             </Link>
 
-            {/* Header Section */}
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">
                 Plan Activo del Cliente
               </h1>
 
-              {/* Client Info Card */}
               <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -233,7 +206,6 @@ export default function TrainingPlanDetail() {
                 </div>
               </div>
 
-              {/* Client Goal */}
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-lg p-6 mb-8 shadow-md">
                 <div className="flex items-center mb-3">
                   <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center mr-3">
@@ -250,7 +222,6 @@ export default function TrainingPlanDetail() {
               </div>
             </div>
 
-            {/* No Plans Content */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -294,7 +265,6 @@ export default function TrainingPlanDetail() {
     );
   }
 
-  // ✅ Mostrar plan activo completo
   return (
     <>
       <TrainerHeader onLogout={handleLogout} />
@@ -302,27 +272,19 @@ export default function TrainingPlanDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <ToastContainer />
 
-          {/* Navigation y botones de acción */}
           <div className="flex justify-between items-center mb-8">
             <Link
               to="/trainer/dashboard"
               className="group relative inline-flex items-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 px-6 py-3 text-white font-semibold shadow-lg transition-all duration-300 ease-out hover:shadow-xl hover:shadow-blue-500/25 active:scale-95 mb-6"
             >
-              {/* Efecto de brillo animado */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
-
-              {/* Resplandor de fondo */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-300/20 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* Contenido del botón */}
               <div className="relative flex items-center">
                 <ArrowLeft className="h-5 w-5 mr-3 group-hover:-translate-x-2 transition-all duration-300 ease-out drop-shadow-sm" />
                 <span className="font-medium tracking-wide">
                   Volver al dashboard
                 </span>
               </div>
-
-              {/* Indicador de interacción */}
               <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-blue-300 group-hover:w-full transition-all duration-300 ease-out" />
             </Link>
             <div className="flex space-x-4">
@@ -345,14 +307,12 @@ export default function TrainingPlanDetail() {
             </div>
           </div>
 
-          {/* Título principal */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">
               Plan Activo del Cliente
             </h1>
           </div>
 
-          {/* Información del cliente */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center space-x-4">
@@ -381,7 +341,6 @@ export default function TrainingPlanDetail() {
               </div>
             </div>
 
-            {/* Objetivo del cliente */}
             <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-lg">
               <div className="flex items-center mb-2">
                 <Target className="h-5 w-5 mr-2 text-amber-600" />
@@ -393,7 +352,6 @@ export default function TrainingPlanDetail() {
             </div>
           </div>
 
-          {/* Información del plan */}
           {plan && (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
@@ -436,22 +394,7 @@ export default function TrainingPlanDetail() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">
-                    Especialización del Entrenador
-                  </h4>
-                  <p className="text-gray-700">{plan.trainerSpecification}</p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">
-                    Entrenador Asignado
-                  </h4>
-                  <p className="text-gray-700">{plan.trainerName}</p>
-                </div>
-              </div>
 
-              {/* Botones de acción del plan */}
               <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Link
                   to={`/trainer/client/${clientDni}/training-plans/${plan.id}/edit`}
@@ -489,7 +432,6 @@ export default function TrainingPlanDetail() {
             </div>
           )}
 
-          {/* Rutinas de ejercicios por día */}
           {plan && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">

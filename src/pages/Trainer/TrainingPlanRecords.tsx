@@ -18,6 +18,7 @@ import { FooterPag } from "../../components/Footer";
 import { useAuth } from "../../auth/hook/useAuth";
 import { TrainingRecord } from "../../model/TrainingRecord";
 import { formatDate, getDayName, getWeekRange, formatWeekRange } from "../../utils/DateUtils";
+import { fetchTrainingRecords } from "../../services/TrainingRecordService";
 
 interface DayRecords {
   date: string;
@@ -42,25 +43,10 @@ export default function TrainingPlanRecords() {
     async function fetchRecords() {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("token");
 
       try {
-        const { startOfWeek, endOfWeek } = getWeekRange(currentWeekOffset);
-
-        const response = await fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${idPlan}/records?startDate=${
-            startOfWeek.toISOString().split("T")[0]
-          }&endDate=${endOfWeek.toISOString().split("T")[0]}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Error al cargar los registros");
-        }
-
-        const data: TrainingRecord[] = await response.json();
+        const { startOfWeek } = getWeekRange(currentWeekOffset);
+        const data = await fetchTrainingRecords(clientDni!, idPlan!);
 
         // Primero creamos todos los días de la semana
         const weekDays: DayRecords[] = [];

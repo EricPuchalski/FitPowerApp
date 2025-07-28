@@ -17,3 +17,23 @@ export const fetchClientData = async (clientDni: string): Promise<Client> => {
 
   return await response.json();
 };
+
+export const ClientService = {
+  async getGymClientsWithoutPlan(gymName: string, token: string): Promise<Client[]> {
+    const response = await fetch(
+      `${API_BASE_URL}/gyms/${encodeURIComponent(gymName)}/clients/without-training-plan`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Error al cargar los clientes del gimnasio");
+    }
+
+    return response.json();
+  }
+};

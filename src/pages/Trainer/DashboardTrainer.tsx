@@ -1,20 +1,7 @@
-// src/components/DashboardTrainer.tsx
-"use client";
-
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
-  Plus,
-  TrendingUp,
-  Menu,
-  X,
-  Dumbbell,
-  Home,
-  Calendar,
-  Mail,
-  Phone,
-  Target,
   User,
 } from "lucide-react";
 import { FooterPag } from "../../components/Footer";
@@ -22,6 +9,9 @@ import { TrainerHeader } from "../../components/TrainerHeader";
 import { useAuth } from "../../auth/hook/useAuth";
 import { Client } from "../../model/Client";
 import { ClientCard } from "../../components/ClientCard";
+import { TrainerService } from "../../services/TrainerService";
+import { ClientService } from "../../services/ClientService";
+
 
 interface User {
   dni: string;
@@ -40,56 +30,47 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(user || null);
   const [activePlansCount, setActivePlansCount] = useState<number>(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  // Carga inicial del entrenador y luego de los clientes/plans
   useEffect(() => {
-    console.log("el user es:");
-    
-    console.log(currentUser);
-    
     if (!currentUser) {
       const token = localStorage.getItem("token");
       const userDni = localStorage.getItem("userDni");
       if (token && userDni) {
-        fetchTrainerInfo(userDni);
+        fetchTrainerInfo(userDni, token);
       }
     } else {
       loadData();
     }
   }, [currentUser, showAll]);
 
-  // Helper que lanza la función correcta de fetch
-  const loadData = () => {
+  const loadData = async () => {
     setLoading(true);
     setError(null);
+    const token = localStorage.getItem("token");
 
-    const loader = showAll ? fetchAllClients : fetchMyClients;
-    loader()
-      .then(() => fetchTrainingPlans())
-      .catch(() => {
-        setError("Error al cargar los clientes");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    try {
+      if (!token) throw new Error("No authentication token found");
+
+      if (showAll) {
+        await fetchAllClients(token);
+      } else {
+        await fetchMyClients(token);
+      }
+      
+      await fetchTrainingPlans(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar los datos");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Obtiene datos del entrenador y guarda trainerId en localStorage
-  const fetchTrainerInfo = async (dni: string) => {
+  const fetchTrainerInfo = async (dni: string, token: string) => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8080/api/v1/trainers/${dni}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await TrainerService.getTrainerInfo(dni, token);
       localStorage.setItem("trainerId", data.id.toString());
       localStorage.setItem("userRole", "ROLE_TRAINER");
       setCurrentUser({
@@ -98,98 +79,48 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         gymName: data.gymName,
         role: "ROLE_TRAINER",
       });
-      
-      console.log(data);
-      
-    } catch {
-      setError("Error al cargar información del entrenador");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar información del entrenador");
       setLoading(false);
     }
   };
 
-  // Fetch solo “Mis Clientes”
-  const fetchMyClients = async () => {
+  const fetchMyClients = async (token: string) => {
     const trainerId = localStorage.getItem("trainerId");
-    const token = localStorage.getItem("token");
-    if (!trainerId || !token) throw new Error();
+    if (!trainerId) throw new Error("Trainer ID not found");
 
-    const res = await fetch(
-      `http://localhost:8080/api/v1/trainers/${trainerId}/clients/active`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    if (!res.ok) {
-      // Si 404 o vacío, devolvemos array vacío
-      if (res.status === 404) {
-        setClients([]);
-        return;
-      }
-      throw new Error();
-    }
-    const data: Client[] = await res.json();
-    setClients(data);
+    const clients = await TrainerService.getMyClients(trainerId, token);
+    setClients(clients);
   };
 
-  // Fetch “Todos los Clientes del Gimnasio”
-  const fetchAllClients = async () => {
-    const token = localStorage.getItem("token");
-    const gymName = currentUser?.gymName;
-    if (!gymName || !token) throw new Error();
+  const fetchAllClients = async (token: string) => {
+    if (!currentUser?.gymName) throw new Error("Gym name not found");
 
-    const res = await fetch(
-      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(
-        gymName
-      )}/clients/without-training-plan`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    if (!res.ok) throw new Error();
-    const data: Client[] = await res.json();
-    setClients(data);
+    const clients = await ClientService.getGymClientsWithoutPlan(currentUser.gymName, token);
+    setClients(clients);
   };
 
-  // Fetch contador de planes activos
-  const fetchTrainingPlans = async () => {
+  const fetchTrainingPlans = async (token: string) => {
     const trainerId = localStorage.getItem("trainerId");
-    const token = localStorage.getItem("token");
-    if (!trainerId || !token) return;
+    if (!trainerId) return;
 
-    try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/trainers/${trainerId}/training-plans`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!res.ok) throw new Error();
-      const data: any[] = await res.json();
-      const activos = data.filter((plan) => plan.active);
-      setActivePlansCount(activos.length);
-    } catch {
-      setActivePlansCount(0);
-    }
+    const count = await TrainerService.getTrainingPlansCount(trainerId, token);
+    setActivePlansCount(count);
   };
 
   const handleLogout = () => {
     logout();
-    navigate("/"); // o "/login" si tenés una ruta específica
+    navigate("/");
   };
 
-  // Loading skeleton
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-100">
-        {/* … tu código de loading idéntico … */}
         <p className="p-8 text-center">Cargando datos…</p>
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">

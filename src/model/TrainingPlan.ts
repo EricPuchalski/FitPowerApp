@@ -6,11 +6,7 @@ export interface TrainingPlan {
   name: string;
   createdAt: string;         // o date
   trainerDni: string;
-  trainerName: string;
   clientDni: string;
-  clientName: string;
-  trainerSpecification: string;
-  clientGoal: string;
   active: boolean;
   exercises: ExerciseRoutine[];
 }
