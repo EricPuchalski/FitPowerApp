@@ -17,50 +17,8 @@ import {
 import { Assignment, Person, Info } from "@mui/icons-material";
 import TrainingReport from "../../components/TrainingReport";
 import { FooterPag } from "../../components/Footer";
-
-interface ClientReportDTO {
-  trainingPlanName: string;
-  clientName: string;
-  clientDni: string;
-  clientGoals: string;
-  trainerName: string;
-  period: string;
-  trainedDays: number;
-  attendanceRate: string;
-  trainedDates: string[];
-  strengthProgress: {
-    maxImprovement?: string;
-    maxDecline?: string;
-  };
-  exerciseProgressDetails: Array<{
-    exercise: string;
-    initial: string;
-    finalValue: string;
-    progress: string;
-    initialReps: number;
-    finalReps: number;
-  }>;
-  restTimeAnalysis: string;
-  trainerComment: string;
-  nextSteps: string;
-}
-
-interface TrainingPlan {
-  id: number;
-  name: string;
-  createdAt: string;
-  trainerDni: string;
-  trainerName: string;
-  clientDni: string;
-  clientName: string;
-  trainerSpecification: string;
-  clientGoal: string;
-  active: boolean;
-  exercises: Array<{
-    id: number;
-    name: string;
-  }>;
-}
+import { ClientReportDTO } from "../../model/ClientReportDTO";
+import { TrainingPlan } from "../../model/TrainingPlan";
 
 export default function ReportClient() {
   const { clientDni } = useParams();

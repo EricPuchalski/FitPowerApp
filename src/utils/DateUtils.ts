@@ -56,5 +56,7 @@ export const getWeekRange = (weekOffset: number) => {
 // Función para formatear el rango de la semana
 export const formatWeekRange = (currentWeekOffset: number) => {
   const { startOfWeek, endOfWeek } = getWeekRange(currentWeekOffset);
-  return `${formatDate(startOfWeek.toISOString())} - ${formatDate(endOfWeek.toISOString())}`;
+  return `${formatDate(startOfWeek.toISOString())} - ${formatDate(
+    endOfWeek.toISOString()
+  )}`;
 };

@@ -1,8 +1,8 @@
 // src/components/DashboardTrainer.tsx
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Users,
   Plus,
@@ -15,161 +15,171 @@ import {
   Mail,
   Phone,
   Target,
-  User
-} from 'lucide-react'
-import { FooterPag } from '../../components/Footer'
-import { TrainerHeader } from "../../components/TrainerHeader"
-import { useAuth } from "../../auth/hook/useAuth"
-import { Client } from "../../model/Client"
+  User,
+} from "lucide-react";
+import { FooterPag } from "../../components/Footer";
+import { TrainerHeader } from "../../components/TrainerHeader";
+import { useAuth } from "../../auth/hook/useAuth";
+import { Client } from "../../model/Client";
+import { ClientCard } from "../../components/ClientCard";
 
 interface User {
-  dni: string
-  name: string
-  gymName: string
-  role: string
+  dni: string;
+  name: string;
+  gymName: string;
+  role: string;
 }
 
 interface DashboardTrainerProps {
-  user?: User
+  user?: User;
 }
 
 export default function DashboardTrainer({ user }: DashboardTrainerProps) {
-  const [clients, setClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [currentUser, setCurrentUser] = useState<User | null>(user || null)
-  const [activePlansCount, setActivePlansCount] = useState<number>(0)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [showAll, setShowAll] = useState(false)
-      const navigate = useNavigate();
-      const { logout } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(user || null);
+  const [activePlansCount, setActivePlansCount] = useState<number>(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Carga inicial del entrenador y luego de los clientes/plans
   useEffect(() => {
+    console.log("el user es:");
+    
+    console.log(currentUser);
+    
     if (!currentUser) {
-      const token = localStorage.getItem("token")
-      const userDni = localStorage.getItem("userDni")
+      const token = localStorage.getItem("token");
+      const userDni = localStorage.getItem("userDni");
       if (token && userDni) {
-        fetchTrainerInfo(userDni)
+        fetchTrainerInfo(userDni);
       }
     } else {
-      loadData()
+      loadData();
     }
-  }, [currentUser, showAll])
+  }, [currentUser, showAll]);
 
   // Helper que lanza la función correcta de fetch
   const loadData = () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
-    const loader = showAll ? fetchAllClients : fetchMyClients
+    const loader = showAll ? fetchAllClients : fetchMyClients;
     loader()
       .then(() => fetchTrainingPlans())
       .catch(() => {
-        setError("Error al cargar los clientes")
+        setError("Error al cargar los clientes");
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }
+        setLoading(false);
+      });
+  };
 
   // Obtiene datos del entrenador y guarda trainerId en localStorage
   const fetchTrainerInfo = async (dni: string) => {
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:8080/api/v1/trainers/${dni}`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      localStorage.setItem("trainerId", data.id.toString())
-      localStorage.setItem("userRole", "ROLE_TRAINER")
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      localStorage.setItem("trainerId", data.id.toString());
+      localStorage.setItem("userRole", "ROLE_TRAINER");
       setCurrentUser({
         dni: data.dni,
         name: data.name,
         gymName: data.gymName,
-        role: "ROLE_TRAINER"
-      })
+        role: "ROLE_TRAINER",
+      });
+      
+      console.log(data);
+      
     } catch {
-      setError("Error al cargar información del entrenador")
-      setLoading(false)
+      setError("Error al cargar información del entrenador");
+      setLoading(false);
     }
-  }
+  };
 
   // Fetch solo “Mis Clientes”
   const fetchMyClients = async () => {
-    const trainerId = localStorage.getItem("trainerId")
-    const token     = localStorage.getItem("token")
-    if (!trainerId || !token) throw new Error()
+    const trainerId = localStorage.getItem("trainerId");
+    const token = localStorage.getItem("token");
+    if (!trainerId || !token) throw new Error();
 
     const res = await fetch(
       `http://localhost:8080/api/v1/trainers/${trainerId}/clients/active`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type':  'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       }
-    )
+    );
     if (!res.ok) {
       // Si 404 o vacío, devolvemos array vacío
       if (res.status === 404) {
-        setClients([])
-        return
+        setClients([]);
+        return;
       }
-      throw new Error()
+      throw new Error();
     }
-    const data: Client[] = await res.json()
-    setClients(data)
-  }
+    const data: Client[] = await res.json();
+    setClients(data);
+  };
 
   // Fetch “Todos los Clientes del Gimnasio”
   const fetchAllClients = async () => {
-    const token   = localStorage.getItem("token")
-    const gymName = currentUser?.gymName
-    if (!gymName || !token) throw new Error()
+    const token = localStorage.getItem("token");
+    const gymName = currentUser?.gymName;
+    if (!gymName || !token) throw new Error();
 
     const res = await fetch(
-      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients/without-training-plan`,
+      `http://localhost:8080/api/v1/gyms/${encodeURIComponent(
+        gymName
+      )}/clients/without-training-plan`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type':  'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       }
-    )
-    if (!res.ok) throw new Error()
-    const data: Client[] = await res.json()
-    setClients(data)
-  }
+    );
+    if (!res.ok) throw new Error();
+    const data: Client[] = await res.json();
+    setClients(data);
+  };
 
   // Fetch contador de planes activos
   const fetchTrainingPlans = async () => {
-    const trainerId = localStorage.getItem("trainerId")
-    const token     = localStorage.getItem("token")
-    if (!trainerId || !token) return
+    const trainerId = localStorage.getItem("trainerId");
+    const token = localStorage.getItem("token");
+    if (!trainerId || !token) return;
 
     try {
-      const res  = await fetch(
+      const res = await fetch(
         `http://localhost:8080/api/v1/trainers/${trainerId}/training-plans`,
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (!res.ok) throw new Error()
-      const data: any[] = await res.json()
-      const activos = data.filter(plan => plan.active)
-      setActivePlansCount(activos.length)
+      );
+      if (!res.ok) throw new Error();
+      const data: any[] = await res.json();
+      const activos = data.filter((plan) => plan.active);
+      setActivePlansCount(activos.length);
     } catch {
-      setActivePlansCount(0)
+      setActivePlansCount(0);
     }
-  }
+  };
 
-    const handleLogout = () => {
-  logout();
-  navigate("/"); // o "/login" si tenés una ruta específica
-};
+  const handleLogout = () => {
+    logout();
+    navigate("/"); // o "/login" si tenés una ruta específica
+  };
 
   // Loading skeleton
   if (loading) {
@@ -178,7 +188,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         {/* … tu código de loading idéntico … */}
         <p className="p-8 text-center">Cargando datos…</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -189,9 +199,7 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         {/* Bienvenida */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{`Bienvenido, ${currentUser?.name}`}</h1>
-          <div className="mt-4">
-  
-</div>
+          <div className="mt-4"></div>
           <p className="text-gray-600 mt-4">{`Gimnasio: ${currentUser?.gymName}`}</p>
         </div>
 
@@ -202,22 +210,25 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
               <p className="text-sm text-gray-700">Total Clientes</p>
               <p className="text-2xl font-bold">{clients.length}</p>
             </div>
-            <Users className="h-8 w-8 text-cyan-600"/>
+            <Users className="h-8 w-8 text-cyan-600" />
           </div>
-          
         </div>
 
         {/* Toggle de vista */}
         <div className="flex space-x-4 mb-6">
           <button
             onClick={() => setShowAll(false)}
-            className={`px-4 py-2 rounded ${!showAll ? 'bg-blue-900 text-white' : 'bg-gray-200'}`}
+            className={`px-4 py-2 rounded ${
+              !showAll ? "bg-blue-900 text-white" : "bg-gray-200"
+            }`}
           >
             Mis Clientes
           </button>
           <button
             onClick={() => setShowAll(true)}
-            className={`px-4 py-2 rounded ${ showAll ? 'bg-blue-900 text-white' : 'bg-gray-200'}`}
+            className={`px-4 py-2 rounded ${
+              showAll ? "bg-blue-900 text-white" : "bg-gray-200"
+            }`}
           >
             Clientes libres
           </button>
@@ -226,7 +237,9 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         {/* Título y descripción */}
         <div className="mb-4">
           <h2 className="text-xl font-semibold">
-            {showAll ? `Clientes de ${currentUser?.gymName} sin un plan activo` : 'Mis Clientes Activos'} 
+            {showAll
+              ? `Clientes de ${currentUser?.gymName} sin un plan activo`
+              : "Mis Clientes Activos"}
           </h2>
           {!showAll && (
             <p className="text-sm text-gray-600">
@@ -243,67 +256,25 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
         )}
 
         {/* Grilla de clientes */}
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-  {clients.map(client => (
-    <div key={client.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 border-l-4 border-blue-500">
-      <div className="flex items-center mb-3">
-        <div className="bg-blue-500 rounded-full p-2 mr-3">
-          <User className="w-4 h-4 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {clients.map((client) => (
+            <ClientCard key={client.id} client={client} />
+          ))}
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-900 text-lg">
-            {client.name} {client.lastName}
-          </h3>
-          <p className="text-gray-500 text-xs">DNI: {client.dni}</p>
-        </div>
-      </div>
-      
-      {/* Goal destacado */}
-      <div className="bg-blue-50 rounded-md p-3 mb-3 border border-blue-200">
-        <div className="flex items-center mb-1">
-          <Target className="w-4 h-4 text-blue-600 mr-2" />
-          <span className="font-medium text-blue-800 text-xs uppercase">Objetivo</span>
-        </div>
-        <p className="text-blue-900 font-medium text-sm">{client.goal}</p>
-      </div>
-      
-      <div className="space-y-2 mb-3">
-        <div className="flex items-center text-gray-600">
-          <Mail className="w-3 h-3 mr-2 text-gray-500" />
-          <span className="text-xs">{client.email}</span>
-        </div>
-        <div className="flex items-center text-gray-600">
-          <Phone className="w-3 h-3 mr-2 text-gray-500" />
-          <span className="text-xs">{client.phoneNumber}</span>
-        </div>
-        <div className="flex items-center text-gray-600">
-          <Calendar className="w-3 h-3 mr-2 text-gray-500" />
-          <span className="text-xs">Creado: {new Date(client.createdAt).toLocaleDateString("es-ES")}</span>
-        </div>
-      </div>
-      
-      <div className="flex flex-col">
-        <Link to={`/trainer/client/${client.dni}/training-plans`}>
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-medium transition-colors">
-            Ver Cliente
-          </button>
-        </Link>
-      </div>
-    </div>
-  ))}
-</div>
 
         {/* Estado “sin clientes” */}
         {clients.length === 0 && !loading && (
           <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4"/>
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {showAll ? 'No hay clientes en el gimnasio' : 'No tienes clientes activos'}
+              {showAll
+                ? "No hay clientes en el gimnasio"
+                : "No tienes clientes activos"}
             </h3>
             <p className="text-gray-600">
               {showAll
-                ? 'Los clientes aparecerán aquí cuando se registren en el gimnasio.'
-                : 'Los clientes aparecerán aquí cuando tengan planes activos contigo.'}
+                ? "Los clientes aparecerán aquí cuando se registren en el gimnasio."
+                : "Los clientes aparecerán aquí cuando tengan planes activos contigo."}
             </p>
           </div>
         )}
@@ -311,5 +282,5 @@ export default function DashboardTrainer({ user }: DashboardTrainerProps) {
 
       <FooterPag />
     </div>
-  )
+  );
 }
