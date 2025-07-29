@@ -17,50 +17,9 @@ import {
 import { Assignment, Person, Info } from "@mui/icons-material";
 import TrainingReport from "../../components/TrainingReport";
 import { FooterPag } from "../../components/Footer";
-
-interface ClientReportDTO {
-  trainingPlanName: string;
-  clientName: string;
-  clientDni: string;
-  clientGoals: string;
-  trainerName: string;
-  period: string;
-  trainedDays: number;
-  attendanceRate: string;
-  trainedDates: string[];
-  strengthProgress: {
-    maxImprovement?: string;
-    maxDecline?: string;
-  };
-  exerciseProgressDetails: Array<{
-    exercise: string;
-    initial: string;
-    finalValue: string;
-    progress: string;
-    initialReps: number;
-    finalReps: number;
-  }>;
-  restTimeAnalysis: string;
-  trainerComment: string;
-  nextSteps: string;
-}
-
-interface TrainingPlan {
-  id: number;
-  name: string;
-  createdAt: string;
-  trainerDni: string;
-  trainerName: string;
-  clientDni: string;
-  clientName: string;
-  trainerSpecification: string;
-  clientGoal: string;
-  active: boolean;
-  exercises: Array<{
-    id: number;
-    name: string;
-  }>;
-}
+import { ClientReportDTO } from "../../model/ClientReportDTO";
+import { TrainingPlan } from "../../model/TrainingPlan";
+import { fetchActiveTrainingPlan, generateTrainingReport } from "../../services/TrainingPlanService";
 
 export default function ReportClient() {
   const { clientDni } = useParams();
@@ -95,29 +54,11 @@ export default function ReportClient() {
 
   // Obtener el plan de entrenamiento activo
   useEffect(() => {
-    const fetchActiveTrainingPlan = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("No se encontró el token de autenticación");
-        setPlanLoading(false);
-        return;
-      }
+    const fetchActiveTrainingPlanData = async () => {
+      if (!clientDni) return;
 
       try {
-        const response = await fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("No se pudo obtener el plan de entrenamiento");
-        }
-
-        const data = await response.json();
+        const data = await fetchActiveTrainingPlan(clientDni);
         setTrainingPlan(data);
 
         // Establecer fechas por defecto (createdAt hasta hoy)
@@ -137,16 +78,13 @@ export default function ReportClient() {
       }
     };
 
-    fetchActiveTrainingPlan();
+    fetchActiveTrainingPlanData();
   }, [clientDni]);
 
   const generateReport = async () => {
-    // Validaciones adicionales
-    if (!trainingPlan) {
-      setError("No hay un plan de entrenamiento activo para este cliente");
-      return;
-    }
+    if (!clientDni || !trainingPlan) return;
 
+    // Validaciones adicionales
     const planStartDate = new Date(trainingPlan.createdAt);
     const selectedStartDate = new Date(startDate);
     
@@ -160,38 +98,17 @@ export default function ReportClient() {
       return;
     }
 
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setError("No se encontró el token de autenticación. Inicia sesión nuevamente.");
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/reports?startDate=${startDate}&endDate=${endDate}`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            trainerComment: trainerComment.trim(),
-            nextSteps: nextSteps.trim(),
-          }),
-        }
+      const data = await generateTrainingReport(
+        clientDni,
+        startDate,
+        endDate,
+        trainerComment,
+        nextSteps
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al generar el reporte");
-      }
-
-      const data = await response.json();
       setReportData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado al generar el reporte");

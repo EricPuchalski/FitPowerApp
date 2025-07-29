@@ -683,30 +683,33 @@ export default function TrainingPlanEdit() {
     <>
       <TrainerHeader onLogout={handleLogout} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Link to={`/trainer/client/${clientDni}/training-plans`}>
-              <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
-                <ArrowLeft className="h-4 w-4" />
-                <span>Volver</span>
-              </button>
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isNewPlan
-                ? "Crear Plan de Entrenamiento"
-                : "Editar Plan de Entrenamiento"}
-            </h1>
-          </div>
+<div className="flex items-center justify-between mb-8">
+  <div className="flex items-center space-x-4">
+    <Link to={`/trainer/client/${clientDni}/training-plans`}>
+      <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+        <ArrowLeft className="h-4 w-4" />
+        <span>Volver</span>
+      </button>
+    </Link>
+    <h1 className="text-3xl font-bold text-gray-900">
+      {isNewPlan
+        ? "Crear Plan de Entrenamiento"
+        : "Editar Plan de Entrenamiento"}
+    </h1>
+  </div>
 
-          <button
-            onClick={savePlan}
-            disabled={saving}
-            className="bg-pink-400 hover:bg-pink-500 text-white px-4 py-2 rounded-md flex items-center space-x-2 disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" />
-            <span>{saving ? "Guardando..." : "Guardar Plan"}</span>
-          </button>
-        </div>
+  {/* Mostrar botón Guardar solo si es nuevo plan O no se está editando un ejercicio en un plan existente */}
+  {(isNewPlan || (!isNewPlan && !isEditingExercise)) && (
+    <button
+      onClick={savePlan}
+      disabled={saving}
+      className="bg-pink-400 hover:bg-pink-500 text-white px-4 py-2 rounded-md flex items-center space-x-2 disabled:opacity-50"
+    >
+      <Save className="h-4 w-4" />
+      <span>{saving ? "Guardando..." : "Guardar Plan"}</span>
+    </button>
+  )}
+</div>
 
         {authError && (
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
@@ -756,12 +759,12 @@ export default function TrainingPlanEdit() {
                   }
                   placeholder="Ej: Plan de Fuerza - Principiante"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isNewPlan} // Deshabilitar si no es nuevo plan
                 />
               </div>
             </div>
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="bg-green-50 rounded-t-lg p-4">

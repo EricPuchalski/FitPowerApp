@@ -1,25 +1,37 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { FooterPag } from "../../components/Footer"
-import type { TrainingPlan } from "../../model/TrainingPlan"
-import type { ExerciseRoutine } from "../../model/ExerciseRoutine"
-import { ClientHeader } from "../../components/ClientHeader"
-import { useAuth } from "../../auth/hook/useAuth"
-import { Calendar, Download, Dumbbell, Clock, Hash, Weight, FileText, Activity } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FooterPag } from "../../components/Footer";
+import { ClientHeader } from "../../components/ClientHeader";
+import { useAuth } from "../../auth/hook/useAuth";
+import {
+  Calendar,
+  Download,
+  Dumbbell,
+  Clock,
+  Hash,
+  Weight,
+  FileText,
+  Activity,
+} from "lucide-react";
+import { fetchActiveTrainingPlan } from "../../services/TrainingPlanService";
+import { TrainingPlan } from "../../model/TrainingPlan";
+import { ExerciseRoutine } from "../../model/ExerciseRoutine";
+import { generateTrainingPlanPDF } from "../../services/PdfService";
 
-const TrainingPlanPage: React.FC = () => {
-  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isDownloading, setIsDownloading] = useState<boolean>(false)
-  const navigate = useNavigate()
+const TrainingPlanPage = () => {
+  const { getUserDni, logout } = useAuth();
+  const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  const { logout } = useAuth()
-
-  const exercisesByDay: Record<string, ExerciseRoutine[]> = {
+  // Organizar ejercicios por día
+  const [exercisesByDay, setExercisesByDay] = useState<
+    Record<string, ExerciseRoutine[]>
+  >({
     MONDAY: [],
     TUESDAY: [],
     WEDNESDAY: [],
@@ -27,44 +39,49 @@ const TrainingPlanPage: React.FC = () => {
     FRIDAY: [],
     SATURDAY: [],
     SUNDAY: [],
-  }
+  });
 
   useEffect(() => {
-    const fetchTrainingPlan = async () => {
+    const loadTrainingPlan = async () => {
       try {
-        const clientDni = localStorage.getItem("userDni")
-        const token = localStorage.getItem("token")
+        const clientDni = getUserDni();
         if (!clientDni) {
-          throw new Error("No se encontró el DNI del cliente en el almacenamiento local")
+          throw new Error("No se encontró el DNI del cliente");
         }
-        const response = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}/training-plans/active`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`)
-        }
-        const data: TrainingPlan = await response.json()
-        setTrainingPlan(data)
+
+        // Usamos el servicio
+        const plan = await fetchActiveTrainingPlan(clientDni);
+        setTrainingPlan(plan);
+
+        // Organizar ejercicios por día
+        const groupedExercises = {
+          MONDAY: [],
+          TUESDAY: [],
+          WEDNESDAY: [],
+          THURSDAY: [],
+          FRIDAY: [],
+          SATURDAY: [],
+          SUNDAY: [],
+        };
+
+        plan.exerciseRoutines?.forEach((exercise) => {
+          if (groupedExercises[exercise.day]) {
+            groupedExercises[exercise.day].push(exercise);
+          }
+        });
+
+        setExercisesByDay(groupedExercises);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ocurrió un error desconocido")
+        setError(
+          err instanceof Error ? err.message : "Ocurrió un error desconocido"
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchTrainingPlan()
-  }, [])
-
-  if (trainingPlan) {
-    trainingPlan.exerciseRoutines?.forEach((exercise) => {
-      if (exercisesByDay[exercise.day]) {
-        exercisesByDay[exercise.day].push(exercise)
-      }
-    })
-  }
+    loadTrainingPlan();
+  }, [getUserDni]);
 
   const dayNames: Record<string, string> = {
     MONDAY: "Lunes",
@@ -74,7 +91,7 @@ const TrainingPlanPage: React.FC = () => {
     FRIDAY: "Viernes",
     SATURDAY: "Sábado",
     SUNDAY: "Domingo",
-  }
+  };
 
   const dayIcons: Record<string, string> = {
     MONDAY: "💪",
@@ -84,178 +101,27 @@ const TrainingPlanPage: React.FC = () => {
     FRIDAY: "🚀",
     SATURDAY: "💯",
     SUNDAY: "🌟",
-  }
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/")
-  }
+    logout();
+    navigate("/");
+  };
 
   const generatePDF = async () => {
-    if (!trainingPlan) return
+    if (!trainingPlan) return;
 
-    setIsDownloading(true)
+    setIsDownloading(true);
 
     try {
-      // Crear el contenido HTML para el PDF
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>${trainingPlan.name}</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 20px; 
-              color: #333;
-              line-height: 1.6;
-            }
-            .header { 
-              text-align: center; 
-              margin-bottom: 30px; 
-              border-bottom: 2px solid #3b82f6;
-              padding-bottom: 20px;
-            }
-            .plan-title { 
-              font-size: 28px; 
-              font-weight: bold; 
-              color: #1f2937;
-              margin-bottom: 10px;
-            }
-            .plan-info { 
-              color: #6b7280; 
-              font-size: 14px;
-            }
-            .day-section { 
-              margin-bottom: 25px; 
-              page-break-inside: avoid;
-            }
-            .day-title { 
-              font-size: 20px; 
-              font-weight: bold; 
-              color: #3b82f6;
-              margin-bottom: 15px;
-              padding: 10px;
-              background-color: #f3f4f6;
-              border-left: 4px solid #3b82f6;
-            }
-            .exercise { 
-              margin-bottom: 15px; 
-              padding: 12px;
-              border: 1px solid #e5e7eb;
-              border-radius: 8px;
-              background-color: #fafafa;
-            }
-            .exercise-name { 
-              font-weight: bold; 
-              font-size: 16px;
-              color: #1f2937;
-              margin-bottom: 8px;
-            }
-            .exercise-details { 
-              display: grid; 
-              grid-template-columns: repeat(4, 1fr); 
-              gap: 10px;
-              font-size: 14px;
-            }
-            .detail-item {
-              background-color: white;
-              padding: 6px 8px;
-              border-radius: 4px;
-              border: 1px solid #e5e7eb;
-            }
-            .detail-label {
-              font-weight: bold;
-              color: #374151;
-            }
-            .no-exercises {
-              color: #9ca3af;
-              font-style: italic;
-              text-align: center;
-              padding: 20px;
-            }
-            .footer {
-              margin-top: 40px;
-              text-align: center;
-              font-size: 12px;
-              color: #6b7280;
-              border-top: 1px solid #e5e7eb;
-              padding-top: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="plan-title">${trainingPlan.name}</div>
-            <div class="plan-info">
-              Cliente: ${trainingPlan.clientName}<br>
-              Creado el: ${new Date(trainingPlan.createdAt).toLocaleDateString()}<br>
-              Estado: ${trainingPlan.active ? "Activo" : "Inactivo"}
-            </div>
-          </div>
-          
-          ${Object.entries(exercisesByDay)
-            .map(
-              ([day, exercises]) => `
-            <div class="day-section">
-              <div class="day-title">${dayNames[day]}</div>
-              ${
-                exercises.length > 0
-                  ? exercises
-                      .map(
-                        (exercise) => `
-                  <div class="exercise">
-                    <div class="exercise-name">${exercise.exerciseName}</div>
-                    <div class="exercise-details">
-                      <div class="detail-item">
-                        <span class="detail-label">Series:</span> ${exercise.series}
-                      </div>
-                      <div class="detail-item">
-                        <span class="detail-label">Repeticiones:</span> ${exercise.repetitions}
-                      </div>
-                      <div class="detail-item">
-                        <span class="detail-label">Peso:</span> ${exercise.weight} kg
-                      </div>
-                      <div class="detail-item">
-                        <span class="detail-label">Descanso:</span> ${exercise.restTime}
-                      </div>
-                    </div>
-                  </div>
-                `,
-                      )
-                      .join("")
-                  : '<div class="no-exercises">No hay ejercicios programados para este día</div>'
-              }
-            </div>
-          `,
-            )
-            .join("")}
-        </body>
-        </html>
-      `
-
-      // Crear un blob con el contenido HTML
-      const blob = new Blob([htmlContent], { type: "text/html" })
-      const url = URL.createObjectURL(blob)
-
-      // Crear un enlace temporal para descargar
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `plan-entrenamiento-${trainingPlan.name.replace(/\s+/g, "-").toLowerCase()}.html`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      // Limpiar la URL del objeto
-      URL.revokeObjectURL(url)
+      generateTrainingPlanPDF(trainingPlan, exercisesByDay, dayNames);
     } catch (error) {
-      console.error("Error al generar el PDF:", error)
-      alert("Error al generar el archivo. Por favor, inténtalo nuevamente.")
+      console.error("Error al generar el PDF:", error);
+      alert("Error al generar el archivo. Por favor, inténtalo nuevamente.");
     } finally {
-      setIsDownloading(false)
+      setIsDownloading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -264,48 +130,60 @@ const TrainingPlanPage: React.FC = () => {
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
           <Dumbbell className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-blue-600" />
         </div>
-        <p className="mt-6 text-lg text-gray-700 font-medium">Cargando tu plan de entrenamiento...</p>
+        <p className="mt-6 text-lg text-gray-700 font-medium">
+          Cargando tu plan de entrenamiento...
+        </p>
       </div>
-    )
+    );
   }
 
-  if (!trainingPlan) {
+  if (error) {
     return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center">
-      <div className="max-w-md">
-        <h2 className="text-2xl font-bold text-gray-700 mb-4">No tienes un plan de entrenamiento activo</h2>
-        <p className="text-gray-600 mb-6">Tu entrenador está en proceso de realizar tu plan a medida, por favor espera!</p>
-        <button 
-          onClick={() => navigate('/client')}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          Volver al inicio
-        </button>
-      </div>
-    </div>
-    )
-  }
-
-  if (!trainingPlan) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-8 h-8 text-yellow-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Plan en preparación</h2>
-          <p className="text-gray-600 leading-relaxed">
-            Tu entrenador está creando un plan personalizado especialmente para ti. ¡Pronto tendrás tu rutina lista para
-            comenzar!
-          </p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center">
+        <div className="max-w-md">
+          <h2 className="text-2xl font-bold text-gray-700 mb-4">
+            Error al cargar el plan
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Reintentar
+          </button>
         </div>
       </div>
-    )
+    );
+  }
+
+  if (!trainingPlan) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center">
+        <div className="max-w-md">
+          <h2 className="text-2xl font-bold text-gray-700 mb-4">
+            No tienes un plan de entrenamiento activo
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Tu entrenador está en proceso de realizar tu plan a medida, por
+            favor espera!
+          </p>
+          <button
+            onClick={() => navigate("/client")}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex flex-col">
-      <ClientHeader fullName={trainingPlan.clientName} onLogout={handleLogout} />
+      <ClientHeader
+        fullName={trainingPlan.clientName}
+        onLogout={handleLogout}
+      />
 
       <nav className="bg-white shadow-sm border-b">
         <ul className="container mx-auto px-4 flex">
@@ -318,7 +196,9 @@ const TrainingPlanPage: React.FC = () => {
             </button>
           </li>
           <li className="flex-1 text-center border-b-4 border-blue-500 bg-blue-50">
-            <button className="w-full py-4 font-medium text-blue-600">Plan de Entrenamiento</button>
+            <button className="w-full py-4 font-medium text-blue-600">
+              Plan de Entrenamiento
+            </button>
           </li>
           <li className="flex-1 text-center hover:bg-gray-50 transition-colors">
             <button
@@ -340,16 +220,23 @@ const TrainingPlanPage: React.FC = () => {
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Dumbbell className="w-5 h-5 text-blue-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800">{trainingPlan.name}</h2>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {trainingPlan.name}
+                </h2>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  <span>Creado el {new Date(trainingPlan.createdAt).toLocaleDateString()}</span>
+                  <span>
+                    Creado el{" "}
+                    {new Date(trainingPlan.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    trainingPlan.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                    trainingPlan.active
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
                   }`}
                 >
                   {trainingPlan.active ? "Activo" : "Inactivo"}
@@ -368,13 +255,19 @@ const TrainingPlanPage: React.FC = () => {
 
               <button
                 className={`flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-blue-300 hover:text-blue-700 transition-all ${
-                  isDownloading ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
+                  isDownloading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:shadow-md"
                 }`}
                 onClick={generatePDF}
                 disabled={isDownloading}
               >
-                <Download className={`w-4 h-4 ${isDownloading ? "animate-bounce" : ""}`} />
-                <span className="font-medium">{isDownloading ? "Generando..." : "Descargar rutina"}</span>
+                <Download
+                  className={`w-4 h-4 ${isDownloading ? "animate-bounce" : ""}`}
+                />
+                <span className="font-medium">
+                  {isDownloading ? "Generando..." : "Descargar rutina"}
+                </span>
               </button>
             </div>
           </div>
@@ -397,11 +290,14 @@ const TrainingPlanPage: React.FC = () => {
               >
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-white text-lg">{dayNames[day]}</h4>
+                    <h4 className="font-bold text-white text-lg">
+                      {dayNames[day]}
+                    </h4>
                     <span className="text-2xl">{dayIcons[day]}</span>
                   </div>
                   <p className="text-blue-100 text-sm mt-1">
-                    {exercises.length} ejercicio{exercises.length !== 1 ? "s" : ""}
+                    {exercises.length} ejercicio
+                    {exercises.length !== 1 ? "s" : ""}
                   </p>
                 </div>
 
@@ -424,25 +320,33 @@ const TrainingPlanPage: React.FC = () => {
                             <div className="flex items-center gap-2 text-sm">
                               <Hash className="w-4 h-4 text-gray-400" />
                               <span className="text-gray-600">Series:</span>
-                              <span className="font-medium text-gray-800">{exercise.series}</span>
+                              <span className="font-medium text-gray-800">
+                                {exercise.series}
+                              </span>
                             </div>
 
                             <div className="flex items-center gap-2 text-sm">
                               <Activity className="w-4 h-4 text-gray-400" />
                               <span className="text-gray-600">Reps:</span>
-                              <span className="font-medium text-gray-800">{exercise.repetitions}</span>
+                              <span className="font-medium text-gray-800">
+                                {exercise.repetitions}
+                              </span>
                             </div>
 
                             <div className="flex items-center gap-2 text-sm">
                               <Weight className="w-4 h-4 text-gray-400" />
                               <span className="text-gray-600">Peso:</span>
-                              <span className="font-medium text-gray-800">{exercise.weight} kg</span>
+                              <span className="font-medium text-gray-800">
+                                {exercise.weight} kg
+                              </span>
                             </div>
 
                             <div className="flex items-center gap-2 text-sm">
                               <Clock className="w-4 h-4 text-gray-400" />
                               <span className="text-gray-600">Descanso:</span>
-                              <span className="font-medium text-gray-800">{exercise.restTime}</span>
+                              <span className="font-medium text-gray-800">
+                                {exercise.restTime}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -465,7 +369,7 @@ const TrainingPlanPage: React.FC = () => {
 
       <FooterPag />
     </div>
-  )
-}
+  );
+};
 
-export default TrainingPlanPage
+export default TrainingPlanPage;

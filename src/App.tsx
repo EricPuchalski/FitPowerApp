@@ -23,8 +23,7 @@ import TrainingPlanEdit from "./pages/Trainer/TrainingPlanEdit";
 import TrainingPlans from "./pages/Trainer/TrainingPlans";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ResetPasswordPage from "./pages/Admin/AdminResetPasswordPage";
-import { ClientNutritionRecords } from './pages/Nutritionist/ClientNutritionRecords'
-
+import { ClientNutritionRecords } from "./pages/Nutritionist/ClientNutritionRecords";
 
 // Importar componentes de rutas protegidas
 import {
@@ -33,7 +32,7 @@ import {
   NutritionistRoute,
   AdminRoute,
   TrainerAdminRoute,
-  AllRolesRoute
+  AllRolesRoute,
 } from "./auth/ProtectedRoute";
 import ReportClient from "./pages/Trainer/ReportClient";
 import NotFound from "./components/NotFound";
@@ -113,13 +112,13 @@ function App() {
             </ClientRoute>
           }
         />
-        <Route 
-          path="/trainer/client/:dni/history" 
+        <Route
+          path="/trainer/client/:dni/history"
           element={
             <TrainerRoute>
               <ClientHistory />
             </TrainerRoute>
-          } 
+          }
         />
 
         {/* ==================== RUTAS DEL ADMINISTRADOR ==================== */}
@@ -181,7 +180,7 @@ function App() {
             </TrainerRoute>
           }
         />
-                <Route
+        <Route
           path="/trainer/client/:clientDni/training-plans/:idPlan/records"
           element={
             <TrainerRoute>
@@ -197,31 +196,30 @@ function App() {
             </TrainerRoute>
           }
         />
-        <Route 
-          path="/trainer/client/:clientDni/training-plans/report" 
+        <Route
+          path="/trainer/client/:clientDni/training-plans/report"
           element={
             <TrainerRoute>
               <ReportClient />
             </TrainerRoute>
           }
         />
-        <Route 
-          path="/trainer/client/:dni/progress" 
+        <Route
+          path="/trainer/client/:dni/progress"
           element={
             <TrainerRoute>
               <ProgressPage />
             </TrainerRoute>
-          } 
+          }
         />
         <Route
-  path="/trainer/client/:dni/progress/nutrition"
-  element={
-    <TrainerRoute>
-      <NutritionProgress />
-    </TrainerRoute>
-  }
-/>
-
+          path="/trainer/client/:dni/progress/nutrition"
+          element={
+            <TrainerRoute>
+              <NutritionProgress />
+            </TrainerRoute>
+          }
+        />
 
         {/* ==================== RUTAS DEL NUTRICIONISTA ==================== */}
         <Route
@@ -232,22 +230,22 @@ function App() {
             </NutritionistRoute>
           }
         />
-        <Route 
-          path="/nutritionist/client/:dni/history" 
+        <Route
+          path="/nutritionist/client/:dni/history"
           element={
             <NutritionistRoute>
               <ClientHistory />
             </NutritionistRoute>
-          } 
+          }
         />
         <Route
-  path="/nutritionist/client/:dni/progress/nutrition"
-  element={
-    <NutritionistRoute>
-      <NutritionProgress />
-    </NutritionistRoute>
-  }
-/>
+          path="/nutritionist/client/:dni/progress/nutrition"
+          element={
+            <NutritionistRoute>
+              <NutritionProgress />
+            </NutritionistRoute>
+          }
+        />
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans"
           element={
@@ -265,15 +263,14 @@ function App() {
           }
         />
         <Route
-  path="/nutritionist/client/:dni/nutrition-plans/:planId/records"
-  element={
-     <NutritionistRoute>
-       <ClientNutritionRecords />
-     </NutritionistRoute>
-   }
- />
-        
-        
+          path="/nutritionist/client/:dni/nutrition-plans/:planId/records"
+          element={
+            <NutritionistRoute>
+              <ClientNutritionRecords />
+            </NutritionistRoute>
+          }
+        />
+
         <Route
           path="/nutritionist/client/:clientDni/nutrition-plans/report"
           element={
@@ -282,8 +279,6 @@ function App() {
             </NutritionistRoute>
           }
         />
-      
-
 
         {/* ==================== RUTAS COMPARTIDAS ==================== */}
         {/* Ejercicios - Solo Trainer y Admin pueden acceder */}
