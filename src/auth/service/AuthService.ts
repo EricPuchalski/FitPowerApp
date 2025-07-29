@@ -187,7 +187,7 @@ const authService = {
       if (userData.roles.includes(UserRole.TRAINER)) {
         const trainerResponse = await axios.get(
           `http://localhost:8080/api/v1/trainers/${userData.dni}`,
-          { headers }
+          { headers } 
         );
         userData.trainerData = trainerResponse.data;
         

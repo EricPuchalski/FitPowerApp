@@ -1,6 +1,6 @@
 const API_BASE_URL = "http://localhost:8080/api/v1";
 
-export const fetchExercises = async (): Promise<any[]> => {
+export const fetchExercises = async (token: string): Promise<any[]> => {
   const token = localStorage.getItem("token");
   const response = await fetch(`${API_BASE_URL}/exercises`, {
     headers: { Authorization: `Bearer ${token}` },

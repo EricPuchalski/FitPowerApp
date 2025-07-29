@@ -179,29 +179,6 @@ const TrainingPlanCard = ({ plan }) => {
         </div>
       </div>
 
-      {/* Trainer Info */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center space-x-4">
-          <div className="flex-shrink-0 bg-indigo-100 p-2 rounded-full">
-            <FiUser className="text-indigo-600" />
-          </div>
-          <div>
-            <p className="font-medium text-gray-900">{plan.trainerName}</p>
-            <p className="text-sm text-gray-500">{plan.trainerSpecification}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Client Goal */}
-      <div className="p-4 bg-blue-50 border-b border-blue-100">
-        <div className="flex items-start">
-          <FiTarget className="flex-shrink-0 text-blue-500 mt-0.5 mr-2" />
-          <div>
-            <p className="text-sm font-semibold text-blue-800">Objetivo del cliente:</p>
-            <p className="text-gray-700">{plan.clientGoal}</p>
-          </div>
-        </div>
-      </div>
 
       {/* Exercise Routines */}
       {plan.exerciseRoutines?.length > 0 && (

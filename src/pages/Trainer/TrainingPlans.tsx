@@ -393,7 +393,7 @@ export default function TrainingPlanDetail() {
                   </div>
                 </div>
               </div>
-
+ 
 
               <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Link
