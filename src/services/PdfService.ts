@@ -99,7 +99,6 @@ export const generateTrainingPlanPDF = (
       <div class="header">
         <div class="plan-title">${trainingPlan.name}</div>
         <div class="plan-info">
-          Cliente: ${trainingPlan.clientName}<br>
           Creado el: ${new Date(trainingPlan.createdAt).toLocaleDateString()}<br>
           Estado: ${trainingPlan.active ? "Activo" : "Inactivo"}
         </div>
