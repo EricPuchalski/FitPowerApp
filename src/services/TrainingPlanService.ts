@@ -3,8 +3,7 @@ import { ExerciseRoutine } from "../model/ExerciseRoutine";
 
 const API_BASE_URL = "http://localhost:8080/api/v1";
 
-export const fetchActiveTrainingPlan = async (clientDni: string) => {
-  const token = localStorage.getItem("token");
+export const fetchActiveTrainingPlan = async (clientDni: string, token: string) => {
   const response = await fetch(
     `${API_BASE_URL}/clients/${clientDni}/training-plans/active`,
     {
@@ -86,15 +85,59 @@ export const deleteExerciseRoutine = async (
   return response.ok;
 };
 
+export const createTrainingPlan = async (
+  clientDni: string,
+  planData: { name: string; description?: string; startDate?: string; endDate?: string },
+  token: string
+) => {
+  const response = await fetch(
+    `${API_BASE_URL}/clients/${clientDni}/training-plans`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(planData),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("No se pudo crear el plan de entrenamiento");
+  }
+
+  return await response.json();
+};
+
+export const fetchTrainingPlan = async (
+  clientDni: string,
+  planId: string,
+  token: string
+) => {
+  const response = await fetch(
+    `${API_BASE_URL}/clients/${clientDni}/training-plans/${planId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!response.ok) {
+    throw new Error("No se pudo obtener el plan de entrenamiento");
+  }
+  return await response.json();
+};
+
 export const generateTrainingReport = async (
+  token : string,
   clientDni: string,
   startDate: string,
   endDate: string,
   trainerComment: string,
   nextSteps: string
 ): Promise<ClientReportDTO> => {
-  const token = localStorage.getItem("token");
-  
+
   if (!token) {
     throw new Error("No se encontró el token de autenticación. Inicia sesión nuevamente.");
   }

@@ -50,10 +50,14 @@ export default function TrainingPlanDetail() {
       setLoading(true);
       setError(null);
       setNoPlans(false);
-      
+
       try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No se encontró token de autenticación");
+        }
         // 1️⃣ Obtener información del cliente usando el servicio
-        const clientData = await fetchClientData(clientDni!);
+        const clientData = await fetchClientData(clientDni!, token);
         setClientInfo({
           name: clientData.name,
           email: clientData.email,
@@ -62,11 +66,18 @@ export default function TrainingPlanDetail() {
         });
 
         // 2️⃣ Obtener plan de entrenamiento activo usando el servicio
-        const trainingPlanData = await fetchActiveTrainingPlan(clientDni!);
-        
+
+        const trainingPlanData = await fetchActiveTrainingPlan(
+          clientDni!,
+          token
+        );
+
         const trainingPlan: TrainingPlan = {
           ...trainingPlanData,
-          exercises: trainingPlanData.exercises ?? trainingPlanData.exerciseRoutines ?? [],
+          exercises:
+            trainingPlanData.exercises ??
+            trainingPlanData.exerciseRoutines ??
+            [],
         };
 
         if (!trainingPlan.exercises.length && !trainingPlan.active) {
@@ -393,7 +404,6 @@ export default function TrainingPlanDetail() {
                   </div>
                 </div>
               </div>
- 
 
               <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Link

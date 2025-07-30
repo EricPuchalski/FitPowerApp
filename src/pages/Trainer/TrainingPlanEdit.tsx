@@ -8,6 +8,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../../auth/hook/useAuth";
 import { FooterPag } from "../../components/Footer";
 import { TrainerHeader } from "../../components/TrainerHeader";
+import ErrorMessage from "../../components/ErrorMessage";
+import ExerciseForm from "../../components/ExerciseForm";
+import ExerciseList from "../../components/ExerciseList";
+import PlanHeaderActions from "../../components/PlanHeaderActions";
+import TrainingPlanDetailsForm from "../../components/TrainingPlanDetailsForm";
+import { fetchExercises } from "../../services/ExerciseService";
+import { createTrainingPlan, deleteExerciseRoutine, fetchExerciseRoutines, fetchTrainingPlan, saveExerciseRoutine } from "../../services/TrainingPlanService";
 
 interface SimpleExercise {
   id: number;
@@ -35,16 +42,6 @@ interface TrainingPlan {
   exercises: Exercise[];
 }
 
-const DAYS_OF_WEEK = [
-  { value: "MONDAY", label: "Lunes" },
-  { value: "TUESDAY", label: "Martes" },
-  { value: "WEDNESDAY", label: "Miércoles" },
-  { value: "THURSDAY", label: "Jueves" },
-  { value: "FRIDAY", label: "Viernes" },
-  { value: "SATURDAY", label: "Sábado" },
-  { value: "SUNDAY", label: "Domingo" },
-];
-
 export default function TrainingPlanEdit() {
   const { clientDni, planId } = useParams<{
     clientDni: string;
@@ -63,8 +60,6 @@ export default function TrainingPlanEdit() {
   });
 
   const [authError, setAuthError] = useState<string | null>(null);
-
-  // Estados para el formulario de ejercicio
   const [exerciseForm, setExerciseForm] = useState<Exercise>({
     exerciseId: 0,
     exerciseName: "",
@@ -76,12 +71,11 @@ export default function TrainingPlanEdit() {
   });
   const [isEditingExercise, setIsEditingExercise] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  
   const navigate = useNavigate();
   const { logout } = useAuth();
-
   const isNewPlan = planId === "new";
 
-  // Limpiar formulario de ejercicio
   const clearExerciseForm = () => {
     setExerciseForm({
       exerciseId: 0,
@@ -98,17 +92,16 @@ export default function TrainingPlanEdit() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    if (!token) {
+      setAuthError("No se encontró token de autenticación");
+      return;
+    }
 
-    const fetchExercises = async () => {
+    const loadData = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/v1/exercises", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await res.json();
-        setAllExercises(data);
+        // Cargar catálogo de ejercicios
+        const exercisesData = await fetchExercises(token);
+        setAllExercises(exercisesData);
 
         if (isNewPlan) {
           setPlan({
@@ -121,92 +114,43 @@ export default function TrainingPlanEdit() {
           });
           setLoading(false);
         } else {
-          await fetchTrainingPlan(data);
+          await loadTrainingPlan(exercisesData, token);
         }
       } catch (error) {
-        console.error("Error al cargar ejercicios:", error);
-        toast.error(
-          "Error al cargar ejercicios. Por favor intenta nuevamente."
-        );
-        setAuthError(
-          "Error al cargar ejercicios. Por favor intenta nuevamente."
-        );
+        console.error("Error al cargar datos:", error);
+        toast.error("Error al cargar datos. Por favor intenta nuevamente.");
+        setAuthError("Error al cargar datos. Por favor intenta nuevamente.");
       }
     };
 
-    fetchExercises();
+    loadData();
   }, [planId, isNewPlan, clientDni]);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
-  const fetchTrainingPlan = async (exerciseCatalog: SimpleExercise[]) => {
+  const loadTrainingPlan = async (exerciseCatalog: SimpleExercise[], token: string) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("No se encontró token de autenticación");
-        setAuthError(
-          "No se encontró token de autenticación. Por favor inicie sesión nuevamente."
-        );
-        return;
-      }
-
-      const [planResponse, exercisesResponse] = await Promise.all([
-        fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        ),
-        fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}/exercises`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        ),
+      
+      const [planData, exercisesData] = await Promise.all([
+        fetchTrainingPlan(clientDni!, planId!, token),
+        fetchExerciseRoutines(clientDni!, planId!, token)
       ]);
 
-      if (!planResponse.ok) {
-        if (planResponse.status === 401 || planResponse.status === 403) {
-          toast.error("No tienes permisos para acceder a este plan");
-          setAuthError(
-            "No tienes permisos para acceder a este plan. Por favor verifica tus credenciales."
-          );
-        }
-        throw new Error(`Error al obtener el plan: ${planResponse.statusText}`);
-      }
+      const exercises = exercisesData.map((ex: any) => {
+        const match = exerciseCatalog.find(
+          (e) => e.id === ex.exerciseId || e.id === ex.exercise?.id
+        );
 
-      const planData = await planResponse.json();
-      let exercises: Exercise[] = [];
-      if (exercisesResponse.ok) {
-        const exercisesData = await exercisesResponse.json();
-
-        exercises = exercisesData.map((ex: any) => {
-          const match = exerciseCatalog.find(
-            (e) => e.id === ex.exerciseId || e.id === ex.exercise?.id
-          );
-
-          return {
-            id: ex.id,
-            exerciseId: ex.exerciseId || ex.exercise?.id || 0,
-            exerciseName: match?.name || "Sin nombre",
-            series: ex.series.toString(),
-            repetitions: ex.repetitions.toString(),
-            weight: ex.weight.toString(),
-            restTime: ex.restTime,
-            dayOfWeek: ex.day,
-          };
-        });
-      }
+        return {
+          id: ex.id,
+          exerciseId: ex.exerciseId || ex.exercise?.id || 0,
+          exerciseName: match?.name || "Sin nombre",
+          series: ex.series.toString(),
+          repetitions: ex.repetitions.toString(),
+          weight: ex.weight.toString(),
+          restTime: ex.restTime,
+          dayOfWeek: ex.day,
+        };
+      });
 
       setPlan({
         id: planData.id,
@@ -222,9 +166,7 @@ export default function TrainingPlanEdit() {
     } catch (error) {
       console.error("Error fetching training plan:", error);
       toast.error("Error al cargar el plan de entrenamiento");
-      setAuthError(
-        "Ocurrió un error al cargar el plan. Por favor intenta nuevamente."
-      );
+      setAuthError("Ocurrió un error al cargar el plan. Por favor intenta nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -294,81 +236,38 @@ export default function TrainingPlanEdit() {
       };
 
       if (isEditingExercise && editingIndex !== null) {
-        if (exerciseForm.id) {
-          const response = await fetch(
-            `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/exercises/${exerciseForm.id}`,
-            {
-              method: "PUT",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                exerciseId: exerciseToSave.exerciseId,
-                series: exerciseToSave.series,
-                repetitions: exerciseToSave.repetitions,
-                weight: exerciseToSave.weight,
-                day: exerciseToSave.dayOfWeek,
-                restTime: exerciseToSave.restTime,
-              }),
-            }
+        let updatedExercise;
+        
+        if (exerciseForm.id && !isNewPlan) {
+          updatedExercise = await saveExerciseRoutine(
+            clientDni!,
+            planId!,
+            exerciseToSave,
+            token,
+            true
           );
-
-          if (!response.ok) {
-            throw new Error(
-              `Error al actualizar ejercicio: ${response.statusText}`
-            );
-          }
-
-          const updatedExercise = await response.json();
-          setPlan((prev) => ({
-            ...prev,
-            exercises: prev.exercises.map((exercise, index) =>
-              index === editingIndex
-                ? { ...exercise, ...updatedExercise }
-                : exercise
-            ),
-          }));
-        } else {
-          setPlan((prev) => ({
-            ...prev,
-            exercises: prev.exercises.map((exercise, index) =>
-              index === editingIndex ? exerciseToSave : exercise
-            ),
-          }));
         }
+
+        setPlan((prev) => ({
+          ...prev,
+          exercises: prev.exercises.map((exercise, index) =>
+            index === editingIndex
+              ? { ...exercise, ...(updatedExercise || exerciseToSave) }
+              : exercise
+          ),
+        }));
 
         toast.success("Ejercicio actualizado correctamente");
       } else {
         let newExercise = { ...exerciseToSave };
 
-        if (planId !== "new") {
-          const response = await fetch(
-            `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}/exercises`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                exerciseId: newExercise.exerciseId,
-                series: newExercise.series,
-                repetitions: newExercise.repetitions,
-                weight: newExercise.weight,
-                day: newExercise.dayOfWeek,
-                restTime: newExercise.restTime,
-              }),
-            }
+        if (!isNewPlan) {
+          const createdExercise = await saveExerciseRoutine(
+            clientDni!,
+            planId!,
+            exerciseToSave,
+            token
           );
-
-          if (!response.ok) {
-            throw new Error(
-              `Error al agregar ejercicio: ${response.statusText}`
-            );
-          }
-
-          const createdExercise = await response.json();
           newExercise = { ...newExercise, id: createdExercise.id };
         }
 
@@ -382,9 +281,7 @@ export default function TrainingPlanEdit() {
       clearExerciseForm();
     } catch (error) {
       console.error("Error al guardar ejercicio:", error);
-      toast.error(
-        "Error al guardar el ejercicio. Por favor intenta nuevamente."
-      );
+      toast.error("Error al guardar el ejercicio. Por favor intenta nuevamente.");
     }
   };
 
@@ -442,23 +339,13 @@ export default function TrainingPlanEdit() {
         return;
       }
 
-      if (exercise.id) {
-        const response = await fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}/exercises/${exercise.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+      if (exercise.id && !isNewPlan) {
+        await deleteExerciseRoutine(
+          clientDni!,
+          planId!,
+          exercise.id,
+          token
         );
-
-        if (!response.ok) {
-          throw new Error(
-            `Error al eliminar ejercicio: ${response.statusText}`
-          );
-        }
       }
 
       setPlan((prev) => ({
@@ -473,9 +360,7 @@ export default function TrainingPlanEdit() {
       toast.success("Ejercicio eliminado correctamente");
     } catch (error) {
       console.error("Error al eliminar ejercicio:", error);
-      toast.error(
-        "Error al eliminar el ejercicio. Por favor intenta nuevamente."
-      );
+      toast.error("Error al eliminar el ejercicio. Por favor intenta nuevamente.");
     }
   };
 
@@ -507,9 +392,7 @@ export default function TrainingPlanEdit() {
 
     if (!token) {
       toast.error("No se encontró token de autenticación");
-      setAuthError(
-        "No se encontró token de autenticación. Por favor inicie sesión nuevamente."
-      );
+      setAuthError("No se encontró token de autenticación. Por favor inicie sesión nuevamente.");
       setSaving(false);
       return;
     }
@@ -530,88 +413,48 @@ export default function TrainingPlanEdit() {
     try {
       toast.info("Guardando plan de entrenamiento...");
 
-      const clientCheckRes = await fetch(
-        `http://localhost:8080/api/v1/clients/${clientDni}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!clientCheckRes.ok) {
-        if (clientCheckRes.status === 401 || clientCheckRes.status === 403) {
-          toast.error("No tienes permisos para acceder a este cliente");
-          setAuthError(
-            "No tienes permisos para acceder a este cliente. Por favor verifica tus credenciales."
-          );
-          return;
-        }
-        const errorText = await clientCheckRes.text();
-        console.error("Cliente no encontrado - Error completo:", errorText);
-        toast.error("El cliente no existe o no tienes permisos para acceder");
-        return;
-      }
-
-      const clientData = await clientCheckRes.json();
-      let planIdToUse = plan.id;
-
       if (isNewPlan) {
-        const planPayload = {
-          name: plan.name.trim(),
-          description: plan.description,
-          startDate: plan.startDate,
-          endDate: plan.endDate,
-          clientDni: clientDni, // clientDni se obtiene del localStorage
-          trainerId: trainerId,
-          clientId: clientData.id,
-        };
-
-        const createRes = await fetch(
-          `http://localhost:8080/api/v1/clients/${clientDni}/training-plans`,
+        const createdPlan = await createTrainingPlan(
+          clientDni!,
           {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(planPayload),
-          }
+            name: plan.name.trim(),
+            description: plan.description,
+            startDate: plan.startDate,
+            endDate: plan.endDate,
+          },
+          token
         );
 
-        if (!createRes.ok) {
-          throw new Error("No se creó el plan.");
+        // Guardar ejercicios para el nuevo plan
+        for (const ex of plan.exercises) {
+          await saveExerciseRoutine(
+            clientDni!,
+            createdPlan.id.toString(),
+            {
+              ...ex,
+              series: Number(ex.series),
+              repetitions: Number(ex.repetitions),
+              weight: Number(ex.weight),
+            },
+            token
+          );
         }
-
-        const createdPlan = await createRes.json();
-        planIdToUse = createdPlan.id;
-      }
-
-      for (const ex of plan.exercises) {
-        const exPayload = {
-          exerciseId: ex.exerciseId,
-          series: Number(ex.series),
-          repetitions: Number(ex.repetitions),
-          weight: Number(ex.weight),
-          day: ex.dayOfWeek,
-          restTime: ex.restTime,
-        };
-
-        const endpoint = ex.id
-          ? `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/exercises/${ex.id}`
-          : `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planIdToUse}/exercises`;
-
-        const method = ex.id ? "PUT" : "POST";
-
-        await fetch(endpoint, {
-          method,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(exPayload),
-        });
+      } else {
+        // Actualizar ejercicios para plan existente
+        for (const ex of plan.exercises) {
+          await saveExerciseRoutine(
+            clientDni!,
+            planId!,
+            {
+              ...ex,
+              series: Number(ex.series),
+              repetitions: Number(ex.repetitions),
+              weight: Number(ex.weight),
+            },
+            token,
+            !!ex.id
+          );
+        }
       }
 
       toast.success("Plan de entrenamiento guardado correctamente");
@@ -619,12 +462,15 @@ export default function TrainingPlanEdit() {
     } catch (err) {
       console.error("Error completo:", err);
       toast.error("Error al guardar el plan. Por favor intenta nuevamente.");
-      setAuthError(
-        "Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente."
-      );
+      setAuthError("Error al guardar el plan. Por favor verifica tus permisos e intenta nuevamente.");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
   };
 
   if (loading) {
@@ -683,347 +529,48 @@ export default function TrainingPlanEdit() {
     <>
       <TrainerHeader onLogout={handleLogout} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-<div className="flex items-center justify-between mb-8">
-  <div className="flex items-center space-x-4">
-    <Link to={`/trainer/client/${clientDni}/training-plans`}>
-      <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
-        <ArrowLeft className="h-4 w-4" />
-        <span>Volver</span>
-      </button>
-    </Link>
-    <h1 className="text-3xl font-bold text-gray-900">
-      {isNewPlan
-        ? "Crear Plan de Entrenamiento"
-        : "Editar Plan de Entrenamiento"}
-    </h1>
-  </div>
+        <PlanHeaderActions
+          title={isNewPlan ? "Crear Plan de Entrenamiento" : "Editar Plan de Entrenamiento"}
+          onSave={savePlan}
+          onBack={() => navigate(`/trainer/client/${clientDni}/training-plans`)}
+          isSaving={saving}
+          isNewPlan={isNewPlan}
+          isEditingExercise={isEditingExercise}
+        />
 
-  {/* Mostrar botón Guardar solo si es nuevo plan O no se está editando un ejercicio en un plan existente */}
-  {(isNewPlan || (!isNewPlan && !isEditingExercise)) && (
-    <button
-      onClick={savePlan}
-      disabled={saving}
-      className="bg-pink-400 hover:bg-pink-500 text-white px-4 py-2 rounded-md flex items-center space-x-2 disabled:opacity-50"
-    >
-      <Save className="h-4 w-4" />
-      <span>{saving ? "Guardando..." : "Guardar Plan"}</span>
-    </button>
-  )}
-</div>
+        {authError && <ErrorMessage message={authError} severity="error" />}
 
-        {authError && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{authError}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <TrainingPlanDetailsForm
+          name={plan.name}
+          onChange={(e) => setPlan(prev => ({ ...prev, name: e.target.value }))}
+          disabled={!isNewPlan}
+        />
 
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-8">
-          <div className="bg-cyan-50 rounded-t-lg p-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Detalles del Plan
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Nombre del Plan *
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={plan.name}
-                  onChange={(e) =>
-                    setPlan((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="Ej: Plan de Fuerza - Principiante"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={!isNewPlan} // Deshabilitar si no es nuevo plan
-                />
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <ExerciseForm
+            exerciseId={exerciseForm.exerciseId}
+            series={exerciseForm.series}
+            repetitions={exerciseForm.repetitions}
+            weight={exerciseForm.weight}
+            dayOfWeek={exerciseForm.dayOfWeek}
+            restTime={exerciseForm.restTime}
+            exercises={allExercises}
+            onChange={updateExerciseForm}
+            onSubmit={addOrUpdateExercise}
+            onCancel={isEditingExercise ? clearExerciseForm : undefined}
+            isEdit={isEditingExercise}
+          />
+
+          <ExerciseList
+            exercises={plan.exercises}
+            onEdit={editExercise}
+            onDelete={confirmDeleteExercise}
+            editingIndex={editingIndex}
+          />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="bg-green-50 rounded-t-lg p-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {isEditingExercise ? "Editar Ejercicio" : "Agregar Ejercicio"}
-              </h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ejercicio *
-                </label>
-                <select
-                  value={exerciseForm.exerciseId || ""}
-                  onChange={(e) =>
-                    updateExerciseForm("exerciseId", Number(e.target.value))
-                  }
-                  className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="" disabled>
-                    — Selecciona ejercicio —
-                  </option>
-                  {allExercises.map((ex) => (
-                    <option key={ex.id} value={ex.id}>
-                      {ex.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Día de la semana *
-                </label>
-                <select
-                  value={exerciseForm.dayOfWeek}
-                  onChange={(e) =>
-                    updateExerciseForm("dayOfWeek", e.target.value)
-                  }
-                  className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  {DAYS_OF_WEEK.map((day) => (
-                    <option key={day.value} value={day.value}>
-                      {day.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Series *
-                  </label>
-                  <input
-                    type="text"
-                    value={exerciseForm.series}
-                    onChange={(e) => {
-                      if (/^\d*$/.test(e.target.value)) {
-                        updateExerciseForm("series", e.target.value);
-                      }
-                    }}
-                    className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ej: 3"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Repeticiones *
-                  </label>
-                  <input
-                    type="text"
-                    value={exerciseForm.repetitions}
-                    onChange={(e) => {
-                      if (/^\d*$/.test(e.target.value)) {
-                        updateExerciseForm("repetitions", e.target.value);
-                      }
-                    }}
-                    className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ej: 10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Peso (kg)
-                  </label>
-                  <input
-                    type="text"
-                    value={exerciseForm.weight}
-                    onChange={(e) => {
-                      if (/^\d*$/.test(e.target.value)) {
-                        updateExerciseForm("weight", e.target.value);
-                      }
-                    }}
-                    className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ej: 0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descanso (MM:SS) *
-                  </label>
-                  <input
-                    type="text"
-                    value={exerciseForm.restTime}
-                    onChange={(e) =>
-                      updateExerciseForm("restTime", e.target.value)
-                    }
-                    className="border px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ej: 01:00"
-                    pattern="^\d{2}:\d{2}$"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Formato: MM:SS (ej: 01:30 para 1 minuto 30 segundos)
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={addOrUpdateExercise}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 flex-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>{isEditingExercise ? "Actualizar" : "Agregar"}</span>
-                </button>
-
-                {isEditingExercise && (
-                  <button
-                    onClick={clearExerciseForm}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-                  >
-                    Cancelar
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="bg-blue-50 rounded-t-lg p-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Ejercicios del Plan ({plan.exercises.length})
-              </h2>
-            </div>
-            <div className="p-6">
-              {plan.exercises.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No hay ejercicios agregados aún.</p>
-                  <p className="text-sm">
-                    Usa el formulario de la izquierda para agregar ejercicios.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Ejercicio
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Día
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Series
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Reps
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Peso
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Descanso
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {plan.exercises.map((exercise, index) => {
-                        const dayLabel =
-                          DAYS_OF_WEEK.find(
-                            (d) => d.value === exercise.dayOfWeek
-                          )?.label || exercise.dayOfWeek;
-
-                        return (
-                          <tr
-                            key={index}
-                            className={`${
-                              index === editingIndex && isEditingExercise
-                                ? "bg-yellow-50"
-                                : ""
-                            } hover:bg-gray-50`}
-                          >
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <div className="font-medium">
-                                {exercise.exerciseName}
-                              </div>
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {dayLabel}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {exercise.series}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {exercise.repetitions}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {Number(exercise.weight) > 0
-                                ? `${exercise.weight} kg`
-                                : "-"}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {exercise.restTime}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                              <button
-                                onClick={() => editExercise(index)}
-                                className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                                title="Editar ejercicio"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => confirmDeleteExercise(index)}
-                                className="text-red-600 hover:text-red-800 inline-flex items-center"
-                                title="Eliminar ejercicio"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <ToastContainer position="top-right" autoClose={3000} />
       </div>
       <FooterPag />
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
 }

@@ -58,7 +58,8 @@ export default function ReportClient() {
       if (!clientDni) return;
 
       try {
-        const data = await fetchActiveTrainingPlan(clientDni);
+        const token = localStorage.getItem("token");
+        const data = await fetchActiveTrainingPlan(clientDni, token);
         setTrainingPlan(data);
 
         // Establecer fechas por defecto (createdAt hasta hoy)
@@ -102,7 +103,9 @@ export default function ReportClient() {
     setError("");
 
     try {
+      const token = localStorage.getItem("token");
       const data = await generateTrainingReport(
+        token,
         clientDni,
         startDate,
         endDate,
