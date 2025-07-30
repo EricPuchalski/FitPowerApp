@@ -33,8 +33,11 @@ const ClientDashboard: React.FC = () => {
         if (!clientDni) {
           throw new Error("No se encontró el DNI del cliente en el almacenamiento local");
         }
-
-        const clientData = await fetchClientData(clientDni);
+          const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No se encontró token de autenticación");
+        }
+        const clientData = await fetchClientData(clientDni, token);
         setClient(clientData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Ocurrió un error desconocido");
@@ -51,6 +54,11 @@ const ClientDashboard: React.FC = () => {
     const loadActivePlans = async () => {
       if (!client) return;
 
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No se encontró token de autenticación");
+        }
+
       try {
         setFetchingPlans(true);
         const clientDni = client.dni;
@@ -58,7 +66,7 @@ const ClientDashboard: React.FC = () => {
         // Cargar planes en paralelo
         const [nutritionPlan, trainingPlan] = await Promise.all([
           fetchActiveNutritionPlan(clientDni).catch(() => null),
-          fetchActiveTrainingPlan(clientDni).catch(() => null)
+          fetchActiveTrainingPlan(clientDni, token).catch(() => null)
         ]);
 
         setActiveNutritionPlanId(nutritionPlan?.id || null);

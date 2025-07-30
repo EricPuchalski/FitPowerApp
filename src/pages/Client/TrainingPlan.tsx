@@ -48,9 +48,13 @@ const TrainingPlanPage = () => {
         if (!clientDni) {
           throw new Error("No se encontró el DNI del cliente");
         }
+          const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No se encontró token de autenticación");
+        }
 
         // Usamos el servicio
-        const plan = await fetchActiveTrainingPlan(clientDni);
+        const plan = await fetchActiveTrainingPlan(clientDni, token);
         setTrainingPlan(plan);
 
         // Organizar ejercicios por día
