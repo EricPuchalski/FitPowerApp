@@ -1,7 +1,34 @@
 import { TrendingUp, TrendingDown, Activity, Clock, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
 
 export const ExerciseProgressSection = ({ data }) => {
+  const [sortBy, setSortBy] = useState('progress'); // 'progress', 'name', 'weight'
+  const [filterPositive, setFilterPositive] = useState(false);
+
   if (!data) return null;
+
+  // Procesar y ordenar datos
+  let exercises = Object.entries(data);
+  
+  if (filterPositive) {
+    exercises = exercises.filter(([_, stats]) => stats.progressPercentage > 0);
+  }
+
+  exercises.sort(([nameA, statsA], [nameB, statsB]) => {
+    switch (sortBy) {
+      case 'progress':
+        return statsB.progressPercentage - statsA.progressPercentage;
+      case 'name':
+        return nameA.localeCompare(nameB);
+      case 'weight':
+        return statsB.currentAverageWeight - statsA.currentAverageWeight;
+      default:
+        return 0;
+    }
+  });
+
+  const positiveProgress = exercises.filter(([_, stats]) => stats.progressPercentage > 0).length;
+  const totalExercises = exercises.length;
 
   return (
     <div className="space-y-8">
@@ -11,16 +38,60 @@ export const ExerciseProgressSection = ({ data }) => {
         </h3>
         <p className="text-gray-600">Tu evolución detallada en cada movimiento</p>
       </div>
+
+      {/* Estadísticas generales */}
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold text-indigo-700">{totalExercises}</div>
+            <div className="text-sm text-indigo-600">Ejercicios totales</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-green-700">{positiveProgress}</div>
+            <div className="text-sm text-green-600">Con progreso positivo</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-purple-700">
+              {((positiveProgress / totalExercises) * 100).toFixed(0)}%
+            </div>
+            <div className="text-sm text-purple-600">Tasa de mejora</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Controles de filtrado y ordenamiento */}
+      <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Ordenar por:</label>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="progress">Progreso</option>
+              <option value="name">Nombre</option>
+              <option value="weight">Peso actual</option>
+            </select>
+          </div>
+          
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={filterPositive}
+              onChange={(e) => setFilterPositive(e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">Solo progreso positivo</span>
+          </label>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Object.entries(data).map(([name, stats], index) => (
+        {exercises.map(([name, stats], index) => (
           <div 
             key={name} 
             className="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-100 hover:border-blue-200"
-            style={{
-              animationDelay: `${index * 150}ms`,
-              animation: 'fadeInUp 0.6s ease forwards'
-            }}
           >
             {/* Indicador de tendencia */}
             <div className="absolute -top-3 -right-3">
@@ -56,7 +127,7 @@ export const ExerciseProgressSection = ({ data }) => {
               </div>
             </div>
 
-            {/* Barra de progreso mejorada */}
+            {/* Barra de progreso */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-gray-600">Progreso en peso</span>
@@ -76,19 +147,14 @@ export const ExerciseProgressSection = ({ data }) => {
                       ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
                       : 'bg-gradient-to-r from-red-400 to-pink-500'
                   }`}
-                  style={{ 
-                    width: `${Math.min(100, Math.abs(stats.progressPercentage))}%`,
-                    animationDelay: `${index * 200 + 500}ms`
-                  }}
-                >
-                  <div className="h-full w-full bg-white opacity-30 animate-pulse"></div>
-                </div>
+                  style={{ width: `${Math.min(100, Math.abs(stats.progressPercentage))}%` }}
+                />
               </div>
             </div>
             
             {/* Métricas adicionales */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg group-hover:bg-gray-100 transition-colors">
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
                 <Activity className="w-4 h-4 text-orange-500" />
                 <div>
                   <div className="text-xs text-gray-600">Reps máx</div>
@@ -96,7 +162,7 @@ export const ExerciseProgressSection = ({ data }) => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg group-hover:bg-gray-100 transition-colors">
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
                 <Clock className="w-4 h-4 text-blue-500" />
                 <div>
                   <div className="text-xs text-gray-600">Descanso</div>
@@ -104,25 +170,9 @@ export const ExerciseProgressSection = ({ data }) => {
                 </div>
               </div>
             </div>
-
-            {/* Efecto de hover decorativo */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 rounded-2xl transition-all duration-300 pointer-events-none"></div>
           </div>
         ))}
       </div>
-
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
 };

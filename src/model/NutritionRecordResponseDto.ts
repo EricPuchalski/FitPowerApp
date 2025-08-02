@@ -4,6 +4,9 @@ export interface NutritionRecordResponseDto {
   id: number;
   createdAt: string;
   calories: number;
+    proteins: number;
+  carbohydrates: number;
+  fats: number;
   food: string;
   mealTime: MealTime;
   observations: string;

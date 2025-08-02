@@ -1,5 +1,4 @@
 "use client";
-
 import { useRef, useState } from "react";
 import {
   Button,
@@ -22,6 +21,7 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
+  Grid,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -34,35 +34,10 @@ import {
   Person,
   Download,
   Assignment,
+  Send,
 } from "@mui/icons-material";
 import html2pdf from "html2pdf.js";
-
-interface ClientReportDTO {
-  trainingPlanName: string;
-  clientName: string;
-  clientDni: string;
-  clientGoals: string;
-  trainerName: string;
-  period: string;
-  trainedDays: number;
-  attendanceRate: string;
-  trainedDates: string[];
-  strengthProgress: {
-    exerciseName: string;
-    progress: string;
-  };
-  exerciseProgressDetails: Array<{
-    exercise: string;
-    initial: string;
-    finalValue: string;
-    progress: string;
-    initialReps: number;
-    finalReps: number;
-  }>;
-  restTimeAnalysis: string;
-  trainerComment: string;
-  nextSteps: string;
-}
+import { ClientReportDTO } from "../model/ClientReportDTO";
 
 interface TrainingReportProps {
   data: ClientReportDTO;
@@ -73,85 +48,154 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(false);
+  const [sendError, setSendError] = useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const generatePdf = () => {
-    setPdfGenerating(true);
-    const element = printRef.current;
+  const [confirmSendOpen, setConfirmSendOpen] = useState(false);
 
-    if (!element) {
-      setPdfGenerating(false);
-      return;
-    }
-
-    // Clonar el elemento para no afectar el DOM visible
-    const clone = element.cloneNode(true) as HTMLElement;
-
-    // Ajustar estilos específicos para el PDF
-    clone.style.width = "190mm"; // Menor que A4 para considerar márgenes
-    clone.style.margin = "0";
-    clone.style.padding = "0";
-    clone.style.boxSizing = "border-box";
-
-    // Aplicar estilos específicos a todos los elementos hijos
-    const allElements = clone.querySelectorAll("*");
-    allElements.forEach((el: HTMLElement) => {
-      el.style.boxSizing = "border-box";
-      el.style.maxWidth = "100%";
-    });
-
-    // Configuración de html2pdf con márgenes adecuados
-    const opt = {
-      margin: [10, 10, 10, 10], // [top, left, bottom, right]
-      filename: `Informe_Entrenamiento_${data.clientName.replace(
-        /\s+/g,
-        "_"
-      )}_${data.period.replace(/\//g, "-")}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        logging: true,
-        useCORS: true,
-        scrollY: 0,
-        windowWidth: 800, // Ancho fijo para consistencia
-        letterRendering: true,
-        allowTaint: true,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-        compress: true,
-      },
-    };
-
-    // Agregar el clon al cuerpo temporalmente
-    const container = document.createElement("div");
-    container.style.position = "absolute";
-    container.style.left = "-9999px";
-    container.appendChild(clone);
-    document.body.appendChild(container);
-
-    html2pdf()
-      .from(clone)
-      .set(opt)
-      .save()
-      .then(() => {
-        // Eliminar el clon después de generar el PDF
-        document.body.removeChild(container);
-        setPdfGenerating(false);
-        setOpenDialog(false);
-      })
-      .catch((err: Error) => {
-        console.error("Error generating PDF:", err);
-        document.body.removeChild(container);
-        setPdfGenerating(false);
-      });
+  const handleSendConfirmation = () => {
+    setConfirmSendOpen(true);
   };
+
+  const handleConfirmSend = async () => {
+    setConfirmSendOpen(false);
+    await sendTrainingReport();
+  };
+
+  // const generatePdf = () => {
+  //   setPdfGenerating(true);
+  //   const element = printRef.current;
+  //   if (!element) {
+  //     setPdfGenerating(false);
+  //     return;
+  //   }
+  //   // Clonar el elemento para no afectar el DOM visible
+  //   const clone = element.cloneNode(true) as HTMLElement;
+  //   // Ajustar estilos específicos para el PDF
+  //   clone.style.width = "190mm"; // Menor que A4 para considerar márgenes
+  //   clone.style.margin = "0";
+  //   clone.style.padding = "0";
+  //   clone.style.boxSizing = "border-box";
+  //   // Aplicar estilos específicos a todos los elementos hijos
+  //   const allElements = clone.querySelectorAll("*");
+  //   allElements.forEach((el: HTMLElement) => {
+  //     el.style.boxSizing = "border-box";
+  //     el.style.maxWidth = "100%";
+  //   });
+  //   // Configuración de html2pdf con márgenes adecuados
+  //   const opt = {
+  //     margin: [10, 10, 10, 10], // [top, left, bottom, right]
+  //     filename: `Informe_Entrenamiento_${data.clientName.replace(
+  //       /\s+/g,
+  //       "_"
+  //     )}_${data.period.replace(/\//g, "-")}.pdf`,
+  //     image: { type: "jpeg", quality: 0.98 },
+  //     html2canvas: {
+  //       scale: 2,
+  //       logging: true,
+  //       useCORS: true,
+  //       scrollY: 0,
+  //       windowWidth: 800, // Ancho fijo para consistencia
+  //       letterRendering: true,
+  //       allowTaint: true,
+  //     },
+  //     jsPDF: {
+  //       unit: "mm",
+  //       format: "a4",
+  //       orientation: "portrait",
+  //       compress: true,
+  //     },
+  //   };
+  //   // Agregar el clon al cuerpo temporalmente
+  //   const container = document.createElement("div");
+  //   container.style.position = "absolute";
+  //   container.style.left = "-9999px";
+  //   container.appendChild(clone);
+  //   document.body.appendChild(container);
+  //   html2pdf()
+  //     .from(clone)
+  //     .set(opt)
+  //     .save()
+  //     .then(() => {
+  //       // Eliminar el clon después de generar el PDF
+  //       document.body.removeChild(container);
+  //       setPdfGenerating(false);
+  //       setOpenDialog(false);
+  //     })
+  //     .catch((err: Error) => {
+  //       console.error("Error generating PDF:", err);
+  //       document.body.removeChild(container);
+  //       setPdfGenerating(false);
+  //     });
+  // };
+
   const handlePrintDialog = () => {
     setOpenDialog(true);
   };
+
+const sendTrainingReport = async () => {
+  setSending(true);
+  setSendError("");
+  setSendSuccess(false);
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    setSendError("No se encontró el token de autenticación. Inicia sesión nuevamente.");
+    setSending(false);
+    return;
+  }
+
+  try {
+    // Verifica que data.period esté definido y tenga el formato correcto
+    if (!data.period || typeof data.period !== "string") {
+      throw new Error("El período no está definido o no es válido.");
+    }
+
+    const dateParts = data.period.split(" - ");
+    if (dateParts.length !== 2) {
+      throw new Error("El período no tiene el formato esperado.");
+    }
+
+    // Convertir las fechas al formato yyyy-MM-dd
+    const startDate = convertToBackendDateFormat(dateParts[0]);
+    const endDate = convertToBackendDateFormat(dateParts[1]);
+
+    const response = await fetch(
+      `http://localhost:8080/api/v1/clients/${data.clientDni}/training-plans/reports/pdf?startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          trainerComment: data.trainerComment.trim(),
+          nextSteps: data.nextSteps.trim(),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Error al enviar el reporte");
+    }
+
+    setSendSuccess(true);
+  } catch (err) {
+    setSendError(err instanceof Error ? err.message : "Error inesperado al enviar el reporte");
+  } finally {
+    setSending(false);
+  }
+};
+
+// Función para convertir la fecha al formato yyyy-MM-dd
+const convertToBackendDateFormat = (dateString: string) => {
+  const [day, month, year] = dateString.split('/');
+  return `${year}-${month}-${day}`;
+};
 
   const getProgressColor = (progress: string) => {
     const value = parseFloat(progress.replace(/[+%]/g, ""));
@@ -174,8 +218,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
     if (progress.startsWith("-")) return `↓ ${progress.replace("-", "")}`;
     return progress;
   };
-
-  // obtener colores segun asisntecia
 
   const getAttendanceStyles = (rate: string) => {
     const value = parseFloat(rate.replace("%", ""));
@@ -207,17 +249,15 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
           <Button onClick={() => setOpenDialog(false)} color="inherit">
             Cancelar
           </Button>
-          <Button
+          {/* <Button
             onClick={generatePdf}
             disabled={pdfGenerating}
-            startIcon={
-              pdfGenerating ? <CircularProgress size={20} /> : <Download />
-            }
+            startIcon={pdfGenerating ? <CircularProgress size={20} /> : <Download />}
             color="primary"
             variant="contained"
           >
             {pdfGenerating ? "Generando..." : "Descargar PDF"}
-          </Button>
+          </Button> */}
         </DialogActions>
       </Dialog>
 
@@ -246,27 +286,116 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
         >
           {isMobile ? "Volver" : "Volver al formulario"}
         </Button>
-        <Button
-          variant="contained"
-          onClick={handlePrintDialog}
-          startIcon={pdfGenerating ? <CircularProgress size={20} /> : <Print />}
-          sx={{
-            backgroundColor: "#fb8c00",
-            "&:hover": { backgroundColor: "#e67c00" },
-            minWidth: isMobile ? "auto" : "200px",
-          }}
-          disabled={pdfGenerating}
-          size={isMobile ? "small" : "medium"}
-        >
-          {isMobile
-            ? pdfGenerating
-              ? "..."
-              : "PDF"
-            : pdfGenerating
-            ? "Generando..."
-            : "Descargar PDF"}
-        </Button>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {/* <Button
+            variant="contained"
+            onClick={handlePrintDialog}
+            startIcon={pdfGenerating ? <CircularProgress size={20} /> : <Print />}
+            sx={{
+              backgroundColor: "#fb8c00",
+              "&:hover": { backgroundColor: "#e67c00" },
+              minWidth: isMobile ? "auto" : "200px",
+            }}
+            disabled={pdfGenerating}
+            size={isMobile ? "small" : "medium"}
+          >
+            {isMobile ? (pdfGenerating ? "..." : "PDF") : pdfGenerating ? "Generando..." : "Descargar PDF"}
+          </Button> */}
+          <Button
+            variant="contained"
+            onClick={handleSendConfirmation}
+            startIcon={sending ? <CircularProgress size={20} /> : <Send />}
+            sx={{
+              backgroundColor: "#4caf50",
+              "&:hover": { backgroundColor: "#388e3c" },
+              minWidth: isMobile ? "auto" : "200px",
+              position: "relative",
+              overflow: "hidden",
+              "&:disabled": {
+                backgroundColor: "#81c784", // Verde más claro cuando está deshabilitado
+              },
+            }}
+            disabled={sending || sendSuccess} // Deshabilitar después de enviar exitosamente
+            size={isMobile ? "small" : "medium"}
+          >
+            {sending
+              ? "Enviando..."
+              : sendSuccess
+              ? "Enviado ✓"
+              : "Enviar al Cliente"}
+          </Button>
+          <Dialog open={confirmSendOpen} onClose={() => setConfirmSendOpen(false)}>
+  <DialogTitle>Confirmar Envío</DialogTitle>
+  <DialogContent>
+    <Typography>¿Estás seguro que deseas enviar este informe al cliente?</Typography>
+    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+      El cliente recibirá un mail con el pdf adjunto.
+    </Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setConfirmSendOpen(false)} color="inherit">
+      Cancelar
+    </Button>
+    <Button
+      onClick={handleConfirmSend}
+      color="primary"
+      variant="contained"
+      startIcon={<Send />}
+    >
+      Confirmar Envío
+    </Button>
+  </DialogActions>
+</Dialog>
+        </Box>
       </Box>
+
+      {sendSuccess && (
+  <Alert 
+    severity="success" 
+    sx={{ 
+      mx: "auto", 
+      maxWidth: 800, 
+      mt: 2,
+      boxShadow: 2,
+      ".MuiAlert-message": {
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }
+    }}
+    onClose={() => setSendSuccess(false)}
+  >
+    <Box sx={{ textAlign: "center", width: "100%" }}>
+      <Typography variant="h6" sx={{ mb: 1 }}>
+        Informe enviado exitosamente!
+      </Typography>
+      <Typography variant="body2">
+        El cliente ha recibido el informe de entrenamiento.
+      </Typography>
+    </Box>
+  </Alert>
+)}
+
+{sendError && (
+  <Alert 
+    severity="error" 
+    sx={{ 
+      mx: "auto", 
+      maxWidth: 800, 
+      mt: 2,
+      boxShadow: 2
+    }}
+    onClose={() => setSendError("")}
+  >
+    <Typography variant="h6" sx={{ mb: 1 }}>
+      Error al enviar el informe, por favor vuelva a intentarlo o comuniquese con la administración.
+    </Typography>
+    <Typography variant="body2">
+      {sendError}
+    </Typography>
+  </Alert>
+)}
 
       {/* Contenido del reporte - Se incluye en el PDF */}
       <Box
@@ -340,7 +469,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
             </Typography>
           </Box>
         </Box>
-
         <Box sx={{ p: 3, "@media print": { p: 2 } }}>
           {/* Información del cliente y plan */}
           <Box
@@ -403,7 +531,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
                 </Box>
               </CardContent>
             </Card>
-
             <Card
               sx={{
                 "@media print": {
@@ -454,7 +581,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
               </CardContent>
             </Card>
           </Box>
-
           {/* Asistencia */}
           <Card
             sx={{
@@ -473,7 +599,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
                 <CalendarToday sx={{ color: "#fb8c00" }} />
                 <Typography variant="h6">Asistencia</Typography>
               </Box>
-
               <Box
                 sx={{
                   display: "grid",
@@ -508,7 +633,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
                     Días Entrenados
                   </Typography>
                 </Box>
-
                 <Box
                   sx={{
                     textAlign: "center",
@@ -532,7 +656,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
                   </Typography>
                 </Box>
               </Box>
-
               {data.trainedDates.length > 0 && (
                 <Box>
                   <Typography
@@ -574,7 +697,7 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
             </CardContent>
           </Card>
 
-          {/* Progreso de Fuerza Destacado */}
+          {/* Análisis de Progreso */}
           {data.strengthProgress && (
             <Card
               sx={{
@@ -583,6 +706,7 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
                   boxShadow: "none",
                   border: "1px solid #e0e0e0",
                   mb: 3,
+                  pageBreakInside: "avoid",
                 },
               }}
             >
@@ -591,34 +715,92 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
                   sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
                 >
                   <TrendingUp sx={{ color: "#fb8c00" }} />
-                  <Typography variant="h6">Progreso Destacado</Typography>
+                  <Typography variant="h6">Análisis de Progreso</Typography>
                 </Box>
- <Box
-  sx={{
-    textAlign: "center",
-    p: 3,
-    background: "linear-gradient(to right, #e8f5e9, #c8e6c9)", // fondo verde suave
-    borderRadius: "8px",
-    "@media print": {
-      background: "none",
-      border: "2px solid #2e7d32", // borde verde oscuro en impresión
-    },
-  }}
->
-  <Typography variant="h5" sx={{ fontWeight: "bold", mb: 1 }}>
-    {data.strengthProgress.exerciseName}
-  </Typography>
-  <Typography
-    variant="h4"
-    sx={{ fontWeight: "bold", color: "#2e7d32", mb: 1 }} // texto verde
-  >
-    {data.strengthProgress.progress}
-  </Typography>
-  <Typography variant="body2" sx={{ color: "#4caf50" }}>
-    Mejor progreso del período
-  </Typography>
-</Box>
 
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
+                    gap: 2,
+                    "@media print": {
+                      flexDirection: "column",
+                      gap: "10px",
+                    },
+                  }}
+                >
+                  {data.strengthProgress.maxImprovement && (
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        flex: 1,
+                        p: 2,
+                        borderColor: "success.main",
+                        backgroundColor: "rgba(76, 175, 80, 0.05)",
+                        textAlign: "center",
+                        "@media print": {
+                          backgroundColor: "transparent",
+                          border: "2px solid #2e7d32",
+                          mb: 1,
+                        },
+                      }}
+                    >
+                      <Typography
+                        color="success.main"
+                        variant="h6"
+                        sx={{ fontWeight: "bold", mb: 1 }}
+                      >
+                        ▲ Mayor Progreso
+                      </Typography>
+                      <Typography variant="body2">
+                        {data.strengthProgress.maxImprovement}
+                      </Typography>
+                    </Card>
+                  )}
+
+                  {data.strengthProgress.maxDecline && (
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        flex: 1,
+                        p: 2,
+                        borderColor: "error.main",
+                        backgroundColor: "rgba(244, 67, 54, 0.05)",
+                        textAlign: "center",
+                        "@media print": {
+                          backgroundColor: "transparent",
+                          border: "2px solid #d32f2f",
+                        },
+                      }}
+                    >
+                      <Typography
+                        color="error.main"
+                        variant="h6"
+                        sx={{ fontWeight: "bold", mb: 1 }}
+                      >
+                        ▼ Menor Progreso
+                      </Typography>
+                      <Typography variant="body2">
+                        {data.strengthProgress.maxDecline}
+                      </Typography>
+                    </Card>
+                  )}
+                </Box>
+
+                {!data.strengthProgress.maxImprovement &&
+                  !data.strengthProgress.maxDecline && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                        textAlign: "center",
+                        py: 2,
+                      }}
+                    >
+                      No hay suficientes datos para mostrar progresos
+                      significativos
+                    </Typography>
+                  )}
               </CardContent>
             </Card>
           )}
@@ -735,102 +917,79 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
           )}
 
           {/* Comentarios y Próximos Pasos */}
-{/* Comentarios y Próximos Pasos */}
-<Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-    gap: 3,
-    "@media print": {
-      gridTemplateColumns: "1fr 1fr",
-      gap: "10px",
-    },
-  }}
->
-  {data.trainerComment && (
-    <Card
-      sx={{
-        borderRadius: 3,
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-        transition: "transform 0.3s, box-shadow 0.3s",
-        "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
-        },
-        "@media print": {
-          boxShadow: "none",
-          border: "1px solid #e0e0e0",
-        },
-      }}
-    >
-      <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Person sx={{ fontSize: 24, color: "#fb8c00", mr: 1 }} />
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-            Comentarios del Entrenador
-          </Typography>
-        </Box>
-        <Typography variant="body1" sx={{ color: "#555" }}>
-          {data.trainerComment}
-        </Typography>
-      </CardContent>
-    </Card>
-  )}
-
-  {data.nextSteps && (
-    <Card
-      sx={{
-        borderRadius: 3,
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-        transition: "transform 0.3s, box-shadow 0.3s",
-        "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
-        },
-        "@media print": {
-          boxShadow: "none",
-          border: "1px solid #e0e0e0",
-        },
-      }}
-    >
-      <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Assignment sx={{ fontSize: 24, color: "#4caf50", mr: 1 }} />
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-            Próximos Pasos
-          </Typography>
-        </Box>
-        <Typography variant="body1" sx={{ color: "#555" }}>
-          {data.nextSteps}
-        </Typography>
-      </CardContent>
-    </Card>
-  )}
-</Box>
-
-
-        </Box>
-
-        {/* Footer del reporte */}
-            {/* <Box
+          <Box
             sx={{
-                px: 3,
-                py: 2,
-                borderTop: "1px solid #e0e0e0",
-                textAlign: "center",
-                backgroundColor: "#f5f5f5",
-                "@media print": {
-                backgroundColor: "transparent",
-                borderTop: "1px solid #e0e0e0",
-                py: 1,
-                },
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 3,
+              "@media print": {
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              },
             }}
-            >
-            <Typography variant="body2" sx={{ color: "#757575" }}>
-                © {new Date().getFullYear()} FitPower - Sistema de Gestión de
-                Entrenamientos
-            </Typography>
-            </Box> */}
+          >
+            {data.trainerComment && (
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
+                  },
+                  "@media print": {
+                    boxShadow: "none",
+                    border: "1px solid #e0e0e0",
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Person sx={{ fontSize: 24, color: "#fb8c00", mr: 1 }} />
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      Comentarios del Entrenador
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" sx={{ color: "#555" }}>
+                    {data.trainerComment}
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
+            {data.nextSteps && (
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: "0px 6px 25px rgba(0, 0, 0, 0.15)",
+                  },
+                  "@media print": {
+                    boxShadow: "none",
+                    border: "1px solid #e0e0e0",
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 3, "@media print": { p: 2 } }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Assignment
+                      sx={{ fontSize: 24, color: "#4caf50", mr: 1 }}
+                    />
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                      Próximos Pasos
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" sx={{ color: "#555" }}>
+                    {data.nextSteps}
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

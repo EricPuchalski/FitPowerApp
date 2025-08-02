@@ -4,12 +4,10 @@ import authService from '../service/AuthService';
 
 export interface AuthUser {
   token: string;
-  roles: string[];
-  id: number;
   username: string;
-  email: string;
   dni: string;
-  gymName: string;
+  email: string;
+  roles: string[];
   trainerData?: {
     id: number;
     name: string;
@@ -17,6 +15,7 @@ export interface AuthUser {
     dni: string;
     email: string;
     specialization?: string;
+    active: boolean;
   };
   nutritionistData?: {
     id: number;
@@ -25,6 +24,7 @@ export interface AuthUser {
     dni: string;
     email: string;
     specialization?: string;
+    active: boolean;
   };
   clientData?: {
     id: number;
@@ -33,6 +33,7 @@ export interface AuthUser {
     dni: string;
     email: string;
     dateOfBirth?: string;
+    active: boolean;
   };
 }
 
@@ -104,6 +105,13 @@ export const useAuth = () => {
   // Obtener headers de autorización
   const getAuthHeaders = () => authService.getAuthHeader();
 
+  // Métodos para obtener datos del token directamente
+  const getTokenData = () => authService.getTokenData();
+  const getUserDni = () => authService.getUserDni();
+  const getUserEmail = () => authService.getUserEmail();
+  const getUsername = () => authService.getUsername();
+  const getUserRole = () => authService.getUserRole();
+
   return {
     user,
     loading,
@@ -121,6 +129,12 @@ export const useAuth = () => {
     getNutritionistData,
     getClientData,
     // Headers
-    getAuthHeaders
+    getAuthHeaders,
+    // Métodos para obtener datos del token
+    getTokenData,
+    getUserDni,
+    getUserEmail,
+    getUsername,
+    getUserRole
   };
 };

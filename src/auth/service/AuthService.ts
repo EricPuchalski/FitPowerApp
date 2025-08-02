@@ -1,66 +1,27 @@
-// src/services/authService.ts
+// src/auth/service/AuthService.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { Trainer } from '../../model/Trainer';
+import { Nutritionist } from '../../model/Nutritionist';
+import { Client } from '../../model/Client';
+import { LoginCredentials } from '../model/LoginRequest';
+import { UserRole } from '../model/UserRole';
+import { LoginResponse } from '../model/LoginResponse';
+import { DecodedToken } from '../model/DecodedToken';
 
 const API_URL = 'http://localhost:8080/api/v1/auth';
 
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
 
-interface LoginResponse {
+// Interfaz para los datos del usuario completos
+interface UserData {
   token: string;
-  roles: string[];
-  id: number;
   username: string;
-  email: string;
-  dni: string;
-  gymName: string;
-}
-
-interface TrainerData {
-  id: number;
-  name: string;
-  gymName: string;
   dni: string;
   email: string;
-  specialization?: string;
-  // otros campos que tenga tu trainer
-}
-
-interface NutritionistData {
-  id: number;
-  name: string;
-  gymName: string;
-  dni: string;
-  email: string;
-  specialization?: string;
-  // otros campos que tenga tu nutricionista
-}
-
-interface ClientData {
-  id: number;
-  name: string;
-  gymName: string;
-  dni: string;
-  email: string;
-  dateOfBirth?: string;
-  // otros campos que tenga tu cliente
-}
-
-interface UserData extends LoginResponse {
-  trainerData?: TrainerData;
-  nutritionistData?: NutritionistData;
-  clientData?: ClientData;
-}
-
-// Enum para los roles
-enum UserRole {
-  TRAINER = "ROLE_TRAINER",
-  NUTRITIONIST = "ROLE_NUTRITIONIST", 
-  CLIENT = "ROLE_CLIENT",
-  ADMIN = "ROLE_ADMIN"
+  roles: string[];
+  trainerData?: Trainer;
+  nutritionistData?: Nutritionist;
+  clientData?: Client;
 }
 
 const authService = {
@@ -70,26 +31,45 @@ const authService = {
       const data: LoginResponse = response.data;
 
       if (data.token) {
-        // Limpiar localStorage primero
+        // Decodificar el token para obtener los datos
+        const decodedToken: DecodedToken = jwtDecode(data.token);
+        
+        // Limpiar localStorage
         localStorage.clear();
         
-        // Almacenar datos básicos de autenticación
+        // Almacenar solo el token y el dni (extraído del token)
         localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.roles[0]);
-        localStorage.setItem("userId", data.id.toString());
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("userEmail", data.email);
-        localStorage.setItem("userDni", data.dni);
-        localStorage.setItem("userRole", data.roles[0]);
-        localStorage.setItem("gymName", data.gymName);
+        localStorage.setItem("userDni", decodedToken.dni);
 
-        let userData: UserData = { ...data };
+        // Crear objeto userData con los datos del token
+        let userData: UserData = {
+          token: data.token,
+          username: decodedToken.sub,
+          dni: decodedToken.dni,
+          email: decodedToken.email,
+          roles: decodedToken.roles
+        };
 
-        // Manejo específico según el rol del usuario
+        // Obtener datos específicos según el rol del usuario
         await this.fetchUserRoleData(userData, data.token);
 
-        // Almacenar todos los datos del usuario
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Verificar si la cuenta está activa
+        if (userData.roles.includes(UserRole.TRAINER)) {
+          if (userData.trainerData && !userData.trainerData.active) {
+            localStorage.clear();
+            throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+          }
+        } else if (userData.roles.includes(UserRole.NUTRITIONIST)) {
+          if (userData.nutritionistData && !userData.nutritionistData.active) {
+            localStorage.clear();
+            throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+          }
+        } else if (userData.roles.includes(UserRole.CLIENT)) {
+          if (userData.clientData && !userData.clientData.active) {
+            localStorage.clear();
+            throw new Error("Cuenta inhabilitada, por favor contactese con la administración");
+          }
+        }
 
         // Almacenar todos los datos del usuario
         localStorage.setItem('user', JSON.stringify(userData));
@@ -97,7 +77,7 @@ const authService = {
         return userData;
       }
       
-      throw new Error(data.message || "Credenciales incorrectas");
+      throw new Error("Credenciales incorrectas");
     } catch (error: any) {
       console.error("Error al iniciar sesión:", error);
       localStorage.clear();
@@ -129,6 +109,19 @@ const authService = {
     }
   },
 
+  // Método para obtener datos del token directamente
+  getTokenData(): DecodedToken | null {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      
+      return jwtDecode<DecodedToken>(token);
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  },
+
   getAuthHeader(): { Authorization?: string } {
     const token = localStorage.getItem('token');
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -139,7 +132,7 @@ const authService = {
     if (!token) return false;
 
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken: DecodedToken = jwtDecode(token);
       const currentTime = Date.now() / 1000;
       return decodedToken.exp > currentTime;
     } catch (error) {
@@ -149,7 +142,25 @@ const authService = {
   },
 
   getUserRole(): string | null {
-    return localStorage.getItem('userRole');
+    const tokenData = this.getTokenData();
+    return tokenData?.roles?.[0] || null;
+  },
+
+  // Método para obtener el DNI desde el token
+  getUserDni(): string | null {
+    return localStorage.getItem('userDni');
+  },
+
+  // Método para obtener el email desde el token
+  getUserEmail(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.email || null;
+  },
+
+  // Método para obtener el username desde el token
+  getUsername(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.sub || null;
   },
 
   getRedirectPath(roles: string[]): string {
@@ -176,7 +187,7 @@ const authService = {
       if (userData.roles.includes(UserRole.TRAINER)) {
         const trainerResponse = await axios.get(
           `http://localhost:8080/api/v1/trainers/${userData.dni}`,
-          { headers }
+          { headers } 
         );
         userData.trainerData = trainerResponse.data;
         
@@ -230,8 +241,8 @@ const authService = {
 
   // Método para verificar si el usuario tiene un rol específico
   hasRole(role: UserRole): boolean {
-    const currentUser = this.getCurrentUser();
-    return currentUser?.roles?.includes(role) || false;
+    const tokenData = this.getTokenData();
+    return tokenData?.roles?.includes(role) || false;
   },
 
   // Métodos específicos para cada rol
@@ -252,20 +263,40 @@ const authService = {
   },
 
   // Obtener datos específicos según el rol
-  getTrainerData(): TrainerData | null {
+  getTrainerData(): Trainer | null {
     const user = this.getCurrentUser();
     return user?.trainerData || null;
   },
 
-  getNutritionistData(): NutritionistData | null {
+  getNutritionistData(): Nutritionist | null {
     const user = this.getCurrentUser();
     return user?.nutritionistData || null;
   },
 
-  getClientData(): ClientData | null {
+  getClientData(): Client | null {
     const user = this.getCurrentUser();
     return user?.clientData || null;
-  }
+  },
+
+  // Cambiar contraseña del usuario logueado
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
+    await axios.put(
+      `${API_URL}/change-password`,
+      { currentPassword, newPassword },
+      { headers }
+    );
+  },
+
+  // Resetear contraseña de otro usuario (solo ADMIN)
+  async resetPassword(username: string, newPassword: string): Promise<void> {
+    const headers = { ...this.getAuthHeader(), 'Content-Type': 'application/json' };
+    await axios.put(
+      `${API_URL}/admin/reset-password`,
+      { username, newPassword },
+      { headers }
+    );
+  },
 };
 
 export default authService;

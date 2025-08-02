@@ -7,18 +7,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { FooterPag } from "../../components/Footer";
 import { useNavigate } from "react-router-dom";
+import { Nutritionist } from "../../model/Nutritionist";
+import { AdminHeader } from "../../components/AdminHeader";
+import { useAuth } from "../../auth/hook/useAuth";
 
-// Interfaz para el Nutricionista
-export interface Nutritionist {
-  id: number;
-  name: string;
-  lastName: string;
-  dni: string;
-  email: string;
-  specialization: string;
-  gymName: string;
-  active: boolean;
-}
+
 
 export default function NutritionistCrud() {
   const token = localStorage.getItem("token") || "";
@@ -39,6 +32,7 @@ export default function NutritionistCrud() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const api = axios.create({
@@ -243,34 +237,14 @@ export default function NutritionistCrud() {
     setErrors({});
   };
 
+    const handleLogout = () => {
+  logout();
+  navigate("/"); 
+};
+
   return (
     <div className="min-h-screen bg-[url('https://img.freepik.com/free-photo/3d-gym-equipment_23-2151114137.jpg')] bg-cover bg-center bg-no-repeat">
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Dumbbell className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">FitPower Admin</h1>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <a href="/admin" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Home size={18} />
-              <span>Inicio</span>
-            </a>
-            <a href="/admin/nutritionists" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Apple size={18} />
-              <span>Nutricionistas</span>
-            </a>
-            <a href="/admin/clients" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Users size={18} />
-              <span>Clientes</span>
-            </a>
-            <a href="/admin/trainers" className="hover:text-blue-200 transition flex items-center space-x-1">
-              <Dumbbell size={18} />
-              <span>Entrenadores</span>
-            </a>
-          </nav>
-        </div>
-      </header>
+        <AdminHeader onLogout={handleLogout}></AdminHeader>
 
       <ToastContainer position="top-right" autoClose={5000} />
 

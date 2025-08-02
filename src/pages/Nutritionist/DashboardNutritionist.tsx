@@ -1,103 +1,303 @@
+// src/pages/Nutritionist/DashboardNutritionist.tsx
 "use client"
 
-import { useState, useEffect } from "react"
-import { Users } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import {
+  Users,
+  Menu,
+  X,
+  Utensils,
+  Home,
+  PlusCircle
+} from "lucide-react"
+import { FooterPag } from "../../components/Footer"
+import { NutritionistHeader } from "../../components/NutritionistHeader"
+import { useAuth } from "../../auth/hook/useAuth"
 
-interface Nutritionist {
-  id: number
-  name: string
+interface User {
   dni: string
-  email: string
+  name: string
   gymName: string
+  role: string
 }
 
+interface Client {
+  id: number
+  dni: string
+  name: string
+  lastName: string
+  email: string
+  phoneNumber: string
+  createdAt: string
+  activePlanId?: number // ← NUEVO: para almacenar el ID del plan activo
+}
+
+type ViewMode = "ALL" | "MINE"
+
 export default function DashboardNutritionist() {
-  const [nutritionist, setNutritionist] = useState<Nutritionist | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [clients, setClients] = useState<Client[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>("MINE")
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  // ← NUEVA FUNCIÓN: Obtener plan activo
+  const getActivePlan = async (clientDni: string) => {
+    const token = localStorage.getItem("token")
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/clients/${clientDni}/nutrition-plans/active`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) return null
+      const plan = await res.json()
+      return plan.id
+    } catch {
+      return null
+    }
+  }
+
+  // ← NUEVA FUNCIÓN: Cargar planes activos para todos los clientes
+  const loadActivePlansForClients = async (clientList: Client[]) => {
+    const updatedClients = await Promise.all(
+      clientList.map(async (client) => {
+        const activePlanId = await getActivePlan(client.dni)
+        return { ...client, activePlanId }
+      })
+    )
+    setClients(updatedClients)
+  }
 
   useEffect(() => {
     const dni = localStorage.getItem("userDni")
     const token = localStorage.getItem("token")
 
     if (!dni || !token) {
-      setError("No se pudo obtener la información de autenticación.")
+      setError("No hay sesión activa.")
+      setLoading(false)
       return
     }
 
-    fetch(`http://localhost:8080/api/v1/nutritionists/dni/${dni}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Error al obtener nutricionista")
-        }
-        return res.json()
-      })
-      .then((data) => {
-        setNutritionist(data)
-        localStorage.setItem("gymName", data.gymName)
-      })
-      .catch((err) => {
-        console.error(err)
-        setError("Error al obtener los datos del nutricionista.")
-      })
+    loadNutritionistInfo(dni, token)
   }, [])
 
-  if (error) {
+  const loadNutritionistInfo = async (dni: string, token: string) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/nutritionists/${dni}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      if (!res.ok) throw new Error("No se pudo cargar el nutricionista")
+
+      const data = await res.json()
+      localStorage.setItem("nutritionistId", data.id.toString())
+      localStorage.setItem("userRole", "ROLE_NUTRITIONIST")
+
+      setCurrentUser({
+        dni: data.dni,
+        name: data.name,
+        gymName: data.gymName,
+        role: "ROLE_NUTRITIONIST",
+      })
+
+      // Carga inicial: todos los clientes
+      await loadMyClients()
+    } catch (err) {
+      setError("Error al cargar información del nutricionista")
+      setLoading(false)
+    }
+  }
+
+  const loadClientsByGym = async (gymName: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:8080/api/v1/gyms/${encodeURIComponent(gymName)}/clients/without-nutrition-plan`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Error al cargar clientes sin plan nutricional");
+      const data: Client[] = await res.json();
+      
+      // ← MODIFICADO: Cargar planes activos después de obtener clientes
+      await loadActivePlansForClients(data);
+    } catch (err) {
+      setError("Error al obtener clientes sin plan nutricional");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const loadMyClients = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("token")
+      const nutritionistId = localStorage.getItem("nutritionistId")
+      if (!nutritionistId) throw new Error("ID de nutricionista no encontrado")
+      const res = await fetch(
+        `http://localhost:8080/api/v1/nutritionists/${nutritionistId}/clients/active`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      if (!res.ok) throw new Error("Error al cargar mis clientes")
+      const data: Client[] = await res.json()
+      
+      // ← MODIFICADO: Cargar planes activos después de obtener clientes
+      await loadActivePlansForClients(data);
+    } catch (err) {
+      setError("Error al obtener mis clientes")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleViewChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    if (mode === "ALL" && currentUser) {
+      loadClientsByGym(currentUser.gymName)
+    } else if (mode === "MINE") {
+      loadMyClients()
+    }
+  }
+
+  if (loading) {
     return (
-      <div className="p-6 text-red-600 font-semibold">
-        {error}
+      <div className="flex flex-col min-h-screen bg-gray-100">
+        <p className="p-8 text-center">Cargando datos…</p>
       </div>
     )
   }
 
-  if (!nutritionist) {
-    return (
-      <div className="p-6 text-gray-600">
-        Cargando información del nutricionista...
-      </div>
-    )
-  }
+  const handleLogout = () => {
+    logout();
+    navigate("/"); // o "/login" si tenés una ruta específica
+  };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">
-        Bienvenido, {nutritionist.name}
-      </h1>
-      <p className="text-gray-700 mb-6">
-        Gimnasio: {nutritionist.gymName}
-      </p>
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* Header */}
+      <NutritionistHeader onLogout={handleLogout}></NutritionistHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-green-900 mb-2">Gestión Nutricional</h2>
-          <ul className="space-y-2 text-green-800">
-            <li>
-              📋 <a href="#" className="hover:underline">Planes nutricionales</a>
-            </li>
-            <li>
-              🧍 <a href="#" className="hover:underline">Clientes asignados</a>
-            </li>
-            <li>
-              ✅ <a href="#" className="hover:underline">Historiales alimentarios</a>
-            </li>
-          </ul>
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">{`Bienvenido/a, ${currentUser?.name}`}</h1>
+          <p className="text-gray-600">{`Gimnasio: ${currentUser?.gymName}`}</p>
+        </div>
+        <div className="mt-4">
+ 
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-yellow-900 mb-2">Datos Personales</h2>
-          <p><strong>DNI:</strong> {nutritionist.dni}</p>
-          <p><strong>Email:</strong> {nutritionist.email}</p>
+        {/* Botones de filtro */}
+        <div className="mt-4 flex space-x-4 mb-6">
+          <button
+            onClick={() => handleViewChange("MINE")}
+            className={`px-4 py-2 rounded ${viewMode === "MINE" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Mis clientes Activos
+          </button>
+          <button
+            onClick={() => handleViewChange("ALL")}
+            className={`px-4 py-2 rounded ${viewMode === "ALL" ? "bg-green-800 text-white" : "bg-gray-200 text-gray-700"}`}
+          >
+            Clientes libres
+          </button>
         </div>
-      </div>
 
-      {/* Futuras funcionalidades */}
-      <div className="mt-10 text-center text-sm text-gray-500">
-        Módulos de clientes y planes nutricionales próximamente.
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="p-6 bg-green-50 rounded-lg border flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-700">Total Clientes</p>
+              <p className="text-2xl font-bold">{clients.length}</p>
+            </div>
+            <Users className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold">
+            {viewMode === "ALL" ? "Clientes del Gimnasio" : "Mis Clientes"}
+          </h2>
+          <p className="text-sm text-gray-600">Gestiona sus planes nutricionales</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-800 border rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {clients.map((client) => (
+            <div key={client.id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition p-6">
+              <h3 className="font-semibold text-gray-900 text-lg">
+                {client.name} {client.lastName}
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">DNI: {client.dni}</p>
+              <div className="space-y-2 mb-4 text-gray-700">
+                <div>Email: {client.email}</div>
+                <div>Teléfono: {client.phoneNumber}</div>
+                <div>Desde: {new Date(client.createdAt).toLocaleDateString("es-ES")}</div>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Link to={`/nutritionist/client/${client.dni}/nutrition-plans`}>
+                  <button className="w-full bg-green-800 text-white py-2 rounded">
+                    Ver Cliente
+                  </button>
+                </Link>
+                <Link to={`/nutritionist/client/${client.dni}/progress/nutrition`}>
+                  <button className="w-full bg-green-100 text-green-800 py-2 rounded border border-green-800 hover:bg-green-800 hover:text-white transition">
+                    Ver Progreso Nutricional
+                  </button>
+                </Link>
+                {/* ← MODIFICADO: Usar activePlanId en lugar de client.id */}
+                {client.activePlanId ? (
+                  <Link to={`/nutritionist/client/${client.dni}/nutrition-plans/${client.activePlanId}/records`}>
+                    <button className="w-full bg-blue-600 text-white py-2 rounded">
+                      Ver Registros
+                    </button>
+                  </Link>
+                ) : (
+                  <button className="w-full bg-gray-400 text-white py-2 rounded cursor-not-allowed" disabled>
+                    Sin Plan Activo
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {clients.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay clientes para mostrar
+            </h3>
+            <p className="text-gray-600">
+              {viewMode === "ALL"
+                ? "Los clientes aparecerán aquí cuando estén registrados en tu gimnasio."
+                : "No tienes clientes asignados en este momento."}
+            </p>
+          </div>
+        )}
+      </main>
+
+      <FooterPag />
     </div>
   )
 }
