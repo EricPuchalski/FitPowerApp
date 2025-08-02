@@ -1,3 +1,8 @@
+//src/pages/Trainer/TrainingPlanRecords.tsx
+
+"use client";
+
+
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
