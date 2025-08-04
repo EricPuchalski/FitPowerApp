@@ -165,9 +165,9 @@ const TrainingPlanCard = ({ plan }) => {
         <div className="flex justify-between items-start">
           <div>
             <h4 className="font-bold text-xl">{plan.name}</h4>
-            <p className="text-blue-100 text-sm opacity-90">
-              Creado el {new Date(plan.createdAt).toLocaleDateString()}
-            </p>
+    <p className="text-blue-100 text-sm opacity-90">
+  Creado el {new Date(plan.createdAt + 'T00:00:00').toLocaleDateString()}
+</p>
           </div>
           <span
             className={`px-3 py-1 text-xs rounded-full font-semibold ${
