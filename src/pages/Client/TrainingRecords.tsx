@@ -45,6 +45,19 @@ interface Exercise {
   name: string
 }
 
+// Función simple: si la fecha viene como "2025-08-04T01:20:26.617261"
+// y ese entrenamiento se hizo el 04/08, entonces simplemente tomar la fecha
+const getDateOnly = (dateString: string): string => {
+  return dateString.substring(0, 10)
+}
+
+// Función para formatear fecha para mostrar  
+const formatDateForDisplay = (dateString: string): string => {
+  const dateOnly = getDateOnly(dateString)
+  const [year, month, day] = dateOnly.split('-')
+  return `${day}/${month}/${year}`
+}
+
 const TrainingRecordsPage: React.FC = () => {
   const { trainingPlanId } = useParams<{ trainingPlanId: string }>()
   const [records, setRecords] = useState<TrainingRecord[]>([])
@@ -54,7 +67,12 @@ const TrainingRecordsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState<boolean>(false)
   const [editingRecord, setEditingRecord] = useState<TrainingRecord | null>(null)
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0])
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    // Obtener fecha actual de Argentina (UTC-3)
+    const now = new Date()
+    const argentinaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000)) // Restar 3 horas
+    return argentinaTime.toISOString().split('T')[0]
+  })
   const token = localStorage.getItem("token")
   const [formData, setFormData] = useState({
     observation: "",
@@ -108,7 +126,7 @@ const TrainingRecordsPage: React.FC = () => {
 
   useEffect(() => {
     const filtered = records.filter((record) => {
-      const recordDate = new Date(record.createdAt).toISOString().split("T")[0]
+      const recordDate = getDateOnly(record.createdAt)
       return recordDate === selectedDate
     })
     setFilteredRecords(filtered)
@@ -421,7 +439,7 @@ const TrainingRecordsPage: React.FC = () => {
                         <Dumbbell className="w-4 h-4 text-blue-600" />
                       </div>
                       <h3 className="text-lg font-semibold text-gray-800">{record.exerciseName}</h3>
-                      <span className="text-sm text-gray-500">{new Date(record.createdAt).toLocaleDateString()}</span>
+                      <span className="text-sm text-gray-500">{formatDateForDisplay(record.createdAt)}</span>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">

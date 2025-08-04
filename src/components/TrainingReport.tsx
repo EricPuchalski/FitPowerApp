@@ -58,6 +58,7 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
 
   const handleSendConfirmation = () => {
     setConfirmSendOpen(true);
+         console.log(data.period);
   };
 
   const handleConfirmSend = async () => {
@@ -136,66 +137,73 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
     setOpenDialog(true);
   };
 
-const sendTrainingReport = async () => {
-  setSending(true);
-  setSendError("");
-  setSendSuccess(false);
+  const sendTrainingReport = async () => {
+    setSending(true);
+    setSendError("");
+    setSendSuccess(false);
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    setSendError("No se encontró el token de autenticación. Inicia sesión nuevamente.");
-    setSending(false);
-    return;
-  }
-
-  try {
-    // Verifica que data.period esté definido y tenga el formato correcto
-    if (!data.period || typeof data.period !== "string") {
-      throw new Error("El período no está definido o no es válido.");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setSendError(
+        "No se encontró el token de autenticación. Inicia sesión nuevamente."
+      );
+      setSending(false);
+      return;
     }
 
-    const dateParts = data.period.split(" - ");
-    if (dateParts.length !== 2) {
-      throw new Error("El período no tiene el formato esperado.");
-    }
-
-    // Convertir las fechas al formato yyyy-MM-dd
-    const startDate = convertToBackendDateFormat(dateParts[0]);
-    const endDate = convertToBackendDateFormat(dateParts[1]);
-
-    const response = await fetch(
-      `http://localhost:8080/api/v1/clients/${data.clientDni}/training-plans/reports/pdf?startDate=${startDate}&endDate=${endDate}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          trainerComment: data.trainerComment.trim(),
-          nextSteps: data.nextSteps.trim(),
-        }),
+    try {
+      // Verifica que data.period esté definido y tenga el formato correcto
+      if (!data.period || typeof data.period !== "string") {
+        throw new Error("El período no está definido o no es válido.");
       }
-    );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Error al enviar el reporte");
+      const dateParts = data.period.split(" - ");
+      if (dateParts.length !== 2) {
+        throw new Error("El período no tiene el formato esperado.");
+      }
+ 
+      
+      // Convertir las fechas al formato yyyy-MM-dd
+      const startDate = convertToBackendDateFormat(dateParts[0]);
+      const endDate = convertToBackendDateFormat(dateParts[1]);
+
+      const response = await fetch(
+        `http://localhost:8080/api/v1/clients/${data.clientDni}/training-plans/reports/pdf?startDate=${startDate}&endDate=${endDate}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            trainerComment: data.trainerComment.trim(),
+            nextSteps: data.nextSteps.trim(),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al enviar el reporte");
+      }
+
+      setSendSuccess(true);
+    } catch (err) {
+      setSendError(
+        err instanceof Error
+          ? err.message
+          : "Error inesperado al enviar el reporte"
+      );
+    } finally {
+      setSending(false);
     }
+  };
 
-    setSendSuccess(true);
-  } catch (err) {
-    setSendError(err instanceof Error ? err.message : "Error inesperado al enviar el reporte");
-  } finally {
-    setSending(false);
-  }
-};
-
-// Función para convertir la fecha al formato yyyy-MM-dd
-const convertToBackendDateFormat = (dateString: string) => {
-  const [day, month, year] = dateString.split('/');
-  return `${year}-${month}-${day}`;
-};
+  // Función para convertir la fecha al formato yyyy-MM-dd
+  const convertToBackendDateFormat = (dateString: string) => {
+    const [day, month, year] = dateString.split("/");
+    return `${year}-${month}-${day}`;
+  };
 
   const getProgressColor = (progress: string) => {
     const value = parseFloat(progress.replace(/[+%]/g, ""));
@@ -287,20 +295,6 @@ const convertToBackendDateFormat = (dateString: string) => {
           {isMobile ? "Volver" : "Volver al formulario"}
         </Button>
         <Box sx={{ display: "flex", gap: 2 }}>
-          {/* <Button
-            variant="contained"
-            onClick={handlePrintDialog}
-            startIcon={pdfGenerating ? <CircularProgress size={20} /> : <Print />}
-            sx={{
-              backgroundColor: "#fb8c00",
-              "&:hover": { backgroundColor: "#e67c00" },
-              minWidth: isMobile ? "auto" : "200px",
-            }}
-            disabled={pdfGenerating}
-            size={isMobile ? "small" : "medium"}
-          >
-            {isMobile ? (pdfGenerating ? "..." : "PDF") : pdfGenerating ? "Generando..." : "Descargar PDF"}
-          </Button> */}
           <Button
             variant="contained"
             onClick={handleSendConfirmation}
@@ -324,78 +318,82 @@ const convertToBackendDateFormat = (dateString: string) => {
               ? "Enviado ✓"
               : "Enviar al Cliente"}
           </Button>
-          <Dialog open={confirmSendOpen} onClose={() => setConfirmSendOpen(false)}>
-  <DialogTitle>Confirmar Envío</DialogTitle>
-  <DialogContent>
-    <Typography>¿Estás seguro que deseas enviar este informe al cliente?</Typography>
-    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-      El cliente recibirá un mail con el pdf adjunto.
-    </Typography>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setConfirmSendOpen(false)} color="inherit">
-      Cancelar
-    </Button>
-    <Button
-      onClick={handleConfirmSend}
-      color="primary"
-      variant="contained"
-      startIcon={<Send />}
-    >
-      Confirmar Envío
-    </Button>
-  </DialogActions>
-</Dialog>
+          <Dialog
+            open={confirmSendOpen}
+            onClose={() => setConfirmSendOpen(false)}
+          >
+            <DialogTitle>Confirmar Envío</DialogTitle>
+            <DialogContent>
+              <Typography>
+                ¿Estás seguro que deseas enviar este informe al cliente?
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                El cliente recibirá un mail con el pdf adjunto.
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setConfirmSendOpen(false)} color="inherit">
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmSend}
+                color="primary"
+                variant="contained"
+                startIcon={<Send />}
+              >
+                Confirmar Envío
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </Box>
 
       {sendSuccess && (
-  <Alert 
-    severity="success" 
-    sx={{ 
-      mx: "auto", 
-      maxWidth: 800, 
-      mt: 2,
-      boxShadow: 2,
-      ".MuiAlert-message": {
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
-      }
-    }}
-    onClose={() => setSendSuccess(false)}
-  >
-    <Box sx={{ textAlign: "center", width: "100%" }}>
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Informe enviado exitosamente!
-      </Typography>
-      <Typography variant="body2">
-        El cliente ha recibido el informe de entrenamiento.
-      </Typography>
-    </Box>
-  </Alert>
-)}
+        <Alert
+          severity="success"
+          sx={{
+            mx: "auto",
+            maxWidth: 800,
+            mt: 2,
+            boxShadow: 2,
+            ".MuiAlert-message": {
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          }}
+          onClose={() => setSendSuccess(false)}
+        >
+          <Box sx={{ textAlign: "center", width: "100%" }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Informe enviado exitosamente!
+            </Typography>
+            <Typography variant="body2">
+              El cliente ha recibido el informe de entrenamiento.
+            </Typography>
+          </Box>
+        </Alert>
+      )}
 
-{sendError && (
-  <Alert 
-    severity="error" 
-    sx={{ 
-      mx: "auto", 
-      maxWidth: 800, 
-      mt: 2,
-      boxShadow: 2
-    }}
-    onClose={() => setSendError("")}
-  >
-    <Typography variant="h6" sx={{ mb: 1 }}>
-      Error al enviar el informe, por favor vuelva a intentarlo o comuniquese con la administración.
-    </Typography>
-    <Typography variant="body2">
-      {sendError}
-    </Typography>
-  </Alert>
-)}
+      {sendError && (
+        <Alert
+          severity="error"
+          sx={{
+            mx: "auto",
+            maxWidth: 800,
+            mt: 2,
+            boxShadow: 2,
+          }}
+          onClose={() => setSendError("")}
+        >
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Error al enviar el informe, por favor vuelva a intentarlo o
+            comuniquese con la administración.
+          </Typography>
+          <Typography variant="body2">{sendError}</Typography>
+        </Alert>
+      )}
 
       {/* Contenido del reporte - Se incluye en el PDF */}
       <Box

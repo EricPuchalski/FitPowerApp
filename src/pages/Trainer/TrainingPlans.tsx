@@ -45,6 +45,24 @@ export default function TrainingPlanDetail() {
   const { logout } = useAuth();
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
 
+  // Función para formatear fechas en formato argentino
+  const formatDateArgentina = (dateString: string): string => {
+    try {
+      // Si la fecha viene en formato "YYYY-MM-DD", la parseamos directamente
+      const [year, month, day] = dateString.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      
+      return date.toLocaleDateString("es-AR", {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      // Fallback si hay algún error en el parsing
+      return dateString;
+    }
+  };
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -381,7 +399,7 @@ export default function TrainingPlanDetail() {
                   <div>
                     <p className="text-sm text-gray-600">Fecha de creación</p>
                     <p className="font-semibold">
-                      {new Date(plan.createdAt).toLocaleDateString("es-ES")}
+                      {formatDateArgentina(plan.createdAt)}
                     </p>
                   </div>
                 </div>

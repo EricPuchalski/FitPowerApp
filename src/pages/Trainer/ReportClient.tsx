@@ -19,7 +19,10 @@ import TrainingReport from "../../components/TrainingReport";
 import { FooterPag } from "../../components/Footer";
 import { ClientReportDTO } from "../../model/ClientReportDTO";
 import { TrainingPlan } from "../../model/TrainingPlan";
-import { fetchActiveTrainingPlan, generateTrainingReport } from "../../services/TrainingPlanService";
+import {
+  fetchActiveTrainingPlan,
+  generateTrainingReport,
+} from "../../services/TrainingPlanService";
 
 export default function ReportClient() {
   const { clientDni } = useParams();
@@ -39,8 +42,8 @@ export default function ReportClient() {
     const date = new Date(dateString);
     // Ajustamos agregando un día para compensar el problema de zona horaria
     date.setDate(date.getDate() + 1);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -49,7 +52,7 @@ export default function ReportClient() {
   const formatInputDate = (dateString: string) => {
     const date = new Date(dateString);
     // No ajustamos aquí para que los inputs funcionen correctamente
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   // Obtener el plan de entrenamiento activo
@@ -88,9 +91,13 @@ export default function ReportClient() {
     // Validaciones adicionales
     const planStartDate = new Date(trainingPlan.createdAt);
     const selectedStartDate = new Date(startDate);
-    
+
     if (selectedStartDate < planStartDate) {
-      setError(`La fecha de inicio no puede ser anterior al inicio del plan (${formatDisplayDate(trainingPlan.createdAt)})`);
+      setError(
+        `La fecha de inicio no puede ser anterior al inicio del plan (${formatDisplayDate(
+          trainingPlan.createdAt
+        )})`
+      );
       return;
     }
 
@@ -104,6 +111,9 @@ export default function ReportClient() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No se encontró token de autenticación");
+      }
       const data = await generateTrainingReport(
         token,
         clientDni,
@@ -114,7 +124,11 @@ export default function ReportClient() {
       );
       setReportData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado al generar el reporte");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Error inesperado al generar el reporte"
+      );
     } finally {
       setLoading(false);
     }
@@ -154,9 +168,15 @@ export default function ReportClient() {
       <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5", py: 4 }}>
         <Box sx={{ maxWidth: 800, mx: "auto", px: 2 }}>
           <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mb: 2 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "center", gap: 1, mb: 2 }}
+            >
               <Assignment sx={{ fontSize: 40, color: "#fb8c00" }} />
-              <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                sx={{ fontWeight: "bold" }}
+              >
                 FitPower
               </Typography>
             </Box>
@@ -165,14 +185,16 @@ export default function ReportClient() {
             </Typography>
             {trainingPlan && (
               <Box sx={{ mt: 2 }}>
-                <Chip 
-                  label={`Plan activo: ${trainingPlan.name}`} 
-                  color="success" 
-                  variant="outlined" 
-                  sx={{ mr: 1 }} 
+                <Chip
+                  label={`Plan activo: ${trainingPlan.name}`}
+                  color="success"
+                  variant="outlined"
+                  sx={{ mr: 1 }}
                 />
-                <Chip 
-                  label={`Inició el ${formatDisplayDate(trainingPlan.createdAt)}`} 
+                <Chip
+                  label={`Inició el ${formatDisplayDate(
+                    trainingPlan.createdAt
+                  )}`}
                   icon={<Info />}
                 />
               </Box>
@@ -182,7 +204,14 @@ export default function ReportClient() {
           <Card>
             <CardContent sx={{ p: 3 }}>
               {/* Sección de fechas */}
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 2, mb: 2 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+                  gap: 2,
+                  mb: 2,
+                }}
+              >
                 <Box>
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     Fecha Inicio
@@ -197,8 +226,10 @@ export default function ReportClient() {
                     size="small"
                     InputLabelProps={{ shrink: true }}
                     inputProps={{
-                      min: trainingPlan ? formatInputDate(trainingPlan.createdAt) : undefined,
-                      max: formatInputDate(new Date().toString())
+                      min: trainingPlan
+                        ? formatInputDate(trainingPlan.createdAt)
+                        : undefined,
+                      max: formatInputDate(new Date().toString()),
                     }}
                   />
                 </Box>
@@ -217,7 +248,7 @@ export default function ReportClient() {
                     InputLabelProps={{ shrink: true }}
                     inputProps={{
                       min: startDate,
-                      max: formatInputDate(new Date().toString())
+                      max: formatInputDate(new Date().toString()),
                     }}
                   />
                 </Box>
@@ -225,8 +256,10 @@ export default function ReportClient() {
 
               {trainingPlan && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  El plan de entrenamiento <strong>{trainingPlan.name}</strong> comenzó el día {formatDisplayDate(trainingPlan.createdAt)}. 
-                  Por favor, seleccione un rango de fechas entre esa fecha y hoy.
+                  El plan de entrenamiento <strong>{trainingPlan.name}</strong>{" "}
+                  comenzó el día {formatDisplayDate(trainingPlan.createdAt)}.
+                  Por favor, seleccione un rango de fechas entre esa fecha y
+                  hoy.
                 </Alert>
               )}
 
@@ -275,19 +308,23 @@ export default function ReportClient() {
                 variant="contained"
                 onClick={generateReport}
                 disabled={loading || !trainingPlan}
-                sx={{ 
-                  backgroundColor: "#fb8c00", 
+                sx={{
+                  backgroundColor: "#fb8c00",
                   "&:hover": { backgroundColor: "#e67c00" },
-                  height: "48px"
+                  height: "48px",
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : "Generar Reporte"}
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Generar Reporte"
+                )}
               </Button>
             </CardContent>
           </Card>
         </Box>
       </Box>
       <FooterPag></FooterPag>
-     </>
+    </>
   );
 }
