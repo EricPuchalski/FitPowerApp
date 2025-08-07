@@ -58,7 +58,6 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
 
   const handleSendConfirmation = () => {
     setConfirmSendOpen(true);
-         console.log(data.period);
   };
 
   const handleConfirmSend = async () => {
@@ -137,67 +136,49 @@ export default function TrainingReport({ data, onBack }: TrainingReportProps) {
     setOpenDialog(true);
   };
 
-  const sendTrainingReport = async () => {
+ const sendTrainingReport = async () => {
     setSending(true);
     setSendError("");
     setSendSuccess(false);
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setSendError(
-        "No se encontró el token de autenticación. Inicia sesión nuevamente."
-      );
-      setSending(false);
-      return;
+        setSendError(
+            "No se encontró el token de autenticación. Inicia sesión nuevamente."
+        );
+        setSending(false);
+        return;
     }
 
     try {
-      // Verifica que data.period esté definido y tenga el formato correcto
-      if (!data.period || typeof data.period !== "string") {
-        throw new Error("El período no está definido o no es válido.");
-      }
+        const response = await fetch(
+            `http://localhost:8080/api/v1/clients/${data.clientDni}/training-plans/reports/pdf`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data), // Envía todo el objeto de datos del reporte
+            }
+        );
 
-      const dateParts = data.period.split(" - ");
-      if (dateParts.length !== 2) {
-        throw new Error("El período no tiene el formato esperado.");
-      }
- 
-      
-      // Convertir las fechas al formato yyyy-MM-dd
-      const startDate = convertToBackendDateFormat(dateParts[0]);
-      const endDate = convertToBackendDateFormat(dateParts[1]);
-
-      const response = await fetch(
-        `http://localhost:8080/api/v1/clients/${data.clientDni}/training-plans/reports/pdf?startDate=${startDate}&endDate=${endDate}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            trainerComment: data.trainerComment.trim(),
-            nextSteps: data.nextSteps.trim(),
-          }),
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Error al enviar el reporte");
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al enviar el reporte");
-      }
-
-      setSendSuccess(true);
+        setSendSuccess(true);
     } catch (err) {
-      setSendError(
-        err instanceof Error
-          ? err.message
-          : "Error inesperado al enviar el reporte"
-      );
+        setSendError(
+            err instanceof Error
+                ? err.message
+                : "Error inesperado al enviar el reporte"
+        );
     } finally {
-      setSending(false);
+        setSending(false);
     }
-  };
+};
 
   // Función para convertir la fecha al formato yyyy-MM-dd
   const convertToBackendDateFormat = (dateString: string) => {

@@ -15,7 +15,7 @@ import {
   FileText,
   Activity,
 } from "lucide-react";
-import { fetchActiveTrainingPlan } from "../../services/TrainingPlanService";
+import { fetchActiveTrainingPlan, fetchMyActiveTrainingPlan } from "../../services/TrainingPlanService";
 import { TrainingPlan } from "../../model/TrainingPlan";
 import { ExerciseRoutine } from "../../model/ExerciseRoutine";
 import { generateTrainingPlanPDF } from "../../services/PdfService";
@@ -54,7 +54,7 @@ const TrainingPlanPage = () => {
         }
 
         // Usamos el servicio
-        const plan = await fetchActiveTrainingPlan(clientDni, token);
+        const plan = await fetchMyActiveTrainingPlan(token);
         setTrainingPlan(plan);
 
         // Organizar ejercicios por día

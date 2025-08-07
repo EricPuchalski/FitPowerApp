@@ -6,7 +6,7 @@ import { useAuth } from "../../auth/hook/useAuth";
 import { ClientHeader } from "../../components/ClientHeader";
 import { fetchClientData } from "../../services/ClientService";
 import { fetchActiveNutritionPlan } from "../../services/NutritionPlanService";
-import { fetchActiveTrainingPlan } from "../../services/TrainingPlanService";
+import { fetchActiveTrainingPlan, fetchMyActiveTrainingPlan } from "../../services/TrainingPlanService";
 
 const ClientDashboard: React.FC = () => {
   const [client, setClient] = useState<Client | null>(null);
@@ -66,7 +66,7 @@ const ClientDashboard: React.FC = () => {
         // Cargar planes en paralelo
         const [nutritionPlan, trainingPlan] = await Promise.all([
           fetchActiveNutritionPlan(clientDni).catch(() => null),
-          fetchActiveTrainingPlan(clientDni, token).catch(() => null)
+          fetchMyActiveTrainingPlan(token).catch(() => null)
         ]);
 
         setActiveNutritionPlanId(nutritionPlan?.id || null);

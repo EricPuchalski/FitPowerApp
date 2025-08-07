@@ -21,6 +21,24 @@ export const fetchActiveTrainingPlan = async (clientDni: string, token: string) 
   return await response.json();
 };
 
+export const fetchMyActiveTrainingPlan = async (token: string) => {
+  const response = await fetch(
+    `${API_BASE_URL}/clients/me/training-plans/active`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+
+  return await response.json();
+};
+
 export const fetchExerciseRoutines = async (clientDni: string, planId: string, token: string) => {
   const response = await fetch(
     `http://localhost:8080/api/v1/clients/${clientDni}/training-plans/${planId}/exercises`,
