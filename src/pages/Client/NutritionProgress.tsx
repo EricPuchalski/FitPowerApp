@@ -11,7 +11,6 @@ interface MetricDTO {
   target: number;              
   realConsumption: number;     
   compliancePercentage: number;
-  delta: number;               
   daysCounted: number;         
 } 
 
@@ -23,8 +22,14 @@ interface ProgressDTO {
   fats: MetricDTO;
 }
 
+interface UserInfo {
+  fullName: string;
+  email: string;
+}
+
 export default function NutritionProgress() {
   const [data, setData] = useState<ProgressDTO | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -39,15 +44,43 @@ export default function NutritionProgress() {
       setLoading(false);
       return;
     }
-    fetch(
-      `http://localhost:8080/api/v1/clients/${clientDni}/progress/nutrition`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-      .then(res => {
-        if (!res.ok) throw new Error("Error al cargar el progreso nutricional");
-        return res.json();
+
+    // Obtener información del usuario y progreso nutricional
+    Promise.all([
+      fetch(`http://localhost:8080/api/v1/clients/${clientDni}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }),
+      fetch(`http://localhost:8080/api/v1/clients/${clientDni}/progress/nutrition`, {
+        headers: { Authorization: `Bearer ${token}` }
       })
-      .then((json: ProgressDTO) => setData(json))
+    ])
+      .then(async ([userRes, progressRes]) => {
+        if (!userRes.ok) throw new Error("Error al cargar información del usuario");
+        if (!progressRes.ok) throw new Error("Error al cargar el progreso nutricional");
+        
+        const userData = await userRes.json();
+        const progressData = await progressRes.json();
+        
+        // Construir nombre completo de forma segura
+        let displayName = userData.fullName;
+        if (!displayName) {
+          if (userData.firstName && userData.lastName) {
+            displayName = `${userData.firstName} ${userData.lastName}`;
+          } else if (userData.lastName) {
+            displayName = userData.lastName;
+          } else if (userData.firstName) {
+            displayName = userData.firstName;
+          } else {
+            displayName = clientDni; // Fallback al DNI
+          }
+        }
+        
+        setUserInfo({ 
+          fullName: displayName,
+          email: userData.email 
+        });
+        setData(progressData);
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [clientDni, token]);
@@ -70,9 +103,9 @@ export default function NutritionProgress() {
   const getMacroUnit = (key: string): string =>
     key === "calories" ? "kcal" : "g";
 
-  // 80% = aceptable, >100% = excedido
+  // 80% = aceptable, >120% = excedido
   const getProgressColor = (percentage: number): string => {
-    if (percentage > 100) {
+    if (percentage > 120) {
       return "#ff4d4f";            // Rojo
     }
     if (percentage >= 80) {
@@ -83,7 +116,7 @@ export default function NutritionProgress() {
 
   const renderComplianceStatus = (metric: MetricDTO) => {
     const p = metric.compliancePercentage;
-    if (p > 100) {
+    if (p > 120) {
       return (
         <span className="text-red-600 font-medium">
           Excedido: {p.toFixed(1)}%
@@ -106,7 +139,10 @@ export default function NutritionProgress() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <ClientHeader fullName={clientDni || ""} onLogout={handleLogout} />
+      <ClientHeader 
+        fullName={userInfo?.fullName || clientDni || ""} 
+        onLogout={handleLogout} 
+      />
       <main className="flex-grow container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6">Progreso Nutricional</h2>
 
